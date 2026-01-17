@@ -1,0 +1,536 @@
+/**
+ * API Client for Academic Journal Publishing Platform
+ */
+
+import axios, { AxiosInstance, AxiosError } from 'axios';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+
+// Create axios instance
+export const api: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor for token refresh
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (refreshToken) {
+          const response = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, {
+            refresh: refreshToken,
+          });
+          
+          const { access } = response.data;
+          localStorage.setItem('access_token', access);
+          
+          originalRequest.headers.Authorization = `Bearer ${access}`;
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh failed, clear tokens
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/admin/login';
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+// =============================================================================
+// Auth API
+// =============================================================================
+
+export const authApi = {
+  login: async (email: string, password: string) => {
+    const response = await api.post('/auth/login/', { email, password });
+    return response.data;
+  },
+  
+  logout: async (refreshToken: string) => {
+    const response = await api.post('/auth/logout/', { refresh: refreshToken });
+    return response.data;
+  },
+  
+  getCurrentUser: async () => {
+    const response = await api.get('/auth/me/');
+    return response.data;
+  },
+  
+  changePassword: async (data: { old_password: string; new_password: string; confirm_password: string }) => {
+    const response = await api.post('/auth/password/change/', data);
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Journals API
+// =============================================================================
+
+export const journalsApi = {
+  list: async (params?: { subject?: string; search?: string; page?: number }) => {
+    const response = await api.get('/journals/', { params });
+    return response.data;
+  },
+  
+  featured: async () => {
+    const response = await api.get('/journals/featured/');
+    return response.data;
+  },
+  
+  getBySlug: async (slug: string) => {
+    const response = await api.get(`/journals/by-slug/${slug}/`);
+    return response.data;
+  },
+  
+  getById: async (id: number) => {
+    const response = await api.get(`/journals/${id}/`);
+    return response.data;
+  },
+
+  get: async (id: string | number) => {
+    const response = await api.get(`/journals/${id}/`);
+    return response.data;
+  },
+  
+  subjects: async () => {
+    const response = await api.get('/journals/subjects/');
+    return response.data;
+  },
+  
+  // Admin
+  create: async (data: any) => {
+    const response = await api.post('/journals/admin/create/', data);
+    return response.data;
+  },
+
+  createWithImage: async (formData: FormData) => {
+    const response = await api.post('/journals/admin/create/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  update: async (id: number, data: any) => {
+    const response = await api.patch(`/journals/admin/${id}/`, data);
+    return response.data;
+  },
+
+  updateWithImage: async (id: number, formData: FormData) => {
+    const response = await api.patch(`/journals/admin/${id}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  
+  delete: async (id: number) => {
+    const response = await api.delete(`/journals/admin/${id}/`);
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Volumes API
+// =============================================================================
+
+export const volumesApi = {
+  listByJournal: async (journalSlug: string) => {
+    const response = await api.get(`/volumes/by-journal/${journalSlug}/`);
+    return response.data;
+  },
+  
+  getByNumber: async (journalSlug: string, volumeNumber: number) => {
+    const response = await api.get(`/volumes/by-journal/${journalSlug}/${volumeNumber}/`);
+    return response.data;
+  },
+  
+  // Admin
+  create: async (data: any) => {
+    const response = await api.post('/volumes/admin/create/', data);
+    return response.data;
+  },
+  
+  update: async (id: number, data: any) => {
+    const response = await api.patch(`/volumes/admin/${id}/`, data);
+    return response.data;
+  },
+  
+  delete: async (id: number) => {
+    const response = await api.delete(`/volumes/admin/${id}/`);
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Issues API
+// =============================================================================
+
+export const issuesApi = {
+  getCurrentIssue: async (journalSlug: string) => {
+    const response = await api.get(`/issues/by-journal/${journalSlug}/current/`);
+    return response.data;
+  },
+  
+  getByNumber: async (journalSlug: string, issueNumber: number) => {
+    const response = await api.get(`/issues/by-journal/${journalSlug}/${issueNumber}/`);
+    return response.data;
+  },
+  
+  getById: async (id: number) => {
+    const response = await api.get(`/issues/${id}/`);
+    return response.data;
+  },
+  
+  listByVolume: async (volumeId: number) => {
+    const response = await api.get(`/issues/by-volume/${volumeId}/`);
+    return response.data;
+  },
+  
+  // Admin
+  create: async (data: any) => {
+    const response = await api.post('/issues/admin/create/', data);
+    return response.data;
+  },
+  
+  update: async (id: number, data: any) => {
+    const response = await api.patch(`/issues/admin/${id}/`, data);
+    return response.data;
+  },
+  
+  delete: async (id: number) => {
+    const response = await api.delete(`/issues/admin/${id}/`);
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Articles API
+// =============================================================================
+
+export const articlesApi = {
+  list: async (params?: { journal?: number; issue?: number; search?: string; page?: number }) => {
+    const response = await api.get('/articles/', { params });
+    return response.data;
+  },
+  
+  search: async (query: string) => {
+    const response = await api.get('/articles/search/', { params: { q: query } });
+    return response.data;
+  },
+  
+  featured: async () => {
+    const response = await api.get('/articles/featured/');
+    return response.data;
+  },
+  
+  recent: async (journalSlug?: string) => {
+    const params = journalSlug ? { journal: journalSlug } : {};
+    const response = await api.get('/articles/recent/', { params });
+    return response.data;
+  },
+  
+  getBySlug: async (journalSlug: string, articleSlug: string) => {
+    const response = await api.get(`/articles/by-journal/${journalSlug}/${articleSlug}/`);
+    return response.data;
+  },
+  
+  getAbstract: async (journalSlug: string, articleSlug: string) => {
+    const response = await api.get(`/articles/by-journal/${journalSlug}/${articleSlug}/abstract/`);
+    return response.data;
+  },
+  
+  getFullText: async (journalSlug: string, articleSlug: string) => {
+    const response = await api.get(`/articles/by-journal/${journalSlug}/${articleSlug}/fulltext/`);
+    return response.data;
+  },
+  
+  getPdfUrl: (journalSlug: string, articleSlug: string) => {
+    return `${API_BASE_URL}/articles/by-journal/${journalSlug}/${articleSlug}/pdf/`;
+  },
+  
+  getHtmlDownloadUrl: (journalSlug: string, articleSlug: string) => {
+    return `${API_BASE_URL}/articles/by-journal/${journalSlug}/${articleSlug}/html-download/`;
+  },
+  
+  listByIssue: async (issueId: number) => {
+    const response = await api.get(`/articles/by-issue/${issueId}/`);
+    return response.data;
+  },
+  
+  // Admin
+  get: async (id: string | number) => {
+    const response = await api.get(`/articles/${id}/`);
+    return response.data;
+  },
+
+  adminList: async (params?: any) => {
+    const response = await api.get('/articles/admin/', { params });
+    return response.data;
+  },
+  
+  create: async (data: any) => {
+    const response = await api.post('/articles/admin/create/', data);
+    return response.data;
+  },
+  
+  update: async (id: number, data: any) => {
+    const response = await api.patch(`/articles/admin/${id}/`, data);
+    return response.data;
+  },
+  
+  delete: async (id: number) => {
+    const response = await api.delete(`/articles/admin/${id}/`);
+    return response.data;
+  },
+  
+  updateAuthors: async (id: number, authors: any[]) => {
+    const response = await api.put(`/articles/admin/${id}/authors/`, { authors });
+    return response.data;
+  },
+  
+  uploadFile: async (id: number, file: File, fileType: string, isPrimary: boolean = false) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+    formData.append('is_primary', String(isPrimary));
+    
+    const response = await api.post(`/articles/admin/${id}/files/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Authors API
+// =============================================================================
+
+export const authorsApi = {
+  list: async (params?: { search?: string; page?: number }) => {
+    const response = await api.get('/articles/authors/', { params });
+    return response.data;
+  },
+  
+  getById: async (id: number) => {
+    const response = await api.get(`/articles/authors/${id}/`);
+    return response.data;
+  },
+  
+  getArticles: async (id: number) => {
+    const response = await api.get(`/articles/authors/${id}/articles/`);
+    return response.data;
+  },
+  
+  // Admin
+  create: async (data: any) => {
+    const response = await api.post('/articles/admin/authors/create/', data);
+    return response.data;
+  },
+  
+  update: async (id: number, data: any) => {
+    const response = await api.patch(`/articles/admin/authors/${id}/`, data);
+    return response.data;
+  },
+  
+  delete: async (id: number) => {
+    const response = await api.delete(`/articles/admin/authors/${id}/`);
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Site API
+// =============================================================================
+
+export const siteApi = {
+  getSettings: async () => {
+    const response = await api.get('/site/settings/');
+    return response.data;
+  },
+  
+  updateSettings: async (data: any) => {
+    const response = await api.patch('/site/settings/', data);
+    return response.data;
+  },
+  
+  getPages: async (params?: { journal?: string | number; nav?: boolean }) => {
+    const response = await api.get('/site/pages/', { params });
+    return response.data;
+  },
+  
+  getPage: async (slug: string, journalSlug?: string) => {
+    const params = journalSlug ? { journal: journalSlug } : {};
+    const response = await api.get(`/site/pages/${slug}/`, { params });
+    return response.data;
+  },
+  
+  getDashboardStats: async () => {
+    const response = await api.get('/site/admin/stats/');
+    return response.data;
+  },
+};
+
+// =============================================================================
+// XML API
+// =============================================================================
+
+export const xmlApi = {
+  upload: async (articleId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await api.post(`/xml/upload/${articleId}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  
+  process: async (articleId: number, xmlContent?: string) => {
+    const data = xmlContent ? { xml_content: xmlContent } : {};
+    const response = await api.post(`/xml/process/${articleId}/`, data);
+    return response.data;
+  },
+  
+  reparse: async (articleId: number) => {
+    const response = await api.post(`/xml/reparse/${articleId}/`);
+    return response.data;
+  },
+  
+  getStatus: async (articleId: number) => {
+    const response = await api.get(`/xml/status/${articleId}/`);
+    return response.data;
+  },
+  
+  getPreview: async (articleId: number) => {
+    const response = await api.get(`/xml/preview/${articleId}/`);
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Announcements/News API
+// =============================================================================
+
+export const announcementsApi = {
+  // Public - get all published announcements
+  list: async () => {
+    const response = await api.get('/journals/announcements/');
+    return response.data;
+  },
+  
+  // Public - get announcements for homepage (limited to 5)
+  homepage: async () => {
+    const response = await api.get('/journals/announcements/homepage/');
+    return response.data;
+  },
+  
+  // Public - get single announcement by slug
+  getBySlug: async (slug: string) => {
+    const response = await api.get(`/journals/announcements/by-slug/${slug}/`);
+    return response.data;
+  },
+  
+  // Admin - get all announcements
+  adminList: async () => {
+    const response = await api.get('/journals/admin/announcements/');
+    return response.data;
+  },
+  
+  // Admin - create announcement
+  create: async (formData: FormData) => {
+    const response = await api.post('/journals/admin/announcements/create/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  
+  // Admin - update announcement
+  update: async (id: number, formData: FormData) => {
+    const response = await api.patch(`/journals/admin/announcements/${id}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  
+  // Admin - delete announcement
+  delete: async (id: number) => {
+    const response = await api.delete(`/journals/admin/announcements/${id}/`);
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Corporate Affiliations API
+// =============================================================================
+
+export const affiliationsApi = {
+  // Public - get all active affiliations
+  list: async () => {
+    const response = await api.get('/journals/affiliations/');
+    return response.data;
+  },
+  
+  // Admin - get all affiliations (including inactive)
+  adminList: async () => {
+    const response = await api.get('/journals/admin/affiliations/');
+    return response.data;
+  },
+  
+  // Admin - get single affiliation
+  get: async (id: number) => {
+    const response = await api.get(`/journals/admin/affiliations/${id}/`);
+    return response.data;
+  },
+  
+  // Admin - create affiliation with logo
+  create: async (formData: FormData) => {
+    const response = await api.post('/journals/admin/affiliations/create/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  
+  // Admin - update affiliation
+  update: async (id: number, formData: FormData) => {
+    const response = await api.patch(`/journals/admin/affiliations/${id}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  
+  // Admin - delete affiliation
+  delete: async (id: number) => {
+    const response = await api.delete(`/journals/admin/affiliations/${id}/`);
+    return response.data;
+  },
+};
+
+export default api;
+
+
+
