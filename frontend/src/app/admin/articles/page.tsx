@@ -83,21 +83,21 @@ export default function AdminArticlesPage() {
                 </option>
               ))}
             </select>
-          </div>
+        </div>
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-gray-700">Journal:</label>
-            <select
-              value={selectedJournal}
-              onChange={(e) => setSelectedJournal(e.target.value)}
+        <select
+          value={selectedJournal}
+          onChange={(e) => setSelectedJournal(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
-            >
-              <option value="">All Journals</option>
+        >
+          <option value="">All Journals</option>
               {filteredJournals.map((journal: any) => (
                 <option key={journal.id} value={journal.slug}>
-                  {journal.title}
-                </option>
-              ))}
-            </select>
+              {journal.title}
+            </option>
+          ))}
+        </select>
           </div>
           {(selectedSubject || selectedJournal) && (
             <button
@@ -117,34 +117,34 @@ export default function AdminArticlesPage() {
             <div className="animate-spin w-8 h-8 border-4 border-academic-navy border-t-transparent rounded-full mx-auto"></div>
           </div>
         ) : filteredArticles.length > 0 ? (
-          <table className="w-full">
+            <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
+                <tr>
                 <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Title</th>
                 <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Journal</th>
                 <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Volume/Issue</th>
                 <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Status</th>
                 <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Date</th>
                 <th className="text-right px-6 py-3 text-sm font-semibold text-gray-600">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
               {filteredArticles.map((article: any) => (
-                <tr key={article.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
+                  <tr key={article.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
                     <p className="font-medium text-gray-900 line-clamp-1 max-w-xs">{article.title}</p>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {article.issue?.volume?.journal?.title || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
                     {article.issue?.volume ? (
                       <>
                         Vol. {article.issue.volume.number}
                         {article.issue?.number && `, Issue ${article.issue.number}`}
                       </>
                     ) : 'N/A'}
-                  </td>
+                    </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                       article.status === 'published'
@@ -154,16 +154,16 @@ export default function AdminArticlesPage() {
                         : 'bg-gray-100 text-gray-600'
                     }`}>
                       {article.status || 'Draft'}
-                    </span>
-                  </td>
+                      </span>
+                    </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {article.published_date 
+                      {article.published_date
                       ? new Date(article.published_date).toLocaleDateString()
                       : 'Not published'
                     }
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
                       {article.issue?.volume?.journal?.slug && (
                         <Link
                           href={`/${article.issue.volume.journal.slug}/article/${article.slug}`}
@@ -173,25 +173,25 @@ export default function AdminArticlesPage() {
                           <FiEye className="w-4 h-4" />
                         </Link>
                       )}
-                      <Link
-                        href={`/admin/articles/${article.id}`}
+                        <Link
+                          href={`/admin/articles/${article.id}`}
                         className="p-2 text-gray-400 hover:text-academic-blue transition-colors"
-                        title="Edit"
-                      >
-                        <FiEdit2 className="w-4 h-4" />
-                      </Link>
-                      <button
+                          title="Edit"
+                        >
+                          <FiEdit2 className="w-4 h-4" />
+                        </Link>
+                        <button
                         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                        title="Delete"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                          title="Delete"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
         ) : (
           <div className="p-8 text-center text-gray-600">
             <FiFileText className="w-12 h-12 text-gray-300 mx-auto mb-2" />

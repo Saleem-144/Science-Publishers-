@@ -153,12 +153,17 @@ export default function ArticlePage() {
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="text-sm font-semibold text-gray-900 mb-2">Keywords</h3>
                 <div className="flex flex-wrap gap-2">
-                  {article.keywords.split(',').map((keyword: string, index: number) => (
+                  {(Array.isArray(article.keywords) 
+                    ? article.keywords 
+                    : typeof article.keywords === 'string' 
+                      ? article.keywords.split(',').map((k: string) => k.trim())
+                      : []
+                  ).map((keyword: string, index: number) => (
                     <span
                       key={index}
                       className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
                     >
-                      {keyword.trim()}
+                      {keyword}
                     </span>
                   ))}
                 </div>

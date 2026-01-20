@@ -116,30 +116,30 @@ export default function AdminIssuesPage() {
                 </option>
               ))}
             </select>
-          </div>
+            </div>
 
           {/* Journal Dropdown */}
-          <div>
+              <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               2. Select Journal
             </label>
-            <select
+                <select
               value={selectedJournal}
               onChange={(e) => handleJournalChange(e.target.value)}
               disabled={!selectedSubject}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue disabled:bg-gray-100 disabled:cursor-not-allowed"
-            >
+                >
               <option value="">-- Select Journal --</option>
               {filteredJournals.map((journal: any) => (
                 <option key={journal.id} value={journal.slug}>
                   {journal.title}
-                </option>
-              ))}
-            </select>
-          </div>
+                    </option>
+                  ))}
+                </select>
+              </div>
 
           {/* Volume Dropdown */}
-          <div>
+              <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               3. Select Volume
             </label>
@@ -158,7 +158,7 @@ export default function AdminIssuesPage() {
             </select>
           </div>
         </div>
-      </div>
+              </div>
 
       {/* Issues List & Create Form */}
       {selectedVolume ? (
@@ -169,7 +169,7 @@ export default function AdminIssuesPage() {
               <h3 className="font-semibold text-gray-900">
                 Issues for Volume {volumesList.find((v: any) => v.id === parseInt(selectedVolume))?.number}
               </h3>
-            </div>
+              </div>
             <button
               onClick={() => setShowCreateForm(!showCreateForm)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-academic-navy text-white font-medium rounded-lg hover:bg-academic-blue transition-colors"
@@ -177,7 +177,7 @@ export default function AdminIssuesPage() {
               <FiPlus className="w-4 h-4" />
               Add Issue
             </button>
-          </div>
+              </div>
 
           {/* Create Issue Form */}
           {showCreateForm && (
@@ -199,7 +199,7 @@ export default function AdminIssuesPage() {
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Title (Optional)
-                  </label>
+                </label>
                   <input
                     type="text"
                     value={newIssue.title}
@@ -207,7 +207,7 @@ export default function AdminIssuesPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
                     placeholder="e.g., Special Edition"
                   />
-                </div>
+              </div>
                 <button
                   onClick={handleCreateIssue}
                   disabled={creating}
@@ -221,57 +221,57 @@ export default function AdminIssuesPage() {
                 >
                   Cancel
                 </button>
-              </div>
-            </div>
-          )}
+          </div>
+        </div>
+      )}
 
           {/* Issues Table */}
           {issuesLoading ? (
             <div className="p-8 text-center">
               <div className="animate-spin w-8 h-8 border-4 border-academic-navy border-t-transparent rounded-full mx-auto"></div>
-            </div>
+          </div>
           ) : issuesList.length > 0 ? (
-            <table className="w-full">
+          <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Issue</th>
                   <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Title</th>
                   <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Articles</th>
                   <th className="text-right px-6 py-3 text-sm font-semibold text-gray-600">Actions</th>
-                </tr>
-              </thead>
+              </tr>
+            </thead>
               <tbody className="divide-y divide-gray-100">
                 {issuesList.map((issue: any) => (
-                  <tr key={issue.id} className="hover:bg-gray-50">
+                <tr key={issue.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 font-medium text-gray-900">
                       Issue {issue.number}
-                    </td>
+                  </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {issue.title || '-'}
-                    </td>
+                  </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {issue.article_count || 0}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2">
                         <button
                           className="p-2 text-gray-400 hover:text-academic-blue transition-colors"
                           title="Edit"
                         >
-                          <FiEdit2 className="w-4 h-4" />
-                        </button>
+                        <FiEdit2 className="w-4 h-4" />
+                      </button>
                         <button
                           className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                           title="Delete"
                         >
-                          <FiTrash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           ) : (
             <div className="p-8 text-center text-gray-600">
               <FiFileText className="w-12 h-12 text-gray-300 mx-auto mb-2" />
@@ -283,8 +283,8 @@ export default function AdminIssuesPage() {
                 Create the first issue
               </button>
             </div>
-          )}
-        </div>
+        )}
+      </div>
       ) : (
         <div className="bg-white rounded-xl shadow-md p-12 text-center">
           <FiLayers className="w-16 h-16 text-gray-300 mx-auto mb-4" />

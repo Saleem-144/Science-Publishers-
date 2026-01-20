@@ -73,46 +73,46 @@ export function ArticleCard({ article, compact = false }: ArticleCardProps) {
         {/* Article Type Tag - Dynamic from Admin */}
         <span className="inline-flex items-center px-3 py-1 bg-academic-blue/10 text-academic-blue text-xs font-semibold rounded-md border border-academic-blue/20">
           {articleType}
-        </span>
+              </span>
         
         {/* Access Status Badge */}
         {isOpenAccess ? (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-md border border-emerald-200">
             <FiUnlock className="w-3.5 h-3.5" />
-            Open Access
-          </span>
-        ) : (
+                  Open Access
+                </span>
+              ) : (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-md border border-amber-200">
             <FiLock className="w-3.5 h-3.5" />
-            Subscription
-          </span>
-        )}
-      </div>
+                  Subscription
+                </span>
+              )}
+            </div>
 
       <Link href={`/${journalSlug}/article/${article.slug}`} className="block group">
         <h3 className={`font-bold text-gray-900 group-hover:text-academic-blue transition-colors line-clamp-2 ${compact ? 'text-sm' : 'text-lg'}`}>
-          {article.title}
-        </h3>
+              {article.title}
+            </h3>
       </Link>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-600">
         <span className="flex items-center gap-1.5">
           <FiUser className="w-4 h-4 text-academic-blue" />
           <span className="truncate max-w-[200px]">{authors}</span>
-        </span>
+              </span>
         {publishDate && (
           <span className="flex items-center gap-1.5">
             <FiCalendar className="w-4 h-4 text-academic-gold" />
             {publishDate}
-          </span>
-        )}
-      </div>
+                </span>
+              )}
+            </div>
 
-      {!compact && article.abstract && (
-        <p className="mt-3 text-sm text-gray-600 line-clamp-2">
-          {article.abstract}
-        </p>
-      )}
+            {!compact && article.abstract && (
+              <p className="mt-3 text-sm text-gray-600 line-clamp-2">
+                {article.abstract}
+              </p>
+            )}
 
       <div className="mt-3 pt-3 border-t border-gray-200">
         <Link 
@@ -122,7 +122,7 @@ export function ArticleCard({ article, compact = false }: ArticleCardProps) {
           <FiBookOpen className="w-3.5 h-3.5" />
           {journalTitle}
         </Link>
-      </div>
-    </article>
+        </div>
+      </article>
   );
 }

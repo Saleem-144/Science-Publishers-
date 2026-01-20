@@ -46,8 +46,8 @@ export default function AboutPage() {
             <p className="text-xl text-blue-100 leading-relaxed">
               We are dedicated to advancing scientific knowledge through high-quality, 
               peer-reviewed academic publications that serve researchers and scholars worldwide.
-            </p>
-          </div>
+          </p>
+        </div>
         </div>
       </section>
 
@@ -67,7 +67,7 @@ export default function AboutPage() {
                 scientific community. We are committed to maintaining rigorous peer review standards 
                 while making research accessible to all who seek knowledge.
               </p>
-            </div>
+      </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <div className="flex items-center gap-3 mb-4">
@@ -80,7 +80,7 @@ export default function AboutPage() {
                 To become a leading global publisher recognized for excellence in scientific 
                 publishing, innovation in research dissemination, and unwavering commitment 
                 to advancing human knowledge across all disciplines.
-              </p>
+                </p>
             </div>
           </div>
         </div>
@@ -99,8 +99,8 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
 
       {/* Our Values */}
       <section className="py-16 md:py-24">
@@ -125,8 +125,8 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
 
       {/* CTA */}
       <section className="py-16 bg-academic-navy text-white">
@@ -152,8 +152,8 @@ export default function AboutPage() {
               Contact Us
             </Link>
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
     </div>
   );
 }

@@ -37,7 +37,7 @@ ALLOWED_HOSTS = get_env('ALLOWED_HOSTS', 'localhost,127.0.0.1', list)
 # Database Configuration
 # =============================================================================
 
-# Use SQLite for development, PostgreSQL for production
+# Use SQLite for development, MySQL/PostgreSQL for production
 DB_ENGINE = get_env('DB_ENGINE', 'django.db.backends.sqlite3')
 
 if DB_ENGINE == 'django.db.backends.sqlite3':
@@ -45,7 +45,21 @@ if DB_ENGINE == 'django.db.backends.sqlite3':
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
+elif DB_ENGINE == 'django.db.backends.mysql':
+    DATABASE_CONFIG = {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': get_env('DB_NAME', 'science_publishers'),
+        'USER': get_env('DB_USER', 'root'),
+        'PASSWORD': get_env('DB_PASSWORD', ''),
+        'HOST': get_env('DB_HOST', 'localhost'),
+        'PORT': get_env('DB_PORT', '3306'),
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        },
+    }
 else:
+    # PostgreSQL or other databases
     DATABASE_CONFIG = {
         'ENGINE': DB_ENGINE,
         'NAME': get_env('DB_NAME', 'science_publishers'),

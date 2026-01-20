@@ -12,7 +12,7 @@ export default function EditArticlePage() {
   const router = useRouter();
   const params = useParams();
   const articleId = params.id as string;
-  
+
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [formData, setFormData] = useState({
@@ -32,24 +32,24 @@ export default function EditArticlePage() {
   const journalsList = journals?.results || journals || [];
 
   useEffect(() => {
-    const fetchArticle = async () => {
-      try {
+  const fetchArticle = async () => {
+    try {
         const article = await articlesApi.get(articleId);
-        setFormData({
-          title: article.title || '',
-          slug: article.slug || '',
-          abstract: article.abstract || '',
+      setFormData({
+        title: article.title || '',
+        slug: article.slug || '',
+        abstract: article.abstract || '',
           keywords: article.keywords || '',
           journal_id: article.issue?.volume?.journal?.id || '',
           status: article.status || 'draft',
         });
-      } catch (error) {
+    } catch (error) {
         toast.error('Failed to fetch article');
-        router.push('/admin/articles');
-      } finally {
+      router.push('/admin/articles');
+    } finally {
         setFetching(false);
-      }
-    };
+    }
+  };
 
     fetchArticle();
   }, [articleId, router]);
@@ -97,29 +97,29 @@ export default function EditArticlePage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Article Title *
             </label>
-            <input
-              type="text"
+              <input
+                type="text"
               required
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
-            />
-          </div>
+              />
+            </div>
 
-          <div>
+            <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               URL Slug *
             </label>
-            <input
-              type="text"
+              <input
+                type="text"
               required
-              value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                value={formData.slug}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
-            />
-          </div>
+              />
+            </div>
 
-          <div>
+            <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Journal
             </label>
@@ -162,28 +162,28 @@ export default function EditArticlePage() {
             />
           </div>
 
-          <div>
+            <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Status
             </label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
-            >
-              <option value="draft">Draft</option>
+              >
+                <option value="draft">Draft</option>
               <option value="review">Under Review</option>
-              <option value="published">Published</option>
-            </select>
+                <option value="published">Published</option>
+              </select>
+            </div>
           </div>
-        </div>
 
         <div className="flex items-center gap-4">
-          <button
-            type="submit"
+            <button
+              type="submit"
             disabled={loading}
             className="inline-flex items-center gap-2 px-6 py-3 bg-academic-navy text-white font-semibold rounded-lg hover:bg-academic-blue transition-colors disabled:opacity-50"
-          >
+            >
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -195,7 +195,7 @@ export default function EditArticlePage() {
                 Save Changes
               </>
             )}
-          </button>
+            </button>
           <Link
             href="/admin/articles"
             className="px-6 py-3 text-gray-600 font-semibold hover:text-gray-900"

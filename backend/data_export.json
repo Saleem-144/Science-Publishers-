@@ -1,0 +1,1923 @@
+[
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 1,
+  "fields": {
+    "user": null,
+    "jti": "644901efb0db43a79f3b0859baabea39",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1MzQwMSwiaWF0IjoxNzY2OTY3MDAxLCJqdGkiOiI2NDQ5MDFlZmIwZGI0M2E3OWYzYjA4NTliYWFiZWEzOSIsInVzZXJfaWQiOjR9.9-_MeUOMIeI9sr44n_8y6toxrkTcqWKmZtQnK9prJ64",
+    "created_at": "2025-12-29T00:10:01.318Z",
+    "expires_at": "2025-12-30T00:10:01Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 2,
+  "fields": {
+    "user": null,
+    "jti": "61753e3e87fc4a15a5b1a71e888fbcd9",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1MzQ2MSwiaWF0IjoxNzY2OTY3MDYxLCJqdGkiOiI2MTc1M2UzZTg3ZmM0YTE1YTViMWE3MWU4ODhmYmNkOSIsInVzZXJfaWQiOjR9.ebk4mJ5poNa2jXeG7FguZ-ZcDQ5dJY85H2-zZ95fAVw",
+    "created_at": "2025-12-29T00:11:01.803Z",
+    "expires_at": "2025-12-30T00:11:01Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 3,
+  "fields": {
+    "user": null,
+    "jti": "e74df7fcacab4247a5e49e09025d51ae",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1MzQ4MCwiaWF0IjoxNzY2OTY3MDgwLCJqdGkiOiJlNzRkZjdmY2FjYWI0MjQ3YTVlNDllMDkwMjVkNTFhZSIsInVzZXJfaWQiOjR9.eELkX4ZFFoZo54c-Tq2fpAAlsmrNKJ5ODTSwt63wgKc",
+    "created_at": "2025-12-29T00:11:20.163Z",
+    "expires_at": "2025-12-30T00:11:20Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 4,
+  "fields": {
+    "user": null,
+    "jti": "20738e1e0f114bd1aa87a84ecd5d07ab",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1MzU4MSwiaWF0IjoxNzY2OTY3MTgxLCJqdGkiOiIyMDczOGUxZTBmMTE0YmQxYWE4N2E4NGVjZDVkMDdhYiIsInVzZXJfaWQiOjR9.7JihEmD-BNNyQD67uaGzDFYw7d3sf906YCtLpJS236E",
+    "created_at": "2025-12-29T00:13:01.853Z",
+    "expires_at": "2025-12-30T00:13:01Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 5,
+  "fields": {
+    "user": null,
+    "jti": "e8feaab6e6f74f22a079eb955aae16c4",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1MzYxOCwiaWF0IjoxNzY2OTY3MjE4LCJqdGkiOiJlOGZlYWFiNmU2Zjc0ZjIyYTA3OWViOTU1YWFlMTZjNCIsInVzZXJfaWQiOjR9.HtSHBZfVJBe6GwTbJC9o_AnN71VO6nIrYnaz2bPUSME",
+    "created_at": "2025-12-29T00:13:38.585Z",
+    "expires_at": "2025-12-30T00:13:38Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 6,
+  "fields": {
+    "user": null,
+    "jti": "f008eb74cb6f4bd2b044c185739a5da1",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1MzY3MCwiaWF0IjoxNzY2OTY3MjcwLCJqdGkiOiJmMDA4ZWI3NGNiNmY0YmQyYjA0NGMxODU3MzlhNWRhMSIsInVzZXJfaWQiOjR9.JYrddYBzUvJuLeBIwACX1SMwpApJANFbituocdQqGsU",
+    "created_at": "2025-12-29T00:14:30.982Z",
+    "expires_at": "2025-12-30T00:14:30Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 7,
+  "fields": {
+    "user": null,
+    "jti": "19b3320f5b6a4b658af2836fd6a0b1e7",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1NDM2OCwiaWF0IjoxNzY2OTY3OTY4LCJqdGkiOiIxOWIzMzIwZjViNmE0YjY1OGFmMjgzNmZkNmEwYjFlNyIsInVzZXJfaWQiOjR9.k0_r9Ii7Sd461zBj1wNdXzsSJ33Y0rFQjZzEGs9kwX0",
+    "created_at": "2025-12-29T00:26:08.990Z",
+    "expires_at": "2025-12-30T00:26:08Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 8,
+  "fields": {
+    "user": null,
+    "jti": "d79a3e60d6db47c1b64d221c27718f36",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1NDUwNSwiaWF0IjoxNzY2OTY4MTA1LCJqdGkiOiJkNzlhM2U2MGQ2ZGI0N2MxYjY0ZDIyMWMyNzcxOGYzNiIsInVzZXJfaWQiOjV9.P-yTswYLb-nhANMQk9xyCsx0LZiw42U6d31QaZ28Y6M",
+    "created_at": "2025-12-29T00:28:25.016Z",
+    "expires_at": "2025-12-30T00:28:25Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 9,
+  "fields": {
+    "user": null,
+    "jti": "ab7c8fd506da4a3386024df6b9ed5b9c",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1NDU0MiwiaWF0IjoxNzY2OTY4MTQyLCJqdGkiOiJhYjdjOGZkNTA2ZGE0YTMzODYwMjRkZjZiOWVkNWI5YyIsInVzZXJfaWQiOjV9.dFWIWeVUKJXRhu6g0KJdfBhYgiTEbmf0D8MMeOMaPCg",
+    "created_at": "2025-12-29T00:29:02.975Z",
+    "expires_at": "2025-12-30T00:29:02Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 10,
+  "fields": {
+    "user": null,
+    "jti": "39e9ea9a4dcb4036865b68a92e7e83fb",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1NDY3OCwiaWF0IjoxNzY2OTY4Mjc4LCJqdGkiOiIzOWU5ZWE5YTRkY2I0MDM2ODY1YjY4YTkyZTdlODNmYiIsInVzZXJfaWQiOjV9.NKXBB_FabUHsHp32I9pZcwl4XB6tX077PqJbM4Gg2s8",
+    "created_at": "2025-12-29T00:31:18.836Z",
+    "expires_at": "2025-12-30T00:31:18Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 11,
+  "fields": {
+    "user": 6,
+    "jti": "5ff5715167a34faaa75251b5a270f312",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1NDgwMiwiaWF0IjoxNzY2OTY4NDAyLCJqdGkiOiI1ZmY1NzE1MTY3YTM0ZmFhYTc1MjUxYjVhMjcwZjMxMiIsInVzZXJfaWQiOjZ9.F7QF8I5t6fj_GreyvmlGMledy0eyQarBkbRwiOCr1_M",
+    "created_at": "2025-12-29T00:33:22.688Z",
+    "expires_at": "2025-12-30T00:33:22Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 12,
+  "fields": {
+    "user": 6,
+    "jti": "a6cff420b138457cb61beedeedcbf3b9",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzA1NTYwNiwiaWF0IjoxNzY2OTY5MjA2LCJqdGkiOiJhNmNmZjQyMGIxMzg0NTdjYjYxYmVlZGVlZGNiZjNiOSIsInVzZXJfaWQiOjZ9.tcTAfA8DfZB3aDR1SPO1o_S90ze9Kp7X5BQKaQJ3LUI",
+    "created_at": "2025-12-29T00:46:46.884Z",
+    "expires_at": "2025-12-30T00:46:46Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 13,
+  "fields": {
+    "user": 6,
+    "jti": "bf625f7dfdb64e60aeaad207ae86e09d",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzM2Mjc2MiwiaWF0IjoxNzY3Mjc2MzYyLCJqdGkiOiJiZjYyNWY3ZGZkYjY0ZTYwYWVhYWQyMDdhZTg2ZTA5ZCIsInVzZXJfaWQiOjZ9.Zyet9ybd8WMU8fenW3PZpxfJ89vU9KXxc_4GHrGW0hI",
+    "created_at": "2026-01-01T14:06:02.973Z",
+    "expires_at": "2026-01-02T14:06:02Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 14,
+  "fields": {
+    "user": 6,
+    "jti": "ccf6760c3a9b46d486b3a291f9364fac",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzM2MzM3MywiaWF0IjoxNzY3Mjc2OTczLCJqdGkiOiJjY2Y2NzYwYzNhOWI0NmQ0ODZiM2EyOTFmOTM2NGZhYyIsInVzZXJfaWQiOjZ9.8aWOLDzMhrOLUDUwihE9kgZgCIfgVzTG--TSY-zKdIw",
+    "created_at": "2026-01-01T14:16:13.417Z",
+    "expires_at": "2026-01-02T14:16:13Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 15,
+  "fields": {
+    "user": 6,
+    "jti": "fbc0aa4267534f1889ac74a41d2cfa1c",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzQzNDU0NSwiaWF0IjoxNzY3MzQ4MTQ1LCJqdGkiOiJmYmMwYWE0MjY3NTM0ZjE4ODlhYzc0YTQxZDJjZmExYyIsInVzZXJfaWQiOjZ9.g8HP_T3EoPTycm56Q5B_zrnUHcd30IEw3YxY7yxQDY0",
+    "created_at": "2026-01-02T10:02:25.643Z",
+    "expires_at": "2026-01-03T10:02:25Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 16,
+  "fields": {
+    "user": 6,
+    "jti": "825716ff987d475a83294a073a6ef32c",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NzQ0MjEwNywiaWF0IjoxNzY3MzU1NzA3LCJqdGkiOiI4MjU3MTZmZjk4N2Q0NzVhODMyOTRhMDczYTZlZjMyYyIsInVzZXJfaWQiOjZ9.2kkaSA0_E9IVMW5axpApeCPH0m1vra1Qq5wZ9-xuEjc",
+    "created_at": "2026-01-02T12:08:27.166Z",
+    "expires_at": "2026-01-03T12:08:27Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 17,
+  "fields": {
+    "user": 6,
+    "jti": "1dcf5cc3792c4400bdfd7b7e6bdaff2a",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2Nzc0MTk5MiwiaWF0IjoxNzY3NjU1NTkyLCJqdGkiOiIxZGNmNWNjMzc5MmM0NDAwYmRmZDdiN2U2YmRhZmYyYSIsInVzZXJfaWQiOjZ9.GJ-ZCbReB0k7PG51QfUQpwOlWvvcDLtd3kgeKzJDd0Y",
+    "created_at": "2026-01-05T23:26:32.005Z",
+    "expires_at": "2026-01-06T23:26:32Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 18,
+  "fields": {
+    "user": 6,
+    "jti": "28012d1a3679400ab905e2b225268613",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2Nzc5MjcwMiwiaWF0IjoxNzY3NzA2MzAyLCJqdGkiOiIyODAxMmQxYTM2Nzk0MDBhYjkwNWUyYjIyNTI2ODYxMyIsInVzZXJfaWQiOjZ9.sYZb4qmrpsPWzRAZUy9mYQ7UbNMH1O7W9y1EZHhYIfU",
+    "created_at": "2026-01-06T13:31:42.348Z",
+    "expires_at": "2026-01-07T13:31:42Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 19,
+  "fields": {
+    "user": 6,
+    "jti": "72f8372c1fef40538ab018871dcd032d",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2Nzk2NDI5MCwiaWF0IjoxNzY3ODc3ODkwLCJqdGkiOiI3MmY4MzcyYzFmZWY0MDUzOGFiMDE4ODcxZGNkMDMyZCIsInVzZXJfaWQiOjZ9.TDr9IPdPtCiXpGOGG2B3xzECbrSfAyUISGHDiPh6WTI",
+    "created_at": "2026-01-08T13:11:30.171Z",
+    "expires_at": "2026-01-09T13:11:30Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 20,
+  "fields": {
+    "user": 6,
+    "jti": "3b5a19abaec945adaebfe0e685e21f8c",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2ODA0NjA2OSwiaWF0IjoxNzY3OTU5NjY5LCJqdGkiOiIzYjVhMTlhYmFlYzk0NWFkYWViZmUwZTY4NWUyMWY4YyIsInVzZXJfaWQiOjZ9.UFJhHZ3ZR8KZXJ8MDwCja97BGMV4MRdlPhKSOlbTlek",
+    "created_at": "2026-01-09T11:54:29.931Z",
+    "expires_at": "2026-01-10T11:54:29Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 21,
+  "fields": {
+    "user": 6,
+    "jti": "dd6e3b2f00e245d6989794f61db05bab",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2ODA1MzU4MCwiaWF0IjoxNzY3OTY3MTgwLCJqdGkiOiJkZDZlM2IyZjAwZTI0NWQ2OTg5Nzk0ZjYxZGIwNWJhYiIsInVzZXJfaWQiOjZ9.1uYLmBy7QqQKLIL9_dT3vL8HHRr5p4ZhPdXhEYM398w",
+    "created_at": "2026-01-09T13:59:40.162Z",
+    "expires_at": "2026-01-10T13:59:40Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 22,
+  "fields": {
+    "user": 6,
+    "jti": "61631c264ca0440ba8140c96448f93f6",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2ODIyOTc4MCwiaWF0IjoxNzY4MTQzMzgwLCJqdGkiOiI2MTYzMWMyNjRjYTA0NDBiYTgxNDBjOTY0NDhmOTNmNiIsInVzZXJfaWQiOjZ9.z1IV_HaCDxbZqI3ThHdo6CyTcKMihMFlqyMto7gmA54",
+    "created_at": "2026-01-11T14:56:20.727Z",
+    "expires_at": "2026-01-12T14:56:20Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 23,
+  "fields": {
+    "user": 6,
+    "jti": "bf39dab1843549be9d805be61cf8a524",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2ODIzMDIzNCwiaWF0IjoxNzY4MTQzODM0LCJqdGkiOiJiZjM5ZGFiMTg0MzU0OWJlOWQ4MDViZTYxY2Y4YTUyNCIsInVzZXJfaWQiOjZ9.v-S2c00BP6u_suThP5XLhKUWREUeFlU3GxhiZQsWPbA",
+    "created_at": "2026-01-11T15:03:54.304Z",
+    "expires_at": "2026-01-12T15:03:54Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 24,
+  "fields": {
+    "user": 6,
+    "jti": "4e6a3369349f4c8abd073892301ec0c4",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2ODcwNTUxMywiaWF0IjoxNzY4NjE5MTEzLCJqdGkiOiI0ZTZhMzM2OTM0OWY0YzhhYmQwNzM4OTIzMDFlYzBjNCIsInVzZXJfaWQiOjZ9.uLqmlrtt2bMkcvoe5F1cFw7vW7Z7Zd8MgTnYbYNuWkU",
+    "created_at": "2026-01-17T03:05:13.426Z",
+    "expires_at": "2026-01-18T03:05:13Z"
+  }
+},
+{
+  "model": "token_blacklist.outstandingtoken",
+  "pk": 25,
+  "fields": {
+    "user": 6,
+    "jti": "927e4949ef3341349fc76ec4b2c833e8",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2ODcwODg0NywiaWF0IjoxNzY4NjIyNDQ3LCJqdGkiOiI5MjdlNDk0OWVmMzM0MTM0OWZjNzZlYzRiMmM4MzNlOCIsInVzZXJfaWQiOjZ9.r0NSC6tgvPMYtWpYaO2krIZAFRPXFzmxp4DPZwCHqeU",
+    "created_at": "2026-01-17T04:00:47.026Z",
+    "expires_at": "2026-01-18T04:00:47Z"
+  }
+},
+{
+  "model": "token_blacklist.blacklistedtoken",
+  "pk": 1,
+  "fields": {
+    "token": 7,
+    "blacklisted_at": "2025-12-29T00:27:43.962Z"
+  }
+},
+{
+  "model": "token_blacklist.blacklistedtoken",
+  "pk": 2,
+  "fields": {
+    "token": 10,
+    "blacklisted_at": "2025-12-29T00:33:12.783Z"
+  }
+},
+{
+  "model": "token_blacklist.blacklistedtoken",
+  "pk": 3,
+  "fields": {
+    "token": 13,
+    "blacklisted_at": "2026-01-02T08:31:07.165Z"
+  }
+},
+{
+  "model": "token_blacklist.blacklistedtoken",
+  "pk": 4,
+  "fields": {
+    "token": 14,
+    "blacklisted_at": "2026-01-02T10:01:56.112Z"
+  }
+},
+{
+  "model": "token_blacklist.blacklistedtoken",
+  "pk": 5,
+  "fields": {
+    "token": 15,
+    "blacklisted_at": "2026-01-02T11:03:08.280Z"
+  }
+},
+{
+  "model": "token_blacklist.blacklistedtoken",
+  "pk": 6,
+  "fields": {
+    "token": 17,
+    "blacklisted_at": "2026-01-06T00:39:35.619Z"
+  }
+},
+{
+  "model": "token_blacklist.blacklistedtoken",
+  "pk": 7,
+  "fields": {
+    "token": 19,
+    "blacklisted_at": "2026-01-08T14:13:50.721Z"
+  }
+},
+{
+  "model": "token_blacklist.blacklistedtoken",
+  "pk": 8,
+  "fields": {
+    "token": 20,
+    "blacklisted_at": "2026-01-09T12:54:42.257Z"
+  }
+},
+{
+  "model": "accounts.user",
+  "pk": 6,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$p2oNQkuZN2M1hEDSBg2ij8$eEoazTDwRgloul0gZTnJBIHqbTPedgpnUovjvbGqFPA=",
+    "is_superuser": true,
+    "email": "saleemsohaib092@gmail.com",
+    "first_name": "Saleem",
+    "last_name": "Sohaib",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-12-29T00:32:39.132Z",
+    "last_login": "2026-01-17T04:00:47.059Z",
+    "created_at": "2025-12-29T00:32:39.687Z",
+    "updated_at": "2025-12-29T00:32:39.687Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "pk": 7,
+  "fields": {
+    "password": "pbkdf2_sha256$1000000$5KtxupAgrcz5WzUZnT6Hoi$m1NhGVJYsJ3zqOBhwIgg0JzNORgMPl3BcGUkEVQOR7o=",
+    "is_superuser": true,
+    "email": "admin@example.com",
+    "first_name": "Admin",
+    "last_name": "User",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-01-02T10:05:44.005Z",
+    "last_login": null,
+    "created_at": "2026-01-02T10:05:44.539Z",
+    "updated_at": "2026-01-02T10:05:44.539Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "journals.subject",
+  "pk": 1,
+  "fields": {
+    "name": "Biology",
+    "slug": "biology",
+    "description": "Life sciences and biological research",
+    "parent": null,
+    "is_active": true,
+    "display_order": 0,
+    "created_at": "2025-12-28T23:40:07.806Z",
+    "updated_at": "2025-12-28T23:40:07.806Z"
+  }
+},
+{
+  "model": "journals.subject",
+  "pk": 2,
+  "fields": {
+    "name": "Chemistry",
+    "slug": "chemistry",
+    "description": "Chemical sciences and research",
+    "parent": null,
+    "is_active": true,
+    "display_order": 0,
+    "created_at": "2025-12-28T23:40:07.806Z",
+    "updated_at": "2025-12-28T23:40:07.806Z"
+  }
+},
+{
+  "model": "journals.subject",
+  "pk": 3,
+  "fields": {
+    "name": "Physics",
+    "slug": "physics",
+    "description": "Physical sciences and research",
+    "parent": null,
+    "is_active": true,
+    "display_order": 0,
+    "created_at": "2025-12-28T23:40:07.823Z",
+    "updated_at": "2025-12-28T23:40:07.823Z"
+  }
+},
+{
+  "model": "journals.subject",
+  "pk": 4,
+  "fields": {
+    "name": "Medicine",
+    "slug": "medicine",
+    "description": "Medical sciences and healthcare research",
+    "parent": null,
+    "is_active": true,
+    "display_order": 0,
+    "created_at": "2025-12-28T23:40:07.823Z",
+    "updated_at": "2025-12-28T23:40:07.823Z"
+  }
+},
+{
+  "model": "journals.subject",
+  "pk": 5,
+  "fields": {
+    "name": "Computer Science",
+    "slug": "computer-science",
+    "description": "Computing and information technology",
+    "parent": null,
+    "is_active": true,
+    "display_order": 0,
+    "created_at": "2025-12-28T23:40:07.843Z",
+    "updated_at": "2025-12-28T23:40:07.843Z"
+  }
+},
+{
+  "model": "journals.subject",
+  "pk": 6,
+  "fields": {
+    "name": "Maths",
+    "slug": "maths",
+    "description": "mathematical behaviour",
+    "parent": null,
+    "is_active": true,
+    "display_order": 0,
+    "created_at": "2025-12-29T00:27:35.487Z",
+    "updated_at": "2025-12-29T00:27:35.487Z"
+  }
+},
+{
+  "model": "journals.journal",
+  "pk": 1,
+  "fields": {
+    "title": "Journal of Molecular Biology",
+    "slug": "journal-molecular-biology",
+    "short_title": "J Mol Biol",
+    "description": "A leading journal covering all aspects of molecular biology research.",
+    "short_description": "Leading journal in molecular biology research.",
+    "issn_print": "0022-2836",
+    "issn_online": "1089-8638",
+    "cover_image": "",
+    "logo": "",
+    "favicon": "",
+    "primary_color": "#1a365d",
+    "secondary_color": "#2b6cb0",
+    "editor_in_chief": "Dr. Sarah Johnson",
+    "publisher": "",
+    "founding_year": 2020,
+    "frequency": "Monthly",
+    "aims_and_scope": "",
+    "author_guidelines": "",
+    "peer_review_policy": "",
+    "contact_email": "",
+    "website_url": "",
+    "is_active": true,
+    "is_featured": true,
+    "meta_title": "Journal of Molecular Biology",
+    "meta_description": "",
+    "meta_keywords": "",
+    "created_at": "2025-12-28T23:40:07.849Z",
+    "updated_at": "2025-12-28T23:40:07.849Z",
+    "subjects": [
+      1
+    ]
+  }
+},
+{
+  "model": "journals.journal",
+  "pk": 2,
+  "fields": {
+    "title": "International Journal of Computer Science",
+    "slug": "ijcs",
+    "short_title": "IJCS",
+    "description": "Covering advances in computer science, AI, and software engineering.",
+    "short_description": "Advances in computer science and AI research.",
+    "issn_print": "2345-6789",
+    "issn_online": "2345-6790",
+    "cover_image": "",
+    "logo": "",
+    "favicon": "",
+    "primary_color": "#065f46",
+    "secondary_color": "#10b981",
+    "editor_in_chief": "Prof. Michael Chen",
+    "publisher": "",
+    "founding_year": 2021,
+    "frequency": "Quarterly",
+    "aims_and_scope": "",
+    "author_guidelines": "",
+    "peer_review_policy": "",
+    "contact_email": "",
+    "website_url": "",
+    "is_active": true,
+    "is_featured": true,
+    "meta_title": "International Journal of Computer Science",
+    "meta_description": "",
+    "meta_keywords": "",
+    "created_at": "2025-12-28T23:40:07.865Z",
+    "updated_at": "2025-12-28T23:40:07.865Z",
+    "subjects": [
+      5
+    ]
+  }
+},
+{
+  "model": "journals.journal",
+  "pk": 3,
+  "fields": {
+    "title": "Medical Research Journal",
+    "slug": "medical-research-journal",
+    "short_title": "Med Res J",
+    "description": "Publishing cutting-edge medical research and clinical studies.",
+    "short_description": "Cutting-edge medical research and clinical studies.",
+    "issn_print": "3456-7890",
+    "issn_online": "3456-7891",
+    "cover_image": "",
+    "logo": "",
+    "favicon": "",
+    "primary_color": "#7c2d12",
+    "secondary_color": "#dc2626",
+    "editor_in_chief": "Dr. Emily White",
+    "publisher": "",
+    "founding_year": 2019,
+    "frequency": "Bi-monthly",
+    "aims_and_scope": "",
+    "author_guidelines": "",
+    "peer_review_policy": "",
+    "contact_email": "",
+    "website_url": "",
+    "is_active": true,
+    "is_featured": true,
+    "meta_title": "Medical Research Journal",
+    "meta_description": "",
+    "meta_keywords": "",
+    "created_at": "2025-12-28T23:40:07.877Z",
+    "updated_at": "2025-12-28T23:40:07.877Z",
+    "subjects": [
+      1,
+      4
+    ]
+  }
+},
+{
+  "model": "journals.journal",
+  "pk": 4,
+  "fields": {
+    "title": "Journal of Applied Physics",
+    "slug": "journal-applied-physics",
+    "short_title": "J Appl Phys",
+    "description": "A premier journal for experimental and theoretical physics research, covering quantum mechanics, condensed matter, and applied physics.",
+    "short_description": "Premier research in experimental and theoretical physics.",
+    "issn_print": "4567-8901",
+    "issn_online": "4567-8902",
+    "cover_image": "",
+    "logo": "",
+    "favicon": "",
+    "primary_color": "#4c1d95",
+    "secondary_color": "#7c3aed",
+    "editor_in_chief": "Prof. Robert Martinez",
+    "publisher": "",
+    "founding_year": 2018,
+    "frequency": "Monthly",
+    "aims_and_scope": "",
+    "author_guidelines": "",
+    "peer_review_policy": "",
+    "contact_email": "",
+    "website_url": "",
+    "is_active": true,
+    "is_featured": true,
+    "meta_title": "Journal of Applied Physics",
+    "meta_description": "",
+    "meta_keywords": "",
+    "created_at": "2026-01-02T10:26:52.213Z",
+    "updated_at": "2026-01-02T10:26:52.213Z",
+    "subjects": [
+      3
+    ]
+  }
+},
+{
+  "model": "journals.corporateaffiliation",
+  "pk": 11,
+  "fields": {
+    "name": "Crossref",
+    "logo": "",
+    "url": "https://www.crossref.org",
+    "display_order": 1,
+    "is_active": true,
+    "created_at": "2026-01-08T13:42:34.927Z",
+    "updated_at": "2026-01-08T13:42:34.927Z"
+  }
+},
+{
+  "model": "journals.corporateaffiliation",
+  "pk": 12,
+  "fields": {
+    "name": "DOAJ",
+    "logo": "",
+    "url": "https://doaj.org",
+    "display_order": 2,
+    "is_active": true,
+    "created_at": "2026-01-08T13:42:34.948Z",
+    "updated_at": "2026-01-08T13:42:34.948Z"
+  }
+},
+{
+  "model": "journals.corporateaffiliation",
+  "pk": 13,
+  "fields": {
+    "name": "PubMed",
+    "logo": "",
+    "url": "https://pubmed.ncbi.nlm.nih.gov",
+    "display_order": 3,
+    "is_active": true,
+    "created_at": "2026-01-08T13:42:34.981Z",
+    "updated_at": "2026-01-08T13:42:34.981Z"
+  }
+},
+{
+  "model": "journals.corporateaffiliation",
+  "pk": 15,
+  "fields": {
+    "name": "Springer Nature",
+    "logo": "",
+    "url": "https://www.springernature.com",
+    "display_order": 5,
+    "is_active": true,
+    "created_at": "2026-01-08T13:42:35.047Z",
+    "updated_at": "2026-01-08T13:42:35.047Z"
+  }
+},
+{
+  "model": "journals.corporateaffiliation",
+  "pk": 16,
+  "fields": {
+    "name": "ORCID",
+    "logo": "affiliations/logos/R_py6oGtu.png",
+    "url": "https://orcid.org",
+    "display_order": 6,
+    "is_active": true,
+    "created_at": "2026-01-08T13:42:35.065Z",
+    "updated_at": "2026-01-09T13:17:20.449Z"
+  }
+},
+{
+  "model": "journals.corporateaffiliation",
+  "pk": 17,
+  "fields": {
+    "name": "Google Scholar",
+    "logo": "",
+    "url": "https://scholar.google.com",
+    "display_order": 7,
+    "is_active": true,
+    "created_at": "2026-01-08T13:42:35.098Z",
+    "updated_at": "2026-01-08T13:42:35.098Z"
+  }
+},
+{
+  "model": "journals.corporateaffiliation",
+  "pk": 18,
+  "fields": {
+    "name": "ResearchGate",
+    "logo": "",
+    "url": "https://www.researchgate.net",
+    "display_order": 8,
+    "is_active": true,
+    "created_at": "2026-01-08T13:42:35.115Z",
+    "updated_at": "2026-01-08T13:42:35.115Z"
+  }
+},
+{
+  "model": "journals.announcement",
+  "pk": 2,
+  "fields": {
+    "title": "Call for Papers: Special Issue on AI in Healthcare",
+    "slug": "call-for-papers-ai-healthcare",
+    "excerpt": "We invite researchers to submit their work for our upcoming special issue exploring the applications of artificial intelligence in healthcare and medicine.",
+    "content": "<h1><strong>Unilever shares business update on growth priorities</strong></h1><p><br></p><p>Unilever highlighted its focus on strengthening core brands, improving operational efficiency, and accelerating innovation across Beauty &amp; Wellbeing, Personal Care, Home Care, and Nutrition. The company reaffirmed its commitment to sustainable sourcing and packaging improvements while driving long-term value for consumers and shareholders.</p><p>The company stated that continued investment in brands and simpler operating models remains central to its growth strategy.</p>",
+    "featured_image": "announcements/images/R.png",
+    "show_on_homepage": true,
+    "is_published": true,
+    "created_by": null,
+    "author_name": "Developer",
+    "published_at": "2025-12-28T00:00:00Z",
+    "created_at": "2026-01-08T13:52:29.036Z",
+    "updated_at": "2026-01-09T12:38:19.946Z"
+  }
+},
+{
+  "model": "journals.announcement",
+  "pk": 3,
+  "fields": {
+    "title": "New Journal Launch: Journal of Applied Physics",
+    "slug": "new-journal-launch-applied-physics",
+    "excerpt": "We are excited to announce the launch of our newest journal, the Journal of Applied Physics, covering cutting-edge research in applied physics and engineering.",
+    "content": "<p>Aethra Science Publishers is proud to announce the launch of the Journal of Applied Physics (JAP), a new peer-reviewed publication dedicated to advancing research in applied physics and engineering sciences.</p><h2>About the Journal</h2><p>The Journal of Applied Physics aims to publish high-quality original research that bridges fundamental physics with practical applications. The journal covers a broad spectrum of topics including:</p><ul><li>Condensed matter physics and materials science</li><li>Optical and photonic technologies</li><li>Nanotechnology and nanoscience</li><li>Energy conversion and storage</li><li>Quantum technologies</li><li>Computational physics</li></ul><h2>Editorial Leadership</h2><p>The journal is led by an internationally recognized editorial board comprising experts from leading research institutions worldwide.</p><h2>Submit Your Research</h2><p>We are now accepting submissions. Authors are encouraged to submit their innovative research for consideration. Publication fees are waived for the first year.</p>",
+    "featured_image": "announcements/images/Netflix-Emblem_NbfEYD2.jpg",
+    "show_on_homepage": true,
+    "is_published": true,
+    "created_by": null,
+    "author_name": "Publisher",
+    "published_at": "2025-12-20T00:00:00Z",
+    "created_at": "2026-01-08T13:52:29.048Z",
+    "updated_at": "2026-01-09T13:12:09.540Z"
+  }
+},
+{
+  "model": "journals.announcement",
+  "pk": 5,
+  "fields": {
+    "title": "Strategic Partnership with European Research Council",
+    "slug": "partnership-european-research-council",
+    "excerpt": "Aethra Science Publishers announces a strategic partnership with the European Research Council to enhance open access publishing for ERC-funded research.",
+    "content": "<p>Aethra Science Publishers is pleased to announce a strategic partnership with the European Research Council (ERC) to facilitate open access publishing for ERC-funded researchers.</p><h2>Partnership Highlights</h2><p>Under this agreement:</p><ul><li>ERC grant holders will have streamlined access to open access publishing across all Aethra journals</li><li>Article processing charges for ERC-funded research will be covered through institutional agreements</li><li>Enhanced visibility for ERC-funded research through dedicated collections and promotion</li><li>Compliance with Plan S and other open access mandates will be simplified</li></ul><h2>Supporting Excellence in Research</h2><p>This partnership reflects our commitment to supporting excellent research and ensuring that groundbreaking discoveries reach the widest possible audience. The ERC funds frontier research across all fields, and we are honored to help disseminate this important work.</p><h2>Getting Started</h2><p>ERC grant holders can contact our institutional partnerships team to learn more about the benefits available under this agreement.</p>",
+    "featured_image": "announcements/images/download_p8IZeaK.jpeg",
+    "show_on_homepage": true,
+    "is_published": true,
+    "created_by": null,
+    "author_name": "Admin",
+    "published_at": "2025-12-05T00:00:00Z",
+    "created_at": "2026-01-08T13:52:29.093Z",
+    "updated_at": "2026-01-09T13:21:39.062Z"
+  }
+},
+{
+  "model": "journals.announcement",
+  "pk": 6,
+  "fields": {
+    "title": "Renewable Energy Projects Expand in Rural Areas",
+    "slug": "renewable-energy-projects-expand-in-rural-areas",
+    "excerpt": "Several new solar and wind projects were approved to boost clean energy capacity.",
+    "content": "<p><strong>Project Details</strong></p><p>The developments include small-scale solar farms and community wind installations.</p><p><strong>Expected Impact</strong></p><p>Officials estimate the projects will supply power to thousands of homes while creating local jobs.</p><p><strong>Project Details</strong></p><p> The developments include small-scale solar farms and community wind installations designed to integrate with existing local grids. Construction will be phased to reduce disruption and prioritize locally sourced materials. Several projects will be owned or co-managed by regional cooperatives to ensure long-term community participation.</p><p><strong>Expected Impact</strong></p><p> Officials estimate the projects will supply power to thousands of homes while creating local jobs in construction, maintenance, and operations. Over time, the installations are expected to lower energy costs, reduce carbon emissions, and strengthen energy independence in rural areas.</p>",
+    "featured_image": "announcements/images/Tradingfloor-e07bf955732c43618a3fb6fc3d6d690a.jpg",
+    "show_on_homepage": false,
+    "is_published": true,
+    "created_by": 6,
+    "author_name": "Sohaib",
+    "published_at": "2026-01-09T00:00:00Z",
+    "created_at": "2026-01-09T12:51:30.556Z",
+    "updated_at": "2026-01-09T13:22:40.407Z"
+  }
+},
+{
+  "model": "journals.announcement",
+  "pk": 7,
+  "fields": {
+    "title": "New Health Report Highlights Rise in Preventive Care",
+    "slug": "new-health-report-highlights-rise-in-preventive-care",
+    "excerpt": "A new report shows an increase in routine health screenings and early checkups.",
+    "content": "<p><strong>Report Findings</strong></p><p> Participation in preventive care programs rose compared to last year, particularly among adults under 40.</p><p><strong>Why It Matters</strong></p><p> Experts note that early detection can reduce long-term healthcare costs and improve outcomes.</p>",
+    "featured_image": "announcements/images/download.jpeg",
+    "show_on_homepage": false,
+    "is_published": true,
+    "created_by": 6,
+    "author_name": "Frontend",
+    "published_at": "2026-01-09T00:00:00Z",
+    "created_at": "2026-01-09T13:11:41.920Z",
+    "updated_at": "2026-01-09T13:11:41.920Z"
+  }
+},
+{
+  "model": "volumes.volume",
+  "pk": 1,
+  "fields": {
+    "journal": 2,
+    "volume_number": 1,
+    "title": "",
+    "year": 2024,
+    "description": "",
+    "cover_image": "",
+    "is_active": true,
+    "created_at": "2025-12-28T23:40:07.928Z",
+    "updated_at": "2025-12-28T23:40:07.928Z"
+  }
+},
+{
+  "model": "volumes.volume",
+  "pk": 2,
+  "fields": {
+    "journal": 2,
+    "volume_number": 2,
+    "title": "",
+    "year": 2023,
+    "description": "",
+    "cover_image": "",
+    "is_active": true,
+    "created_at": "2025-12-28T23:40:07.953Z",
+    "updated_at": "2025-12-28T23:40:07.953Z"
+  }
+},
+{
+  "model": "volumes.volume",
+  "pk": 3,
+  "fields": {
+    "journal": 1,
+    "volume_number": 1,
+    "title": "",
+    "year": 2024,
+    "description": "",
+    "cover_image": "",
+    "is_active": true,
+    "created_at": "2025-12-28T23:40:07.979Z",
+    "updated_at": "2025-12-28T23:40:07.979Z"
+  }
+},
+{
+  "model": "volumes.volume",
+  "pk": 4,
+  "fields": {
+    "journal": 1,
+    "volume_number": 2,
+    "title": "",
+    "year": 2023,
+    "description": "",
+    "cover_image": "",
+    "is_active": true,
+    "created_at": "2025-12-28T23:40:08.002Z",
+    "updated_at": "2025-12-28T23:40:08.002Z"
+  }
+},
+{
+  "model": "volumes.volume",
+  "pk": 5,
+  "fields": {
+    "journal": 3,
+    "volume_number": 1,
+    "title": "",
+    "year": 2024,
+    "description": "",
+    "cover_image": "",
+    "is_active": true,
+    "created_at": "2025-12-28T23:40:08.030Z",
+    "updated_at": "2025-12-28T23:40:08.030Z"
+  }
+},
+{
+  "model": "volumes.volume",
+  "pk": 6,
+  "fields": {
+    "journal": 3,
+    "volume_number": 2,
+    "title": "",
+    "year": 2023,
+    "description": "",
+    "cover_image": "",
+    "is_active": true,
+    "created_at": "2025-12-28T23:40:08.051Z",
+    "updated_at": "2025-12-28T23:40:08.051Z"
+  }
+},
+{
+  "model": "volumes.volume",
+  "pk": 7,
+  "fields": {
+    "journal": 4,
+    "volume_number": 1,
+    "title": "",
+    "year": 2024,
+    "description": "",
+    "cover_image": "",
+    "is_active": true,
+    "created_at": "2026-01-02T10:26:52.255Z",
+    "updated_at": "2026-01-02T10:26:52.255Z"
+  }
+},
+{
+  "model": "volumes.volume",
+  "pk": 8,
+  "fields": {
+    "journal": 4,
+    "volume_number": 2,
+    "title": "",
+    "year": 2023,
+    "description": "",
+    "cover_image": "",
+    "is_active": true,
+    "created_at": "2026-01-02T10:26:52.291Z",
+    "updated_at": "2026-01-02T10:26:52.291Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 1,
+  "fields": {
+    "volume": 1,
+    "issue_number": 1,
+    "title": "",
+    "publication_date": "2025-12-29",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2025-12-28T23:40:07.928Z",
+    "updated_at": "2025-12-28T23:40:07.928Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 2,
+  "fields": {
+    "volume": 1,
+    "issue_number": 2,
+    "title": "",
+    "publication_date": "2025-09-30",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": true,
+    "created_at": "2025-12-28T23:40:07.948Z",
+    "updated_at": "2025-12-28T23:40:07.948Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 3,
+  "fields": {
+    "volume": 2,
+    "issue_number": 1,
+    "title": "",
+    "publication_date": "2025-07-02",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2025-12-28T23:40:07.958Z",
+    "updated_at": "2025-12-28T23:40:07.958Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 4,
+  "fields": {
+    "volume": 2,
+    "issue_number": 2,
+    "title": "",
+    "publication_date": "2025-04-03",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2025-12-28T23:40:07.958Z",
+    "updated_at": "2025-12-28T23:40:07.958Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 5,
+  "fields": {
+    "volume": 3,
+    "issue_number": 1,
+    "title": "",
+    "publication_date": "2025-12-29",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2025-12-28T23:40:07.982Z",
+    "updated_at": "2025-12-28T23:40:07.982Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 6,
+  "fields": {
+    "volume": 3,
+    "issue_number": 2,
+    "title": "",
+    "publication_date": "2025-09-30",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": true,
+    "created_at": "2025-12-28T23:40:07.995Z",
+    "updated_at": "2025-12-28T23:40:07.995Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 7,
+  "fields": {
+    "volume": 4,
+    "issue_number": 1,
+    "title": "",
+    "publication_date": "2025-07-02",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2025-12-28T23:40:08.012Z",
+    "updated_at": "2025-12-28T23:40:08.012Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 8,
+  "fields": {
+    "volume": 4,
+    "issue_number": 2,
+    "title": "",
+    "publication_date": "2025-04-03",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2025-12-28T23:40:08.013Z",
+    "updated_at": "2025-12-28T23:40:08.013Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 9,
+  "fields": {
+    "volume": 5,
+    "issue_number": 1,
+    "title": "",
+    "publication_date": "2025-12-29",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2025-12-28T23:40:08.036Z",
+    "updated_at": "2025-12-28T23:40:08.036Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 10,
+  "fields": {
+    "volume": 5,
+    "issue_number": 2,
+    "title": "",
+    "publication_date": "2025-09-30",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": true,
+    "created_at": "2025-12-28T23:40:08.036Z",
+    "updated_at": "2025-12-28T23:40:08.036Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 11,
+  "fields": {
+    "volume": 6,
+    "issue_number": 1,
+    "title": "",
+    "publication_date": "2025-07-02",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2025-12-28T23:40:08.062Z",
+    "updated_at": "2025-12-28T23:40:08.062Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 12,
+  "fields": {
+    "volume": 6,
+    "issue_number": 2,
+    "title": "",
+    "publication_date": "2025-04-03",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2025-12-28T23:40:08.067Z",
+    "updated_at": "2025-12-28T23:40:08.067Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 13,
+  "fields": {
+    "volume": 7,
+    "issue_number": 1,
+    "title": "",
+    "publication_date": "2026-01-02",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2026-01-02T10:26:52.267Z",
+    "updated_at": "2026-01-02T10:26:52.267Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 14,
+  "fields": {
+    "volume": 7,
+    "issue_number": 2,
+    "title": "",
+    "publication_date": "2025-10-04",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": true,
+    "created_at": "2026-01-02T10:26:52.283Z",
+    "updated_at": "2026-01-02T10:26:52.283Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 15,
+  "fields": {
+    "volume": 8,
+    "issue_number": 1,
+    "title": "",
+    "publication_date": "2025-07-06",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2026-01-02T10:26:52.305Z",
+    "updated_at": "2026-01-02T10:26:52.305Z"
+  }
+},
+{
+  "model": "issues.issue",
+  "pk": 16,
+  "fields": {
+    "volume": 8,
+    "issue_number": 2,
+    "title": "",
+    "publication_date": "2025-04-07",
+    "description": "",
+    "cover_image": "",
+    "is_special_issue": false,
+    "special_issue_title": "",
+    "is_active": true,
+    "is_current": false,
+    "created_at": "2026-01-02T10:26:52.316Z",
+    "updated_at": "2026-01-02T10:26:52.316Z"
+  }
+},
+{
+  "model": "articles.author",
+  "pk": 1,
+  "fields": {
+    "first_name": "John",
+    "last_name": "Smith",
+    "email": "john.smith@university.edu",
+    "orcid_id": "",
+    "affiliation": "Harvard University",
+    "department": "",
+    "country": "USA",
+    "bio": "",
+    "created_at": "2025-12-28T23:40:07.896Z",
+    "updated_at": "2025-12-28T23:40:07.896Z"
+  }
+},
+{
+  "model": "articles.author",
+  "pk": 2,
+  "fields": {
+    "first_name": "Maria",
+    "last_name": "Garcia",
+    "email": "maria.garcia@research.org",
+    "orcid_id": "",
+    "affiliation": "MIT",
+    "department": "",
+    "country": "USA",
+    "bio": "",
+    "created_at": "2025-12-28T23:40:07.901Z",
+    "updated_at": "2025-12-28T23:40:07.901Z"
+  }
+},
+{
+  "model": "articles.author",
+  "pk": 3,
+  "fields": {
+    "first_name": "David",
+    "last_name": "Lee",
+    "email": "david.lee@stanford.edu",
+    "orcid_id": "",
+    "affiliation": "Stanford University",
+    "department": "",
+    "country": "USA",
+    "bio": "",
+    "created_at": "2025-12-28T23:40:07.910Z",
+    "updated_at": "2025-12-28T23:40:07.910Z"
+  }
+},
+{
+  "model": "articles.author",
+  "pk": 4,
+  "fields": {
+    "first_name": "Emma",
+    "last_name": "Wilson",
+    "email": "emma.wilson@oxford.ac.uk",
+    "orcid_id": "",
+    "affiliation": "University of Oxford",
+    "department": "",
+    "country": "UK",
+    "bio": "",
+    "created_at": "2025-12-28T23:40:07.915Z",
+    "updated_at": "2025-12-28T23:40:07.915Z"
+  }
+},
+{
+  "model": "articles.author",
+  "pk": 5,
+  "fields": {
+    "first_name": "Hiroshi",
+    "last_name": "Tanaka",
+    "email": "h.tanaka@tokyo-u.ac.jp",
+    "orcid_id": "",
+    "affiliation": "University of Tokyo",
+    "department": "",
+    "country": "Japan",
+    "bio": "",
+    "created_at": "2025-12-28T23:40:07.922Z",
+    "updated_at": "2025-12-28T23:40:07.922Z"
+  }
+},
+{
+  "model": "articles.article",
+  "pk": 1,
+  "fields": {
+    "issue": 2,
+    "title": "Novel Approaches to Gene Editing Using CRISPR-Cas9 Technology",
+    "slug": "article-1",
+    "doi": "",
+    "article_type": "research",
+    "status": "published",
+    "abstract": "This study presents novel approaches to gene editing using CRISPR-Cas9 technology. We demonstrate improved efficiency and reduced off-target effects through modified guide RNA sequences.",
+    "keywords": [
+      "research",
+      "science",
+      "innovation"
+    ],
+    "page_start": "1",
+    "page_end": "10",
+    "article_number": "",
+    "received_date": null,
+    "revised_date": null,
+    "accepted_date": null,
+    "published_date": "2025-12-29",
+    "is_open_access": true,
+    "is_featured": true,
+    "view_count": 8,
+    "download_count": 0,
+    "meta_title": "Novel Approaches to Gene Editing Using CRISPR-Cas9 Technology",
+    "meta_description": "",
+    "created_at": "2025-12-28T23:40:08.075Z",
+    "updated_at": "2025-12-28T23:40:08.075Z"
+  }
+},
+{
+  "model": "articles.article",
+  "pk": 2,
+  "fields": {
+    "issue": 6,
+    "title": "Machine Learning Applications in Drug Discovery",
+    "slug": "article-2",
+    "doi": "",
+    "article_type": "research",
+    "status": "published",
+    "abstract": "We review recent advances in machine learning applications for drug discovery, including deep learning models for molecular property prediction and generative models for de novo drug design.",
+    "keywords": [
+      "research",
+      "science",
+      "innovation"
+    ],
+    "page_start": "11",
+    "page_end": "20",
+    "article_number": "",
+    "received_date": null,
+    "revised_date": null,
+    "accepted_date": null,
+    "published_date": "2025-12-14",
+    "is_open_access": true,
+    "is_featured": true,
+    "view_count": 0,
+    "download_count": 0,
+    "meta_title": "Machine Learning Applications in Drug Discovery",
+    "meta_description": "",
+    "created_at": "2025-12-28T23:40:08.106Z",
+    "updated_at": "2025-12-28T23:40:08.106Z"
+  }
+},
+{
+  "model": "articles.article",
+  "pk": 3,
+  "fields": {
+    "issue": 10,
+    "title": "Climate Change Effects on Biodiversity: A Comprehensive Review",
+    "slug": "article-3",
+    "doi": "",
+    "article_type": "research",
+    "status": "published",
+    "abstract": "This comprehensive review examines the effects of climate change on global biodiversity, analyzing data from over 100 ecosystems across five continents.",
+    "keywords": [
+      "research",
+      "science",
+      "innovation"
+    ],
+    "page_start": "21",
+    "page_end": "30",
+    "article_number": "",
+    "received_date": null,
+    "revised_date": null,
+    "accepted_date": null,
+    "published_date": "2025-11-29",
+    "is_open_access": true,
+    "is_featured": true,
+    "view_count": 0,
+    "download_count": 0,
+    "meta_title": "Climate Change Effects on Biodiversity: A Comprehensive Review",
+    "meta_description": "",
+    "created_at": "2025-12-28T23:40:08.144Z",
+    "updated_at": "2025-12-28T23:40:08.144Z"
+  }
+},
+{
+  "model": "articles.article",
+  "pk": 4,
+  "fields": {
+    "issue": 1,
+    "title": "Advances in Quantum Computing Algorithms",
+    "slug": "article-4",
+    "doi": "",
+    "article_type": "research",
+    "status": "published",
+    "abstract": "We present new quantum computing algorithms that achieve polynomial speedup over classical methods for optimization problems in logistics and scheduling.",
+    "keywords": [
+      "research",
+      "science",
+      "innovation"
+    ],
+    "page_start": "31",
+    "page_end": "40",
+    "article_number": "",
+    "received_date": null,
+    "revised_date": null,
+    "accepted_date": null,
+    "published_date": "2025-11-14",
+    "is_open_access": true,
+    "is_featured": false,
+    "view_count": 0,
+    "download_count": 0,
+    "meta_title": "Advances in Quantum Computing Algorithms",
+    "meta_description": "",
+    "created_at": "2025-12-28T23:40:08.167Z",
+    "updated_at": "2025-12-28T23:40:08.167Z"
+  }
+},
+{
+  "model": "articles.article",
+  "pk": 5,
+  "fields": {
+    "issue": 5,
+    "title": "Understanding Neural Network Architectures for Medical Imaging",
+    "slug": "article-5",
+    "doi": "",
+    "article_type": "research",
+    "status": "published",
+    "abstract": "This paper explores various neural network architectures for medical imaging analysis, comparing CNN, ResNet, and transformer-based models.",
+    "keywords": [
+      "research",
+      "science",
+      "innovation"
+    ],
+    "page_start": "41",
+    "page_end": "50",
+    "article_number": "",
+    "received_date": null,
+    "revised_date": null,
+    "accepted_date": null,
+    "published_date": "2025-10-30",
+    "is_open_access": true,
+    "is_featured": false,
+    "view_count": 0,
+    "download_count": 0,
+    "meta_title": "Understanding Neural Network Architectures for Medical Imaging",
+    "meta_description": "",
+    "created_at": "2025-12-28T23:40:08.203Z",
+    "updated_at": "2025-12-28T23:40:08.203Z"
+  }
+},
+{
+  "model": "articles.article",
+  "pk": 6,
+  "fields": {
+    "issue": 9,
+    "title": "The Role of Microbiome in Human Health",
+    "slug": "article-6",
+    "doi": "",
+    "article_type": "research",
+    "status": "published",
+    "abstract": "We investigate the role of gut microbiome in human health, presenting findings from a longitudinal study of 1,000 participants over 5 years.",
+    "keywords": [
+      "research",
+      "science",
+      "innovation"
+    ],
+    "page_start": "51",
+    "page_end": "60",
+    "article_number": "",
+    "received_date": null,
+    "revised_date": null,
+    "accepted_date": null,
+    "published_date": "2025-10-15",
+    "is_open_access": true,
+    "is_featured": false,
+    "view_count": 0,
+    "download_count": 0,
+    "meta_title": "The Role of Microbiome in Human Health",
+    "meta_description": "",
+    "created_at": "2025-12-28T23:40:08.218Z",
+    "updated_at": "2025-12-28T23:40:08.218Z"
+  }
+},
+{
+  "model": "articles.article",
+  "pk": 7,
+  "fields": {
+    "issue": 14,
+    "title": "Advances in Quantum Computing Algorithms",
+    "slug": "article-4",
+    "doi": "",
+    "article_type": "research",
+    "status": "published",
+    "abstract": "We present new quantum computing algorithms that achieve polynomial speedup over classical methods for optimization problems in logistics and scheduling.",
+    "keywords": [
+      "research",
+      "science",
+      "innovation"
+    ],
+    "page_start": "31",
+    "page_end": "40",
+    "article_number": "",
+    "received_date": null,
+    "revised_date": null,
+    "accepted_date": null,
+    "published_date": "2025-11-18",
+    "is_open_access": true,
+    "is_featured": false,
+    "view_count": 0,
+    "download_count": 0,
+    "meta_title": "Advances in Quantum Computing Algorithms",
+    "meta_description": "",
+    "created_at": "2026-01-02T10:26:52.353Z",
+    "updated_at": "2026-01-02T10:26:52.353Z"
+  }
+},
+{
+  "model": "articles.article",
+  "pk": 8,
+  "fields": {
+    "issue": 1,
+    "title": "Understanding Neural Network Architectures for Medical Imaging",
+    "slug": "article-5",
+    "doi": "",
+    "article_type": "research",
+    "status": "published",
+    "abstract": "This paper explores various neural network architectures for medical imaging analysis, comparing CNN, ResNet, and transformer-based models.",
+    "keywords": [
+      "research",
+      "science",
+      "innovation"
+    ],
+    "page_start": "41",
+    "page_end": "50",
+    "article_number": "",
+    "received_date": null,
+    "revised_date": null,
+    "accepted_date": null,
+    "published_date": "2025-11-03",
+    "is_open_access": true,
+    "is_featured": false,
+    "view_count": 0,
+    "download_count": 0,
+    "meta_title": "Understanding Neural Network Architectures for Medical Imaging",
+    "meta_description": "",
+    "created_at": "2026-01-02T10:26:52.399Z",
+    "updated_at": "2026-01-02T10:26:52.399Z"
+  }
+},
+{
+  "model": "articles.article",
+  "pk": 9,
+  "fields": {
+    "issue": 5,
+    "title": "The Role of Microbiome in Human Health",
+    "slug": "article-6",
+    "doi": "",
+    "article_type": "research",
+    "status": "published",
+    "abstract": "We investigate the role of gut microbiome in human health, presenting findings from a longitudinal study of 1,000 participants over 5 years.",
+    "keywords": [
+      "research",
+      "science",
+      "innovation"
+    ],
+    "page_start": "51",
+    "page_end": "60",
+    "article_number": "",
+    "received_date": null,
+    "revised_date": null,
+    "accepted_date": null,
+    "published_date": "2025-10-19",
+    "is_open_access": true,
+    "is_featured": false,
+    "view_count": 2,
+    "download_count": 0,
+    "meta_title": "The Role of Microbiome in Human Health",
+    "meta_description": "",
+    "created_at": "2026-01-02T10:26:52.454Z",
+    "updated_at": "2026-01-02T10:26:52.454Z"
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 1,
+  "fields": {
+    "article": 1,
+    "author": 1,
+    "author_order": 1,
+    "is_corresponding": true,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 2,
+  "fields": {
+    "article": 1,
+    "author": 2,
+    "author_order": 2,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 3,
+  "fields": {
+    "article": 1,
+    "author": 3,
+    "author_order": 3,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 4,
+  "fields": {
+    "article": 2,
+    "author": 1,
+    "author_order": 1,
+    "is_corresponding": true,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 5,
+  "fields": {
+    "article": 2,
+    "author": 2,
+    "author_order": 2,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 6,
+  "fields": {
+    "article": 2,
+    "author": 3,
+    "author_order": 3,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 7,
+  "fields": {
+    "article": 3,
+    "author": 1,
+    "author_order": 1,
+    "is_corresponding": true,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 8,
+  "fields": {
+    "article": 3,
+    "author": 2,
+    "author_order": 2,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 9,
+  "fields": {
+    "article": 3,
+    "author": 3,
+    "author_order": 3,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 10,
+  "fields": {
+    "article": 4,
+    "author": 1,
+    "author_order": 1,
+    "is_corresponding": true,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 11,
+  "fields": {
+    "article": 4,
+    "author": 2,
+    "author_order": 2,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 12,
+  "fields": {
+    "article": 4,
+    "author": 3,
+    "author_order": 3,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 13,
+  "fields": {
+    "article": 5,
+    "author": 1,
+    "author_order": 1,
+    "is_corresponding": true,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 14,
+  "fields": {
+    "article": 5,
+    "author": 2,
+    "author_order": 2,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 15,
+  "fields": {
+    "article": 5,
+    "author": 3,
+    "author_order": 3,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 16,
+  "fields": {
+    "article": 6,
+    "author": 1,
+    "author_order": 1,
+    "is_corresponding": true,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 17,
+  "fields": {
+    "article": 6,
+    "author": 2,
+    "author_order": 2,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 18,
+  "fields": {
+    "article": 6,
+    "author": 3,
+    "author_order": 3,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 19,
+  "fields": {
+    "article": 7,
+    "author": 1,
+    "author_order": 1,
+    "is_corresponding": true,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 20,
+  "fields": {
+    "article": 7,
+    "author": 2,
+    "author_order": 2,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 21,
+  "fields": {
+    "article": 7,
+    "author": 3,
+    "author_order": 3,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 22,
+  "fields": {
+    "article": 8,
+    "author": 1,
+    "author_order": 1,
+    "is_corresponding": true,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 23,
+  "fields": {
+    "article": 8,
+    "author": 2,
+    "author_order": 2,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 24,
+  "fields": {
+    "article": 8,
+    "author": 3,
+    "author_order": 3,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 25,
+  "fields": {
+    "article": 9,
+    "author": 1,
+    "author_order": 1,
+    "is_corresponding": true,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 26,
+  "fields": {
+    "article": 9,
+    "author": 2,
+    "author_order": 2,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "articles.articleauthor",
+  "pk": 27,
+  "fields": {
+    "article": 9,
+    "author": 3,
+    "author_order": 3,
+    "is_corresponding": false,
+    "author_contribution": "",
+    "affiliation_override": ""
+  }
+},
+{
+  "model": "media_files.sitesettings",
+  "pk": 1,
+  "fields": {
+    "site_name": "Science Publishers",
+    "site_description": "A comprehensive platform for academic journal publishing",
+    "tagline": "Advancing Knowledge Through Open Research",
+    "logo": "",
+    "favicon": "",
+    "contact_email": "info@sciencepublishers.com",
+    "contact_address": "",
+    "contact_phone": "",
+    "social_links": {},
+    "footer_text": "",
+    "copyright_text": "",
+    "meta_keywords": "",
+    "meta_description": "",
+    "google_analytics_id": "",
+    "updated_at": "2025-12-28T23:40:07.806Z"
+  }
+}
+]

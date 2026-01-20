@@ -97,7 +97,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
+      {/* Header */}
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <div className="p-2 bg-academic-navy rounded-lg">
@@ -118,7 +118,7 @@ export default function AdminSettingsPage() {
 
           <div className="space-y-6">
             {/* Site Logo */}
-            <div>
+        <div>
               <label className="block text-sm font-semibold text-gray-800 mb-3">
                 Site Logo
               </label>
@@ -131,7 +131,7 @@ export default function AdminSettingsPage() {
                       fill
                       className="object-contain p-2 bg-white"
                     />
-                    <button
+        <button
                       type="button"
                       onClick={() => {
                         setLogoFile(null);
@@ -139,9 +139,9 @@ export default function AdminSettingsPage() {
                         if (logoInputRef.current) logoInputRef.current.value = '';
                       }}
                       className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                    >
+        >
                       <FiX className="w-3 h-3" />
-                    </button>
+        </button>
                   </div>
                 )}
                 <div className="w-full max-w-md mx-auto">
@@ -164,7 +164,7 @@ export default function AdminSettingsPage() {
                   />
                 </div>
               </div>
-            </div>
+      </div>
 
             {/* Favicon */}
             <div>
@@ -204,7 +204,7 @@ export default function AdminSettingsPage() {
                     </p>
                     <p className="text-xs text-gray-500">ICO, PNG, JPG (Recommended: 32x32px or 16x16px)</p>
                   </div>
-                  <input
+              <input
                     ref={faviconInputRef}
                     type="file"
                     accept="image/x-icon,image/png,image/jpeg,image/jpg,.ico,.png,.jpg,.jpeg"
@@ -222,7 +222,7 @@ export default function AdminSettingsPage() {
           <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-200">
             <FiGlobe className="w-5 h-5 text-academic-blue" />
             <h2 className="text-xl font-bold text-gray-900">General</h2>
-          </div>
+            </div>
 
           <div className="space-y-5 max-w-2xl mx-auto">
             <div>
@@ -260,7 +260,7 @@ export default function AdminSettingsPage() {
             <FiMail className="w-5 h-5 text-academic-blue" />
             <h2 className="text-xl font-bold text-gray-900">Contact Information</h2>
           </div>
-
+          
           <div className="space-y-5 max-w-2xl mx-auto">
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-2">
@@ -322,7 +322,7 @@ export default function AdminSettingsPage() {
               </>
             )}
           </button>
-        </div>
+            </div>
       </form>
       </div>
     </div>
