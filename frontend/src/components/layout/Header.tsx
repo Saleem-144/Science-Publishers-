@@ -19,6 +19,7 @@ const navLinks: NavLink[] = [
     label: 'About us',
     children: [
       { href: '/about', label: 'About Aethra science publisher' },
+      { href: '/about/open-access-policy', label: 'Open access policy' },
       { href: '/contact', label: 'Contact us' },
     ],
   },
@@ -55,7 +56,19 @@ const navLinks: NavLink[] = [
           { href: '/information/for-editors-and-reviewers/publication-process', label: 'Publication process' },
         ],
       },
-      { href: '/information/ethical-guidelines', label: 'Ethical guidelines' },
+      {
+        label: 'Ethical guidelines',
+        children: [
+          { href: '/information/ethical-guidelines/allegations-from-whistleblowers', label: 'Allegations from whistleblowers' },
+          { href: '/information/ethical-guidelines/aethra-advisory-board', label: 'Aethra advisory board' },
+          { href: '/information/ethical-guidelines/conflict-of-interest', label: 'Conflict of interest' },
+          { href: '/information/ethical-guidelines/fabricating-and-stating-false-information', label: 'Fabricating and stating false information' },
+          { href: '/information/ethical-guidelines/plagiarism-prevention', label: 'Plagiarism prevention' },
+          { href: '/information/ethical-guidelines/publishing-ethics', label: 'Publishing ethics' },
+          { href: '/information/ethical-guidelines/post-publication-discussions-and-corrections', label: 'Post publication discussions and corrections' },
+          { href: '/information/ethical-guidelines/research-misconduct', label: 'Research misconduct' },
+        ],
+      },
     ],
   },
 ];
