@@ -91,8 +91,9 @@ class Journal(models.Model):
     
     # Descriptions
     description = models.TextField(
+        'About Journal',
         blank=True,
-        help_text='Full description of the journal'
+        help_text='Full description/About section of the journal (supports HTML)'
     )
     short_description = models.TextField(
         max_length=500,
@@ -150,6 +151,13 @@ class Journal(models.Model):
         blank=True,
         help_text='Name of the Editor-in-Chief'
     )
+    editor_in_chief_image = models.ImageField(
+        'Editor-in-Chief Photo',
+        upload_to='journals/editors/',
+        blank=True,
+        null=True,
+        help_text='Photo of the Editor-in-Chief for avatar display'
+    )
     publisher = models.CharField(
         max_length=200,
         blank=True,
@@ -171,6 +179,14 @@ class Journal(models.Model):
         blank=True,
         help_text='Journal aims and scope (can include HTML)'
     )
+    indexing = models.TextField(
+        blank=True,
+        help_text='Indexing information (can include HTML)'
+    )
+    open_thematic_issue = models.TextField(
+        blank=True,
+        help_text='Open thematic issue information (can include HTML)'
+    )
     author_guidelines = models.TextField(
         blank=True,
         help_text='Guidelines for authors submitting manuscripts'
@@ -178,6 +194,20 @@ class Journal(models.Model):
     peer_review_policy = models.TextField(
         blank=True,
         help_text='Description of the peer review process'
+    )
+    
+    # Actions & Files
+    submission_url = models.URLField(
+        'Submission URL',
+        blank=True,
+        help_text='URL for submitting work (e.g. OJS or external form)'
+    )
+    flyer_pdf = models.FileField(
+        'Journal Flyer (PDF)',
+        upload_to='journals/flyers/',
+        blank=True,
+        null=True,
+        help_text='PDF flyer for the journal'
     )
     
     # Contact
@@ -390,3 +420,129 @@ class Announcement(models.Model):
                 counter += 1
             self.slug = slug
         super().save(*args, **kwargs)
+
+
+class EditorialBoardMember(models.Model):
+    """
+    Structured information for editorial board members.
+    Grouped by designation on the frontend.
+    """
+    journal = models.ForeignKey(
+        Journal,
+        on_delete=models.CASCADE,
+        related_name='editorial_board_members',
+        help_text='The journal this member belongs to'
+    )
+    designation = models.CharField(
+        max_length=200,
+        help_text='Member role (e.g., Editor-in-Chief, Associate Editor)'
+    )
+    name = models.CharField(max_length=255)
+    image = models.ImageField(
+        upload_to='editorial_board/',
+        blank=True,
+        null=True,
+        help_text='Member photo'
+    )
+    department = models.CharField(max_length=255, blank=True)
+    institution = models.CharField(
+        'School/College/University',
+        max_length=255,
+        blank=True
+    )
+    country = models.CharField(max_length=100, blank=True)
+    description = models.TextField(
+        blank=True,
+        help_text='Brief bio or description (supports HTML/Rich Text)'
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text='Order within the designation or overall'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'editorial board member'
+        verbose_name_plural = 'editorial board members'
+        ordering = ['display_order', 'name']
+
+    def __str__(self):
+        return f"{self.name} ({self.designation}) - {self.journal.title}"
+
+
+class CTACard(models.Model):
+    """
+    Call to Action cards for the homepage hero section.
+    Simplified version: only image and link.
+    """
+    image = models.ImageField(
+        upload_to='cta_cards/',
+        help_text='Image to display on the card'
+    )
+    link_url = models.URLField(
+        'Link URL',
+        default='#',
+        help_text='URL to redirect when the card is clicked'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text='Show this card on the homepage?'
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text='Order of appearance (lower numbers first)'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'CTA card'
+        verbose_name_plural = 'CTA cards'
+        ordering = ['display_order', 'created_at']
+    
+    def __str__(self):
+        return f"CTA Card {self.id} - {self.link_url}"
+
+
+class JournalIndexing(models.Model):
+    """
+    Indexing entries for a journal (e.g. Scopus, PubMed).
+    """
+    journal = models.ForeignKey(
+        Journal,
+        on_delete=models.CASCADE,
+        related_name='indexing_entries',
+        help_text='The journal this indexing entry belongs to'
+    )
+    title = models.CharField(
+        max_length=200,
+        help_text='Name of the indexing service (e.g. Scopus)'
+    )
+    logo = models.ImageField(
+        upload_to='journals/indexing_logos/',
+        blank=True,
+        null=True,
+        help_text='Logo of the indexing service'
+    )
+    url = models.URLField(
+        blank=True,
+        help_text='Link to the journal listing on this indexing service'
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text='Order of appearance'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'journal indexing'
+        verbose_name_plural = 'journal indexings'
+        ordering = ['display_order', 'title']
+
+    def __str__(self):
+        return f"{self.title} - {self.journal.title}"

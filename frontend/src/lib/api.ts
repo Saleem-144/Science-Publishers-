@@ -4,7 +4,7 @@
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://4kzwh7j8-8000.euw.devtunnels.ms/api/v1';
 
 // Create axios instance
 export const api: AxiosInstance = axios.create({
@@ -528,6 +528,104 @@ export const affiliationsApi = {
     const response = await api.delete(`/journals/admin/affiliations/${id}/`);
     return response.data;
   },
+};
+
+// =============================================================================
+// Editorial Board API
+// =============================================================================
+
+export const editorialBoardApi = {
+  list: async (journalId: number) => {
+    const response = await api.get('/journals/admin/editorial-board/', {
+      params: { journal: journalId }
+    });
+    return response.data;
+  },
+  create: async (data: FormData) => {
+    const response = await api.post('/journals/admin/editorial-board/create/', data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+  update: async (id: number, data: FormData) => {
+    const response = await api.patch(`/journals/admin/editorial-board/${id}/`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+  delete: async (id: number) => {
+    const response = await api.delete(`/journals/admin/editorial-board/${id}/`);
+    return response.data;
+  }
+};
+
+// =============================================================================
+// CTA Cards API
+// =============================================================================
+
+export const ctaCardsApi = {
+  // Public - get all active cards
+  list: async () => {
+    const response = await api.get('/journals/cta-cards/');
+    return response.data;
+  },
+  
+  // Admin - get all cards
+  adminList: async () => {
+    const response = await api.get('/journals/admin/cta-cards/');
+    return response.data;
+  },
+  
+  // Admin - create card
+  create: async (formData: FormData) => {
+    const response = await api.post('/journals/admin/cta-cards/create/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  
+  // Admin - update card
+  update: async (id: number, formData: FormData) => {
+    const response = await api.patch(`/journals/admin/cta-cards/${id}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  
+  // Admin - delete card
+  delete: async (id: number) => {
+    const response = await api.delete(`/journals/admin/cta-cards/${id}/`);
+    return response.data;
+  },
+};
+
+// =============================================================================
+// Journal Indexing API
+// =============================================================================
+
+export const indexingApi = {
+  list: async (journalId: number) => {
+    const response = await api.get('/journals/admin/indexing/', {
+      params: { journal: journalId }
+    });
+    return response.data;
+  },
+  create: async (data: FormData) => {
+    const response = await api.post('/journals/admin/indexing/create/', data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+  update: async (id: number, data: FormData) => {
+    const response = await api.patch(`/journals/admin/indexing/${id}/`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+  delete: async (id: number) => {
+    const response = await api.delete(`/journals/admin/indexing/${id}/`);
+    return response.data;
+  }
 };
 
 export default api;

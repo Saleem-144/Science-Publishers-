@@ -1,7 +1,86 @@
 """Serializers for journals app."""
 
 from rest_framework import serializers
-from .models import Subject, Journal, Announcement, CorporateAffiliation
+from .models import Subject, Journal, Announcement, CorporateAffiliation, EditorialBoardMember, CTACard, JournalIndexing
+
+
+class JournalIndexingSerializer(serializers.ModelSerializer):
+    """Serializer for Journal Indexing entries."""
+    
+    logo_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = JournalIndexing
+        fields = [
+            'id', 'journal', 'title', 'logo', 'logo_url', 'url', 'display_order'
+        ]
+        read_only_fields = ['id', 'logo_url']
+
+    def get_logo_url(self, obj):
+        if obj.logo:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.logo.url)
+            return obj.logo.url
+        return None
+
+
+class EditorialBoardMemberSerializer(serializers.ModelSerializer):
+    """Serializer for Editorial Board Member."""
+    
+    image_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = EditorialBoardMember
+        fields = [
+            'id', 'journal', 'designation', 'name', 
+            'image', 'image_url', 'department', 
+            'institution', 'country', 'description', 
+            'display_order'
+        ]
+        read_only_fields = ['id', 'image_url']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
+
+class CTACardSerializer(serializers.ModelSerializer):
+    """Serializer for CTA Card listing."""
+    
+    image_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CTACard
+        fields = [
+            'id', 'image', 'image_url', 'link_url', 
+            'is_active', 'display_order', 
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'image_url', 'created_at', 'updated_at']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
+
+class CTACardCreateUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for creating/updating CTA Cards."""
+    
+    class Meta:
+        model = CTACard
+        fields = [
+            'id', 'image', 'link_url', 'is_active', 'display_order'
+        ]
+        read_only_fields = ['id']
 
 
 class SubjectSerializer(serializers.ModelSerializer):
@@ -77,6 +156,13 @@ class JournalDetailSerializer(serializers.ModelSerializer):
     total_volumes = serializers.IntegerField(read_only=True)
     total_articles = serializers.IntegerField(read_only=True)
     current_issue = serializers.SerializerMethodField()
+    editorial_board_members = serializers.SerializerMethodField()
+    indexing_entries = serializers.SerializerMethodField()
+    flyer_pdf = serializers.SerializerMethodField()
+    cover_image = serializers.SerializerMethodField()
+    logo = serializers.SerializerMethodField()
+    favicon = serializers.SerializerMethodField()
+    editor_in_chief_image = serializers.SerializerMethodField()
     
     class Meta:
         model = Journal
@@ -86,16 +172,51 @@ class JournalDetailSerializer(serializers.ModelSerializer):
             'issn_print', 'issn_online',
             'cover_image', 'logo', 'favicon',
             'primary_color', 'secondary_color',
-            'editor_in_chief', 'publisher', 'founding_year', 'frequency',
-            'aims_and_scope', 'author_guidelines', 'peer_review_policy',
+            'editor_in_chief', 'editor_in_chief_image',
+            'publisher', 'founding_year', 'frequency',
+            'aims_and_scope', 'indexing', 'open_thematic_issue',
+            'author_guidelines', 'peer_review_policy',
+            'submission_url', 'flyer_pdf',
             'contact_email', 'website_url',
             'subjects', 'subject_ids',
             'is_active', 'is_featured',
             'meta_title', 'meta_description', 'meta_keywords',
             'total_volumes', 'total_articles', 'current_issue',
+            'editorial_board_members', 'indexing_entries',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def _get_absolute_url(self, field):
+        if field:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(field.url)
+            return field.url
+        return None
+
+    def get_flyer_pdf(self, obj):
+        return self._get_absolute_url(obj.flyer_pdf)
+
+    def get_cover_image(self, obj):
+        return self._get_absolute_url(obj.cover_image)
+
+    def get_logo(self, obj):
+        return self._get_absolute_url(obj.logo)
+
+    def get_favicon(self, obj):
+        return self._get_absolute_url(obj.favicon)
+
+    def get_editor_in_chief_image(self, obj):
+        return self._get_absolute_url(obj.editor_in_chief_image)
+
+    def get_editorial_board_members(self, obj):
+        members = obj.editorial_board_members.all().order_by('display_order', 'name')
+        return EditorialBoardMemberSerializer(members, many=True, context=self.context).data
+    
+    def get_indexing_entries(self, obj):
+        entries = obj.indexing_entries.all().order_by('display_order', 'title')
+        return JournalIndexingSerializer(entries, many=True, context=self.context).data
     
     def get_current_issue(self, obj):
         current = obj.current_issue
@@ -129,8 +250,11 @@ class JournalCreateUpdateSerializer(serializers.ModelSerializer):
             'issn_print', 'issn_online',
             'cover_image', 'logo', 'favicon',
             'primary_color', 'secondary_color',
-            'editor_in_chief', 'publisher', 'founding_year', 'frequency',
-            'aims_and_scope', 'author_guidelines', 'peer_review_policy',
+            'editor_in_chief', 'editor_in_chief_image',
+            'publisher', 'founding_year', 'frequency',
+            'aims_and_scope', 'indexing', 'open_thematic_issue',
+            'author_guidelines', 'peer_review_policy',
+            'submission_url', 'flyer_pdf',
             'contact_email', 'website_url',
             'subject_ids',
             'is_active', 'is_featured',

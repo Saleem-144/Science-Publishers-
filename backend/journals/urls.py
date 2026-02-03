@@ -40,10 +40,28 @@ urlpatterns = [
     # Corporate Affiliation endpoints (public)
     path('affiliations/', views.CorporateAffiliationListView.as_view(), name='affiliation_list'),
     
+    # CTA Cards (public)
+    path('cta-cards/', views.CTACardListView.as_view(), name='cta_card_list'),
+    
     # Corporate Affiliation admin endpoints
     path('admin/affiliations/', views.CorporateAffiliationAdminListView.as_view(), name='admin_affiliation_list'),
     path('admin/affiliations/create/', views.CorporateAffiliationCreateView.as_view(), name='admin_affiliation_create'),
     path('admin/affiliations/<int:pk>/', views.CorporateAffiliationAdminDetailView.as_view(), name='admin_affiliation_detail'),
+
+    # CTA Cards (admin)
+    path('admin/cta-cards/', views.CTACardAdminListView.as_view(), name='admin_cta_card_list'),
+    path('admin/cta-cards/create/', views.CTACardCreateView.as_view(), name='admin_cta_card_create'),
+    path('admin/cta-cards/<int:pk>/', views.CTACardAdminDetailView.as_view(), name='admin_cta_card_detail'),
+
+    # Editorial Board admin endpoints
+    path('admin/editorial-board/', views.EditorialBoardMemberAdminListView.as_view(), name='admin_editorial_board_list'),
+    path('admin/editorial-board/create/', views.EditorialBoardMemberCreateView.as_view(), name='admin_editorial_board_create'),
+    path('admin/editorial-board/<int:pk>/', views.EditorialBoardMemberAdminDetailView.as_view(), name='admin_editorial_board_detail'),
+
+    # Journal Indexing admin endpoints
+    path('admin/indexing/', views.JournalIndexingAdminListView.as_view(), name='admin_indexing_list'),
+    path('admin/indexing/create/', views.JournalIndexingCreateView.as_view(), name='admin_indexing_create'),
+    path('admin/indexing/<int:pk>/', views.JournalIndexingAdminDetailView.as_view(), name='admin_indexing_detail'),
 ]
 
 

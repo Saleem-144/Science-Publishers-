@@ -4,9 +4,18 @@ Uses environment variables with sensible defaults for development.
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env from project root (if present) so get_env can read values from it
+dotenv_path = BASE_DIR / '.env'
+if dotenv_path.exists():
+    load_dotenv(dotenv_path)
+else:
+    # fallback to default load (reads from current working dir)
+    load_dotenv()
 
 
 def get_env(key: str, default: str = None, cast: type = str):

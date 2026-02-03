@@ -3,10 +3,11 @@
 from rest_framework import generics, filters, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 
-from .models import Subject, Journal, Announcement, CorporateAffiliation
+from .models import Subject, Journal, Announcement, CorporateAffiliation, CTACard, EditorialBoardMember, JournalIndexing
 from .serializers import (
     SubjectSerializer,
     SubjectListSerializer,
@@ -18,6 +19,10 @@ from .serializers import (
     AnnouncementCreateUpdateSerializer,
     CorporateAffiliationSerializer,
     CorporateAffiliationCreateUpdateSerializer,
+    CTACardSerializer,
+    CTACardCreateUpdateSerializer,
+    EditorialBoardMemberSerializer,
+    JournalIndexingSerializer,
 )
 
 
@@ -30,13 +35,19 @@ class JournalListView(generics.ListAPIView):
     
     permission_classes = [AllowAny]
     serializer_class = JournalListSerializer
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['is_featured', 'subjects']
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['is_featured', 'subjects', 'issn_online', 'issn_print']
+    search_fields = ['title', 'short_title', 'description', 'issn_online', 'issn_print']
     ordering_fields = ['title', 'created_at']
     ordering = ['title']
     
     def get_queryset(self):
-        return Journal.objects.filter(is_active=True)
+        queryset = Journal.objects.filter(is_active=True)
+        # Custom filtering for subject slug if provided in params
+        subject_slug = self.request.query_params.get('subjects__slug')
+        if subject_slug:
+            queryset = queryset.filter(subjects__slug=subject_slug)
+        return queryset
 
 
 class FeaturedJournalsView(generics.ListAPIView):
@@ -381,3 +392,104 @@ class CorporateAffiliationAdminDetailView(generics.RetrieveUpdateDestroyAPIView)
         if self.request.method in ['PUT', 'PATCH']:
             return CorporateAffiliationCreateUpdateSerializer
         return CorporateAffiliationSerializer
+
+
+# =============================================================================
+# CTA Card Views
+# =============================================================================
+
+class CTACardListView(generics.ListAPIView):
+    """Public: List all active CTA cards."""
+    permission_classes = [AllowAny]
+    serializer_class = CTACardSerializer
+    
+    def get_queryset(self):
+        return CTACard.objects.filter(is_active=True)
+
+
+class CTACardAdminListView(generics.ListAPIView):
+    """Admin: List all CTA cards."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = CTACardSerializer
+    queryset = CTACard.objects.all()
+
+
+class CTACardCreateView(generics.CreateAPIView):
+    """Admin: Create a new CTA card."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = CTACardCreateUpdateSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+
+class CTACardAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin: Get, update, or delete a CTA card."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = CTACard.objects.all()
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return CTACardCreateUpdateSerializer
+        return CTACardSerializer
+
+
+# =============================================================================
+# Editorial Board Views
+# =============================================================================
+
+class EditorialBoardMemberAdminListView(generics.ListAPIView):
+    """Admin: List members for a specific journal."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = EditorialBoardMemberSerializer
+
+    def get_queryset(self):
+        journal_id = self.request.query_params.get('journal')
+        if journal_id:
+            return EditorialBoardMember.objects.filter(journal_id=journal_id)
+        return EditorialBoardMember.objects.all()
+
+
+class EditorialBoardMemberCreateView(generics.CreateAPIView):
+    """Admin: Create a new board member."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = EditorialBoardMemberSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+
+class EditorialBoardMemberAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin: Get, update, or delete a board member."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = EditorialBoardMemberSerializer
+    queryset = EditorialBoardMember.objects.all()
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+
+# =============================================================================
+# Journal Indexing Views
+# =============================================================================
+
+class JournalIndexingAdminListView(generics.ListAPIView):
+    """Admin: List indexing entries for a specific journal."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = JournalIndexingSerializer
+
+    def get_queryset(self):
+        journal_id = self.request.query_params.get('journal')
+        if journal_id:
+            return JournalIndexing.objects.filter(journal_id=journal_id)
+        return JournalIndexing.objects.all()
+
+
+class JournalIndexingCreateView(generics.CreateAPIView):
+    """Admin: Create a new indexing entry."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = JournalIndexingSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+
+class JournalIndexingAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin: Get, update, or delete an indexing entry."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = JournalIndexingSerializer
+    queryset = JournalIndexing.objects.all()
+    parser_classes = [MultiPartParser, FormParser, JSONParser]

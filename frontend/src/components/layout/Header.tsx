@@ -13,23 +13,26 @@ interface NavLink {
   children?: NavLink[];
 }
 
+// Configurable PublishWithUs URL - can be set via environment variable or default
+const PUBLISH_WITH_US_URL = process.env.NEXT_PUBLIC_PUBLISH_WITH_US_URL || '/publish-with-us';
+
 const navLinks: NavLink[] = [
   { href: '/', label: 'Home' },
   {
-    label: 'About us',
+    label: 'About Us',
     children: [
       { href: '/about', label: 'About Aethra science publisher' },
       { href: '/about/open-access-policy', label: 'Open access policy' },
-      { href: '/contact', label: 'Contact us' },
+      { href: '/contact', label: 'ContactUs' },
     ],
   },
-  { href: '/journals', label: 'Browse journals' },
+  { href: '/journals', label: 'Browse Journals' },
   { href: '/services', label: 'Our Services' },
   {
     label: 'Information',
     children: [
       {
-        label: 'For authors',
+        label: 'ForAuthors',
         children: [
           { href: '/information/for-authors/archiving-policies', label: 'Archiving policies' },
           { href: '/information/for-authors/article-processing-charges-policy', label: 'Article processing charges policy' },
@@ -43,7 +46,7 @@ const navLinks: NavLink[] = [
         ],
       },
       {
-        label: 'For editors and reviewers',
+        label: 'ForEditorsAndReviewers',
         children: [
           { href: '/information/for-editors-and-reviewers/editorial-management', label: 'Editorial management' },
           { href: '/information/for-editors-and-reviewers/editorial-policies', label: 'Editorial policies' },
@@ -57,7 +60,7 @@ const navLinks: NavLink[] = [
         ],
       },
       {
-        label: 'Ethical guidelines',
+        label: 'EthicalGuidelines',
         children: [
           { href: '/information/ethical-guidelines/allegations-from-whistleblowers', label: 'Allegations from whistleblowers' },
           { href: '/information/ethical-guidelines/aethra-advisory-board', label: 'Aethra advisory board' },
@@ -130,9 +133,10 @@ export function Header() {
     setOpenDropdowns((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(label)) {
+        // If clicking the same dropdown, close it
         newSet.delete(label);
       } else {
-        // Close other dropdowns when opening a new one
+        // Close all other dropdowns and open only this one
         newSet.clear();
         newSet.add(label);
       }
@@ -146,8 +150,11 @@ export function Header() {
     setOpenNestedDropdowns((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(label)) {
+        // If clicking the same nested dropdown, close it
         newSet.delete(label);
       } else {
+        // Close all other nested dropdowns and open only this one
+        newSet.clear();
         newSet.add(label);
       }
       return newSet;
@@ -191,20 +198,23 @@ export function Header() {
         >
           <button
             onClick={() => toggleDropdown(link.label)}
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 relative ${
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 relative group ${
               active || isOpen
-                ? 'bg-academic-blue text-white shadow-md'
-                : 'text-blue-100 hover:bg-white/15 hover:text-white'
+                ? 'text-black'
+                : 'text-black'
             }`}
           >
             {link.label}
+            <span className={`absolute bottom-0 left-0 h-0.5 transition-all duration-200 ${
+              active ? 'bg-yellow-500 w-full' : 'bg-yellow-500 group-hover:w-full w-0'
+            }`}></span>
             <FiChevronDown
               className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
             />
           </button>
 
           {isOpen && (
-            <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 transition-all duration-200">
+            <div className="absolute top-full right-0 mt-1 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50 transition-all duration-200">
               {link.children.map((child, childIndex) => {
                 if (child.children) {
                   // Nested dropdown (For authors)
@@ -213,7 +223,7 @@ export function Header() {
                     <div key={childIndex} className="relative">
                       <button
                         onClick={() => toggleNestedDropdown(child.label)}
-                        className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-academic-blue/5 cursor-pointer transition-colors"
+                        className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-black hover:bg-gray-100 cursor-pointer transition-colors"
                       >
                         <span className="font-medium">{child.label}</span>
                         <FiChevronDown
@@ -221,15 +231,15 @@ export function Header() {
                         />
                       </button>
                       {isNestedOpen && (
-                        <div className="bg-gradient-to-br from-gray-50 to-white border-l-4 border-academic-blue">
+                        <div className="absolute top-0 left-full ml-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50">
                           {child.children.map((grandchild, grandIndex) => (
                             <Link
                               key={grandIndex}
                               href={grandchild.href || '#'}
-                              className={`block px-6 py-2.5 text-sm transition-all duration-150 ${
+                              className={`block px-4 py-2.5 text-sm transition-all duration-150 ${
                                 isActive(grandchild.href)
-                                  ? 'bg-academic-blue text-white font-medium'
-                                  : 'text-gray-600 hover:bg-academic-blue/10 hover:text-academic-blue hover:pl-8'
+                                  ? 'bg-gray-200 text-black font-medium'
+                                  : 'text-black hover:bg-gray-100 hover:pl-6'
                               }`}
                               onClick={() => {
                                 setOpenDropdowns(new Set());
@@ -250,8 +260,8 @@ export function Header() {
                     href={child.href || '#'}
                     className={`block px-4 py-2.5 text-sm transition-all duration-150 ${
                       isActive(child.href)
-                        ? 'bg-academic-blue text-white font-medium'
-                        : 'text-gray-700 hover:bg-academic-blue/10 hover:text-academic-blue hover:pl-6'
+                        ? 'bg-gray-200 text-black font-medium'
+                        : 'text-black hover:bg-gray-100 hover:pl-6'
                     }`}
                     onClick={() => setOpenDropdowns(new Set())}
                   >
@@ -271,14 +281,14 @@ export function Header() {
         href={link.href || '#'}
         className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative group ${
           isActive(link.href)
-            ? 'bg-academic-blue text-white shadow-md'
-            : 'text-blue-100 hover:bg-white/15 hover:text-white'
+            ? 'text-black'
+            : 'text-black'
         }`}
       >
         {link.label}
-        {!isActive(link.href) && (
-          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-academic-gold transition-all duration-200 group-hover:w-full"></span>
-        )}
+        <span className={`absolute bottom-0 left-0 h-0.5 transition-all duration-200 ${
+          isActive(link.href) ? 'bg-yellow-500 w-full' : 'bg-yellow-500 group-hover:w-full w-0'
+        }`}></span>
       </Link>
     );
   };
@@ -302,8 +312,8 @@ export function Header() {
             }}
             className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-medium transition-colors ${
               hasActiveChild(link)
-                ? 'bg-academic-blue text-white'
-                : 'text-blue-100 hover:bg-white/10'
+                ? 'bg-gray-200 text-black'
+                : 'text-black hover:bg-gray-100'
             }`}
             style={{ paddingLeft: `${indent + 1}rem` }}
           >
@@ -332,8 +342,8 @@ export function Header() {
         }}
         className={`block px-4 py-3 rounded-lg font-medium transition-colors ${
           isActive(link.href)
-            ? 'bg-academic-blue text-white'
-            : 'text-blue-100 hover:bg-white/10'
+            ? 'bg-gray-200 text-black'
+            : 'text-black hover:bg-gray-100'
         }`}
         style={{ paddingLeft: `${indent + 1}rem` }}
       >
@@ -343,7 +353,7 @@ export function Header() {
   };
 
   return (
-    <header className="bg-gradient-to-r from-academic-navy via-academic-navy to-academic-blue text-white sticky top-0 z-50 shadow-xl border-b border-white/10">
+    <header className="bg-white text-black sticky top-0 z-50 shadow-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-18 md:h-20">
           {/* Logo */}
@@ -352,10 +362,10 @@ export function Header() {
               <span className="text-academic-navy font-bold text-xl">A</span>
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg md:text-xl font-bold tracking-tight">
+              <h1 className="text-lg md:text-xl font-bold tracking-tight text-black">
                 Aethra Science Publishers
               </h1>
-              <p className="text-xs text-blue-200 -mt-0.5">Academic Excellence</p>
+              <p className="text-xs text-gray-600 -mt-0.5">Academic Excellence</p>
             </div>
           </Link>
 
@@ -370,11 +380,11 @@ export function Header() {
             <div className="relative" ref={searchRef}>
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2.5 rounded-lg text-blue-100 hover:bg-white/15 hover:text-white transition-all duration-200 relative group"
+                className="p-2.5 rounded-lg text-black hover:bg-gray-100 transition-all duration-200 relative group"
                 aria-label="Search"
               >
                 <FiSearch className="w-5 h-5" />
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-academic-gold transition-all duration-200 group-hover:w-full"></span>
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gray-400 transition-all duration-200 group-hover:w-full"></span>
               </button>
 
               {/* Search Dropdown */}
@@ -466,10 +476,18 @@ export function Header() {
               )}
             </div>
 
+            {/* PublishWithUs Button */}
+            <Link
+              href={PUBLISH_WITH_US_URL}
+              className="px-4 py-2.5 rounded-lg text-sm font-medium text-black bg-yellow-500 hover:bg-yellow-600 transition-all duration-200 shadow-sm"
+            >
+              Publish With Us
+            </Link>
+
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2.5 rounded-lg text-blue-100 hover:bg-white/15 transition-colors"
+              className="lg:hidden p-2.5 rounded-lg text-black hover:bg-gray-100 transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
@@ -484,9 +502,21 @@ export function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-academic-navy/98 border-t border-white/10 backdrop-blur-sm">
+        <div className="lg:hidden bg-white border-t border-gray-200">
           <nav className="max-w-7xl mx-auto px-4 py-4 space-y-1">
             {navLinks.map((link) => renderMobileNavItem(link))}
+            {/* PublishWithUs button in mobile menu */}
+            <Link
+              href={PUBLISH_WITH_US_URL}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setOpenDropdowns(new Set());
+                setOpenNestedDropdowns(new Set());
+              }}
+              className="block px-4 py-3 rounded-lg font-medium transition-colors text-black bg-yellow-500 hover:bg-yellow-600 mt-2 text-center shadow-sm"
+            >
+              PublishWithUs
+            </Link>
           </nav>
         </div>
       )}

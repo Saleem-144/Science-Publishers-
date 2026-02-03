@@ -89,6 +89,15 @@ export default function HomePage() {
     });
   };
 
+  const getImageUrl = (imagePath: string | null) => {
+    if (!imagePath) return null;
+    // If it's already a full URL, return it
+    if (imagePath.startsWith('http')) return imagePath;
+    // Otherwise, prepend the backend base URL
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000';
+    return `${baseUrl}${imagePath}`;
+  };
+
   return (
     <div className="page-enter">
       {/* Hero Section with Background Image Slider */}
@@ -419,7 +428,7 @@ export default function HomePage() {
                   <Link href={`/news/${newsList[1].slug}`} className="group block relative h-52 md:h-[calc(50%-0.5rem)] rounded-xl overflow-hidden">
                     <div 
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                      style={{ backgroundImage: `url('${newsList[1].featured_image || defaultNewsImages[0]}')` }}
+                      style={{ backgroundImage: `url('${getImageUrl(newsList[1].featured_image) || defaultNewsImages[0]}')` }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
@@ -444,7 +453,7 @@ export default function HomePage() {
                   <Link href={`/news/${newsList[2].slug}`} className="group block relative h-52 md:h-[calc(50%-0.5rem)] rounded-xl overflow-hidden">
                     <div 
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                      style={{ backgroundImage: `url('${newsList[2].featured_image || defaultNewsImages[1]}')` }}
+                      style={{ backgroundImage: `url('${getImageUrl(newsList[2].featured_image) || defaultNewsImages[1]}')` }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
@@ -472,7 +481,7 @@ export default function HomePage() {
                   <Link href={`/news/${newsList[0].slug}`} className="group block relative h-52 md:h-full min-h-[400px] rounded-xl overflow-hidden">
                     <div 
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                      style={{ backgroundImage: `url('${newsList[0].featured_image || defaultNewsImages[2]}')` }}
+                      style={{ backgroundImage: `url('${getImageUrl(newsList[0].featured_image) || defaultNewsImages[2]}')` }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
