@@ -62,6 +62,14 @@ urlpatterns = [
     path('admin/indexing/', views.JournalIndexingAdminListView.as_view(), name='admin_indexing_list'),
     path('admin/indexing/create/', views.JournalIndexingCreateView.as_view(), name='admin_indexing_create'),
     path('admin/indexing/<int:pk>/', views.JournalIndexingAdminDetailView.as_view(), name='admin_indexing_detail'),
+
+    # CTA Buttons & Form Submissions
+    path('cta-buttons/', views.CTAButtonListView.as_view(), name='cta_button_list'),
+    path('cta-buttons/by-slug/<slug:slug>/', views.CTAButtonBySlugView.as_view(), name='cta_button_by_slug'),
+    path('cta-buttons/submit/', views.CTAFormSubmissionCreateView.as_view(), name='cta_submission_create'),
+    path('admin/cta-buttons/', views.CTAButtonAdminListView.as_view(), name='admin_cta_button_list'),
+    path('admin/cta-buttons/<int:pk>/', views.CTAButtonAdminDetailView.as_view(), name='admin_cta_button_detail'),
+    path('admin/cta-submissions/', views.CTAFormSubmissionAdminListView.as_view(), name='admin_cta_submission_list'),
 ]
 
 

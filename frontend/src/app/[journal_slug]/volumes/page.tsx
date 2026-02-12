@@ -71,10 +71,10 @@ export default function JournalVolumesPage() {
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xl font-bold text-academic-navy">
-                        Volume {volume.number} ({volume.year})
+                        Volume {volume.volume_number} ({volume.year})
                       </h3>
                       <span className="text-sm text-gray-500">
-                        {volume.issue_count || 0} Issues
+                        {volume.total_issues || 0} Issues
                       </span>
                     </div>
 
@@ -84,7 +84,7 @@ export default function JournalVolumesPage() {
                         {volume.issues.map((issue: any) => (
                           <Link
                             key={issue.id}
-                            href={`/${journalSlug}/issue/${issue.number}`}
+                            href={`/${journalSlug}/issue/${issue.issue_number}`}
                             className="group p-4 rounded-lg border border-gray-200 hover:border-academic-blue hover:shadow-md transition-all"
                           >
                             <div className="flex items-center gap-3">
@@ -93,10 +93,10 @@ export default function JournalVolumesPage() {
                               </div>
                               <div className="flex-1">
                                 <p className="font-medium text-gray-900 group-hover:text-academic-blue">
-                                  Issue {issue.number}
+                                  Issue {issue.issue_number}
                                 </p>
                                 <p className="text-sm text-gray-500">
-                                  {issue.article_count || 0} Articles
+                                  {issue.total_articles || 0} Articles
                                 </p>
                               </div>
                               <FiArrowRight className="w-4 h-4 text-gray-400 group-hover:text-academic-blue group-hover:translate-x-1 transition-all" />

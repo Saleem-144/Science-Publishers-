@@ -32,26 +32,49 @@ class XMLProcessingService:
         self.article = article
         self.errors = []
     
-    def process_xml_file(self, article_file: ArticleFile) -> bool:
+    def process_xml_file(self, file_obj=None, force_update_metadata: bool = False) -> bool:
         """
         Process an XML file attached to an article.
-        
-        Args:
-            article_file: ArticleFile instance with file_type='xml'
-        
-        Returns:
-            True if processing succeeded, False otherwise
         """
-        if article_file.file_type != 'xml':
-            self.errors.append('File is not an XML file')
-            return False
-        
         try:
-            # Read XML content
-            article_file.file.seek(0)
-            xml_content = article_file.file.read().decode('utf-8')
+            xml_content = ""
+            source = ""
+            if file_obj:
+                source = "provided file object"
+                if hasattr(file_obj, 'file') and hasattr(file_obj.file, 'open'):
+                    file_obj.file.open('rb')
+                    xml_content = file_obj.file.read().decode('utf-8', errors='ignore')
+                    file_obj.file.close()
+                else:
+                    file_obj.seek(0)
+                    xml_content = file_obj.read().decode('utf-8', errors='ignore')
+            elif self.article.xml_file:
+                source = f"article.xml_file ({self.article.xml_file.name})"
+                self.article.xml_file.open('rb')
+                xml_content = self.article.xml_file.read().decode('utf-8', errors='ignore')
+                self.article.xml_file.close()
+            else:
+                # Fallback to ArticleFile related model
+                article_file = ArticleFile.objects.filter(
+                    article=self.article, 
+                    file_type='xml'
+                ).order_by('-created_at').first()
+                
+                if article_file:
+                    source = f"ArticleFile ({article_file.file.name})"
+                    article_file.file.open('rb')
+                    xml_content = article_file.file.read().decode('utf-8', errors='ignore')
+                    article_file.file.close()
+                else:
+                    self.errors.append('No XML file found for article')
+                    return False
             
-            return self.process_xml_content(xml_content)
+            if not xml_content:
+                self.errors.append('XML file is empty')
+                return False
+
+            logger.info(f"Processing XML for article {self.article.id} from {source}. Content length: {len(xml_content)}")
+            return self.process_xml_content(xml_content, force_update_metadata=force_update_metadata)
             
         except UnicodeDecodeError:
             self.errors.append('Could not decode XML file as UTF-8')
@@ -61,12 +84,13 @@ class XMLProcessingService:
             self.errors.append(f'Error reading file: {str(e)}')
             return False
     
-    def process_xml_content(self, xml_content: str) -> bool:
+    def process_xml_content(self, xml_content: str, force_update_metadata: bool = False) -> bool:
         """
         Process XML content string.
         
         Args:
             xml_content: Raw XML string
+            force_update_metadata: If True, overwrite article title/abstract even if they exist
         
         Returns:
             True if processing succeeded, False otherwise
@@ -95,7 +119,7 @@ class XMLProcessingService:
                 self.errors.extend(parsed.errors)
                 return False
             
-            # Store parsed content
+            # Store parsed content (ALWAYS overwrite these)
             html_content.abstract_html = parsed.abstract_html
             html_content.body_html = self._resolve_figure_references(parsed.body_html)
             html_content.references_html = parsed.references_html
@@ -126,27 +150,88 @@ class XMLProcessingService:
             self._create_table_records(parsed.tables)
             
             # Update article metadata if available
-            if parsed.title and not self.article.title:
-                self.article.title = parsed.title
+            # We overwrite if forced OR if current content is placeholder
+            update_meta = force_update_metadata
             
-            if parsed.doi and not self.article.doi:
+            if parsed.title and (update_meta or not self.article.title or len(self.article.title) < 10 or self.article.title == 'Untitled Article' or 'Processing' in self.article.title):
+                logger.info(f"Updating title for article {self.article.id} from XML")
+                self.article.title = parsed.title
+                
+                # Also update slug if it's currently based on a placeholder or if we are forcing
+                # but only if it's a relatively new/draft article
+                from django.utils.text import slugify
+                import uuid
+                new_slug = f"{slugify(parsed.title[:250])}-{uuid.uuid4().hex[:8]}"
+                
+                if update_meta or not self.article.slug or 'untitled' in self.article.slug or 'processing' in self.article.slug:
+                    logger.info(f"Updating slug for article {self.article.id} from XML title")
+                    self.article.slug = new_slug
+            
+            if parsed.doi and (update_meta or not self.article.doi or self.article.doi == ''):
+                logger.info(f"Updating DOI for article {self.article.id} from XML")
                 self.article.doi = parsed.doi
             
-            if parsed.abstract and not self.article.abstract:
+            if parsed.article_id_code and (update_meta or not self.article.article_id_code or self.article.article_id_code == ''):
+                logger.info(f"Updating Article ID Code for article {self.article.id} from XML")
+                self.article.article_id_code = parsed.article_id_code
+            
+            if parsed.article_type and (update_meta or not self.article.article_type or self.article.article_type == 'research'):
+                # Map XML article-type to model choices
+                type_map = {
+                    'research-article': 'research',
+                    'review-article': 'review',
+                    'case-report': 'case_report',
+                    'short-communication': 'short_communication',
+                    'editorial': 'editorial',
+                    'letter': 'letter',
+                    'commentary': 'commentary',
+                    'book-review': 'book_review'
+                }
+                mapped_type = type_map.get(parsed.article_type.lower())
+                if mapped_type:
+                    logger.info(f"Updating Article Type for article {self.article.id} to {mapped_type}")
+                    self.article.article_type = mapped_type
+            
+            # Update dates if available
+            if parsed.received_date and (update_meta or not self.article.received_date):
+                self.article.received_date = parsed.received_date
+            if parsed.revised_date and (update_meta or not self.article.revised_date):
+                self.article.revised_date = parsed.revised_date
+            if parsed.accepted_date and (update_meta or not self.article.accepted_date):
+                self.article.accepted_date = parsed.accepted_date
+            if parsed.published_date and (update_meta or not self.article.published_date):
+                self.article.published_date = parsed.published_date
+            
+            # Update page info
+            if parsed.page_start and (update_meta or not self.article.page_start):
+                self.article.page_start = parsed.page_start
+            if parsed.page_end and (update_meta or not self.article.page_end):
+                self.article.page_end = parsed.page_end
+            
+            if parsed.abstract and (update_meta or not self.article.abstract or len(self.article.abstract) < 20):
+                logger.info(f"Updating abstract for article {self.article.id} from XML")
                 self.article.abstract = parsed.abstract
             
-            if parsed.keywords and not self.article.keywords:
+            if parsed.keywords and (update_meta or not self.article.keywords or len(self.article.keywords) == 0):
+                logger.info(f"Updating keywords for article {self.article.id} from XML")
                 self.article.keywords = parsed.keywords
+                if update_meta or not self.article.keywords_display:
+                    self.article.keywords_display = ', '.join(parsed.keywords)
             
             self.article.save()
+            
+            # Create Author records
+            self._create_author_records(parsed.authors, force_update=update_meta)
             
             # Update status
             html_content.parsing_status = ParsingStatus.SUCCESS
             html_content.parsing_errors = ''
             html_content.parsed_at = timezone.now()
+            
+            # CRITICAL: Explicitly save all changed fields
             html_content.save()
             
-            logger.info(f'Successfully parsed XML for article {self.article.id}')
+            logger.info(f'Successfully parsed and saved XML content for article {self.article.id}. Status: {html_content.parsing_status}')
             return True
             
         except Exception as e:
@@ -157,6 +242,44 @@ class XMLProcessingService:
             html_content.save()
             self.errors.append(f'Processing error: {str(e)}')
             return False
+    
+    def _create_author_records(self, authors: list, force_update: bool = False):
+        """Create or update Author records from parsed data."""
+        from articles.models import Author, ArticleAuthor
+        
+        # If forcing update, we remove current article-author associations 
+        # but keep the Author records themselves as they might be used elsewhere
+        if force_update and self.article.article_authors.exists():
+            logger.info(f"Removing existing authors for article {self.article.id} to refresh from XML")
+            self.article.article_authors.all().delete()
+        
+        # Only create if the article has no authors yet
+        if self.article.authors.exists():
+            return
+            
+        for i, auth in enumerate(authors):
+            # Try to find existing author by name and email
+            author = None
+            if auth.email:
+                author = Author.objects.filter(email__iexact=auth.email).first()
+            
+            if not author:
+                author = Author.objects.create(
+                    first_name=auth.first_name,
+                    last_name=auth.last_name,
+                    email=auth.email,
+                    affiliation=auth.affiliation,
+                    orcid_id=auth.orcid
+                )
+            
+            ArticleAuthor.objects.get_or_create(
+                article=self.article,
+                author=author,
+                defaults={
+                    'author_order': i + 1,
+                    'is_corresponding': auth.is_corresponding
+                }
+            )
     
     def _resolve_figure_references(self, body_html: str) -> str:
         """
@@ -259,14 +382,15 @@ class XMLProcessingService:
                 self.errors.append('No XML content to re-parse')
                 return False
             
-            return self.process_xml_content(html_content.original_xml)
+            # When manually reparsing, we force update metadata
+            return self.process_xml_content(html_content.original_xml, force_update_metadata=True)
             
         except ArticleHTMLContent.DoesNotExist:
             self.errors.append('No HTML content record found')
             return False
 
 
-def process_article_xml(article_id: int, xml_content: str = None) -> Dict:
+def process_article_xml(article_id: int, xml_content: str = None, force_update_metadata: bool = False) -> Dict:
     """
     Convenience function to process XML for an article.
     
@@ -274,6 +398,7 @@ def process_article_xml(article_id: int, xml_content: str = None) -> Dict:
         article_id: Article ID
         xml_content: Optional XML content string. If not provided,
                      will look for an uploaded XML file.
+        force_update_metadata: Whether to overwrite existing title/abstract
     
     Returns:
         Dict with 'success' boolean and 'errors' list
@@ -286,23 +411,16 @@ def process_article_xml(article_id: int, xml_content: str = None) -> Dict:
     service = XMLProcessingService(article)
     
     if xml_content:
-        success = service.process_xml_content(xml_content)
+        success = service.process_xml_content(xml_content, force_update_metadata=force_update_metadata)
     else:
-        # Try to find XML file
-        xml_file = ArticleFile.objects.filter(
-            article=article,
-            file_type='xml'
-        ).order_by('-created_at').first()
-        
-        if not xml_file:
-            return {'success': False, 'errors': ['No XML file found for article']}
-        
-        success = service.process_xml_file(xml_file)
+        # Default to forcing metadata update if it's a file-based process (usually means a new upload)
+        success = service.process_xml_file(force_update_metadata=True)
     
     return {
         'success': success,
         'errors': service.errors
     }
+
 
 
 

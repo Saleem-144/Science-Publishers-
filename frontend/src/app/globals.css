@@ -45,11 +45,22 @@ body {
 }
 
 /* Article Content Styling */
-.article-content {
-  font-family: var(--font-literata), Georgia, serif;
-  font-size: 1.125rem;
-  line-height: 1.8;
-  color: #334155;
+.article-content, 
+.article-body-content, 
+.abstract-content-container, 
+.article-content *, 
+.article-body-content *, 
+.abstract-content-container *,
+.references-list-container,
+.references-list-container * {
+  font-family: var(--font-inter), system-ui, sans-serif !important;
+}
+
+.article-content, .article-body-content, .abstract-content-container {
+  font-size: 1.125rem !important;
+  line-height: 1.7 !important;
+  color: #334155 !important;
+  text-align: justify !important;
 }
 
 .article-content h1,
@@ -57,96 +68,206 @@ body {
 .article-content h3,
 .article-content h4,
 .article-content h5,
-.article-content h6 {
-  font-family: var(--font-literata), Georgia, serif;
-  color: #1a365d;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
+.article-content h6,
+.article-body-content h1,
+.article-body-content h2,
+.article-body-content h3,
+.article-body-content h4,
+.article-body-content h5,
+.article-body-content h6 {
+  color: #111827 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+  font-weight: 700 !important;
+  display: block !important;
 }
 
-.article-content h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 0.5rem;
+/* Math Rendering Styles */
+.math-container {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.125rem;
+  max-width: 100%;
 }
 
-.article-content h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
+.display-formula {
+  text-align: center !important;
+  margin: 2.5rem 0 !important;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1rem 0;
 }
 
-.article-content p {
-  margin-bottom: 1.25rem;
+/* Protect MathJax SVG from global font overrides */
+mjx-container[jax="SVG"] {
+  direction: ltr;
+  font-family: serif !important; /* MathJax handles its own fonts but this helps layout */
 }
 
-.article-content a {
-  color: #2563eb;
+mjx-container[jax="SVG"] > svg {
+  margin: 0 !important;
+  vertical-align: middle !important;
+}
+
+/* Ensure MathJax elements are not affected by global font/alignment overrides */
+mjx-container, 
+mjx-container * {
+  font-family: MJXZERO, STIXGeneral, 'Arial Unicode MS', serif !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+}
+
+.article-content p, 
+.abstract-content-container p, 
+.article-body-content p {
+  margin-top: 0 !important;
+  margin-bottom: 0.75rem !important;
+  padding: 0 !important;
+  color: #374151 !important;
+  font-size: 1.125rem !important;
+  line-height: 1.7 !important;
+  display: block !important;
+  white-space: normal !important;
+}
+
+.article-body-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 3rem auto !important;
+  border-radius: 2rem !important;
+  display: block !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.article-body-content table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin: 2rem 0 !important;
+}
+
+/* References styling */
+.references-list-container, .references-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+  margin-top: 2rem !important;
+}
+
+.reference-line {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: #4b5563;
+}
+
+.reference-label {
+  font-weight: 900;
+  color: #1e3a8a;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.875rem;
+  min-width: 2.2rem;
+  margin-top: 0.15rem;
+}
+
+.reference-label::before { content: "["; }
+.reference-label::after { content: "]"; }
+
+.reference-content {
+  flex: 1;
+}
+
+.reference-content a {
+  color: #1e3a8a;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.reference-content a:hover {
   text-decoration: underline;
 }
 
-.article-content a:hover {
-  color: #1d4ed8;
+.article-content .references-list li, .references-list li {
+  margin-bottom: 1.5rem !important;
+  list-style-type: none !important;
+  padding-left: 2.5rem !important;
+  text-indent: -2.5rem !important;
+  font-size: 0.9375rem !important;
+  line-height: 1.6 !important;
+  color: #4b5563 !important;
 }
 
-.article-content ul,
-.article-content ol {
-  margin-left: 1.5rem;
-  margin-bottom: 1.25rem;
+/* Table and figure styling */
+.article-content table, .article-body-content table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin: 3rem 0 !important;
+  font-family: var(--font-inter), sans-serif !important;
+  font-size: 0.9375rem !important;
 }
 
-.article-content li {
-  margin-bottom: 0.5rem;
+.article-content th, .article-content td, .article-body-content th, .article-body-content td {
+  border: 1px solid #f3f4f6 !important;
+  padding: 1rem !important;
+  text-align: left !important;
 }
 
-.article-content blockquote {
-  border-left: 4px solid #2563eb;
-  padding-left: 1rem;
-  margin: 1.5rem 0;
-  font-style: italic;
-  color: #64748b;
+.article-content th, .article-body-content th {
+  background-color: #f9fafb !important;
+  font-weight: 800 !important;
+  color: #111827 !important;
 }
 
-.article-content figure {
-  margin: 2rem 0;
-  text-align: center;
+/* Fix chemical formulas vertical alignment */
+.article-content sub, .article-content sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+.article-content sub { bottom: -0.25em; }
+.article-content sup { top: -0.5em; }
+
+.article-content img, .article-body-content img {
+  max-width: 100% !important;
+  height: auto !important;
+  margin: 3rem auto !important;
+  border-radius: 2rem !important;
+  display: block !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 }
 
-.article-content figure img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+.article-content .abstract-section-title, .abstract-content-container .abstract-section-title {
+  font-family: var(--font-inter), sans-serif !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  color: #1e3a8a !important;
+  letter-spacing: 0.2em !important;
+  margin-bottom: 0.5rem !important;
+  margin-top: 1.5rem !important;
+  display: block !important;
+  opacity: 0.6 !important;
 }
 
-.article-content figcaption {
-  margin-top: 0.75rem;
-  font-size: 0.875rem;
-  color: #64748b;
+.article-content a, .article-body-content a, .abstract-content-container a {
+  color: #2563eb !important;
+  text-decoration: underline !important;
 }
 
-.article-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1.5rem 0;
-  font-size: 0.9375rem;
+.article-content a:hover, .article-body-content a:hover, .abstract-content-container a:hover {
+  color: #1d4ed8 !important;
 }
 
-.article-content table th,
-.article-content table td {
-  border: 1px solid #e2e8f0;
-  padding: 0.75rem 1rem;
-  text-align: left;
+.article-content a, .article-body-content a, .abstract-content-container a {
+  color: #2563eb !important;
+  text-decoration: underline !important;
 }
 
-.article-content table th {
-  background: #f8fafc;
-  font-weight: 600;
-  color: #1a365d;
-}
-
-.article-content table tr:hover {
-  background: #f8fafc;
+.article-content a:hover, .article-body-content a:hover, .abstract-content-container a:hover {
+  color: #1d4ed8 !important;
 }
 
 /* Smooth scroll */
@@ -238,6 +359,7 @@ html {
   min-height: 200px;
   padding: 1rem !important;
   line-height: 1.7 !important;
+  white-space: normal !important;
 }
 
 .ql-editor.ql-blank::before {

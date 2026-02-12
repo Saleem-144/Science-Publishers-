@@ -1,7 +1,8 @@
 """Serializers for journals app."""
 
+import logging
 from rest_framework import serializers
-from .models import Subject, Journal, Announcement, CorporateAffiliation, EditorialBoardMember, CTACard, JournalIndexing
+from .models import Subject, Journal, Announcement, CorporateAffiliation, EditorialBoardMember, CTACard, JournalIndexing, CTAButton, CTAFormSubmission
 
 
 class JournalIndexingSerializer(serializers.ModelSerializer):
@@ -12,7 +13,7 @@ class JournalIndexingSerializer(serializers.ModelSerializer):
     class Meta:
         model = JournalIndexing
         fields = [
-            'id', 'journal', 'title', 'logo', 'logo_url', 'url', 'display_order'
+            'id', 'journal', 'category', 'title', 'logo', 'logo_url', 'url', 'display_order'
         ]
         read_only_fields = ['id', 'logo_url']
 
@@ -23,6 +24,26 @@ class JournalIndexingSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.logo.url)
             return obj.logo.url
         return None
+
+
+class CTAButtonSerializer(serializers.ModelSerializer):
+    """Serializer for CTA Buttons."""
+    class Meta:
+        model = CTAButton
+        fields = ['id', 'slug', 'label', 'notification_email', 'is_active']
+
+
+class CTAFormSubmissionSerializer(serializers.ModelSerializer):
+    """Serializer for CTA Form Submissions."""
+    class Meta:
+        model = CTAFormSubmission
+        fields = [
+            'id', 'button', 'title', 'first_name', 'last_name', 
+            'email', 'qualification', 'affiliation', 'journal', 
+            'country', 'expertise', 'orcid_id', 'scopus_id', 
+            'cv_file', 'comments', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at']
 
 
 class EditorialBoardMemberSerializer(serializers.ModelSerializer):
@@ -89,6 +110,13 @@ class SubjectSerializer(serializers.ModelSerializer):
     parent_name = serializers.CharField(source='parent.name', read_only=True)
     journal_count = serializers.SerializerMethodField()
     children = serializers.SerializerMethodField()
+    slug = serializers.SlugField(required=False, allow_blank=True)
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    parent = serializers.PrimaryKeyRelatedField(
+        queryset=Subject.objects.all(),
+        required=False,
+        allow_null=True
+    )
     
     class Meta:
         model = Subject
@@ -130,6 +158,9 @@ class JournalListSerializer(serializers.ModelSerializer):
     subjects = SubjectListSerializer(many=True, read_only=True)
     total_volumes = serializers.IntegerField(read_only=True)
     total_articles = serializers.IntegerField(read_only=True)
+    editor_in_chief_image = serializers.SerializerMethodField()
+    cover_image = serializers.SerializerMethodField()
+    logo = serializers.SerializerMethodField()
     
     class Meta:
         model = Journal
@@ -137,9 +168,27 @@ class JournalListSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'short_title', 'short_description',
             'issn_print', 'issn_online',
             'cover_image', 'logo', 'primary_color',
-            'is_featured', 'subjects',
+            'editor_in_chief', 'editor_in_chief_image',
+            'is_featured', 'is_active', 'subjects',
             'total_volumes', 'total_articles'
         ]
+
+    def _get_absolute_url(self, field):
+        if field:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(field.url)
+            return field.url
+        return None
+
+    def get_editor_in_chief_image(self, obj):
+        return self._get_absolute_url(obj.editor_in_chief_image)
+
+    def get_cover_image(self, obj):
+        return self._get_absolute_url(obj.cover_image)
+
+    def get_logo(self, obj):
+        return self._get_absolute_url(obj.logo)
 
 
 class JournalDetailSerializer(serializers.ModelSerializer):
@@ -153,8 +202,6 @@ class JournalDetailSerializer(serializers.ModelSerializer):
         source='subjects',
         required=False
     )
-    total_volumes = serializers.IntegerField(read_only=True)
-    total_articles = serializers.IntegerField(read_only=True)
     current_issue = serializers.SerializerMethodField()
     editorial_board_members = serializers.SerializerMethodField()
     indexing_entries = serializers.SerializerMethodField()
@@ -185,7 +232,7 @@ class JournalDetailSerializer(serializers.ModelSerializer):
             'editorial_board_members', 'indexing_entries',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'total_volumes', 'total_articles']
     
     def _get_absolute_url(self, field):
         if field:
@@ -219,18 +266,23 @@ class JournalDetailSerializer(serializers.ModelSerializer):
         return JournalIndexingSerializer(entries, many=True, context=self.context).data
     
     def get_current_issue(self, obj):
-        current = obj.current_issue
-        if current:
-            return {
-                'id': current.id,
-                'issue_number': current.issue_number,
-                'volume_number': current.volume.volume_number,
-                'year': current.volume.year,
-                'title': current.title,
-                'publication_date': current.publication_date,
-            }
-        return None
-
+        try:
+            current = obj.current_issue
+            if current:
+                return {
+                    'id': current.id,
+                    'issue_number': current.issue_number,
+                    'volume_number': current.volume.volume_number if current.volume else None,
+                    'year': current.volume.year if current.volume else None,
+                    'title': current.title,
+                    'publication_date': current.publication_date,
+                }
+            return None
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error in get_current_issue for journal {obj.slug}: {str(e)}", exc_info=True)
+            return None
 
 class JournalCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating journals (admin)."""

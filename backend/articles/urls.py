@@ -11,6 +11,7 @@ urlpatterns = [
     path('search/', views.ArticleSearchView.as_view(), name='article_search'),
     path('featured/', views.FeaturedArticlesView.as_view(), name='featured_articles'),
     path('recent/', views.RecentArticlesView.as_view(), name='recent_articles'),
+    path('special-issues/', views.SpecialIssuesArticlesView.as_view(), name='special_issues_articles'),
     path('<int:pk>/', views.ArticleDetailView.as_view(), name='article_detail'),
     
     # Article by journal and slug
@@ -18,6 +19,7 @@ urlpatterns = [
     path('by-journal/<slug:journal_slug>/<slug:article_slug>/abstract/', views.ArticleAbstractView.as_view(), name='article_abstract'),
     path('by-journal/<slug:journal_slug>/<slug:article_slug>/fulltext/', views.ArticleFullTextView.as_view(), name='article_fulltext'),
     path('by-journal/<slug:journal_slug>/<slug:article_slug>/pdf/', views.ArticlePDFView.as_view(), name='article_pdf'),
+    path('by-journal/<slug:journal_slug>/<slug:article_slug>/xml/', views.ArticleXMLDownloadView.as_view(), name='article_xml'),
     path('by-journal/<slug:journal_slug>/<slug:article_slug>/html-download/', views.ArticleHTMLDownloadView.as_view(), name='article_html_download'),
     
     # Articles by issue
@@ -41,6 +43,7 @@ urlpatterns = [
     path('admin/authors/create/', views.AuthorCreateView.as_view(), name='admin_author_create'),
     path('admin/authors/<int:pk>/', views.AuthorAdminDetailView.as_view(), name='admin_author_detail'),
 ]
+
 
 
 

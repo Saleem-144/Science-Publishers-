@@ -121,15 +121,39 @@ class Article(models.Model):
     Contains metadata, links to authors, files, and parsed HTML content.
     """
     
-    # Relationship to issue (and through it, volume and journal)
+    # Relationships
+    journal = models.ForeignKey(
+        'journals.Journal',
+        on_delete=models.CASCADE,
+        related_name='articles_direct',
+        null=True,
+        blank=True,
+        help_text='The journal this article belongs to (required)'
+    )
+    volume = models.ForeignKey(
+        'volumes.Volume',
+        on_delete=models.SET_NULL,
+        related_name='articles',
+        null=True,
+        blank=True,
+        help_text='The volume this article belongs to'
+    )
     issue = models.ForeignKey(
         'issues.Issue',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='articles',
+        null=True,
+        blank=True,
         help_text='The issue this article belongs to'
     )
     
     # Core identification
+    article_id_code = models.CharField(
+        'Article ID',
+        max_length=50,
+        blank=True,
+        help_text='Custom article identifier (e.g., JS-2024-001)'
+    )
     title = models.TextField(
         help_text='Full article title'
     )
@@ -157,6 +181,11 @@ class Article(models.Model):
         default=ArticleStatus.DRAFT,
         help_text='Publication status'
     )
+    is_special_issue = models.BooleanField(
+        'Is Special Issue',
+        default=False,
+        help_text='Tick if this article belongs to a Special Issue'
+    )
     
     # Content
     abstract = models.TextField(
@@ -164,9 +193,54 @@ class Article(models.Model):
         help_text='Article abstract (plain text or simple HTML)'
     )
     keywords = models.JSONField(
+        'SEO Keywords',
         default=list,
         blank=True,
-        help_text='List of keywords as JSON array'
+        help_text='List of keywords for SEO as JSON array'
+    )
+    keywords_display = models.TextField(
+        'Display Keywords',
+        blank=True,
+        help_text='Keywords to be displayed on the website'
+    )
+    license_text = models.CharField(
+        'License',
+        max_length=255,
+        default='CC BY License',
+        help_text='Licensing information'
+    )
+    
+    # Files
+    xml_file = models.FileField(
+        'XML File',
+        upload_to='articles/xml/',
+        blank=True,
+        null=True,
+        help_text='XML source file for parsing'
+    )
+    pdf_file = models.FileField(
+        'PDF File',
+        upload_to='articles/pdf/',
+        blank=True,
+        null=True
+    )
+    epub_file = models.FileField(
+        'ePUB File',
+        upload_to='articles/epub/',
+        blank=True,
+        null=True
+    )
+    prc_file = models.FileField(
+        'PRC File',
+        upload_to='articles/prc/',
+        blank=True,
+        null=True
+    )
+    mobi_file = models.FileField(
+        'Mobi File',
+        upload_to='articles/mobi/',
+        blank=True,
+        null=True
     )
     
     # Page information
@@ -256,7 +330,6 @@ class Article(models.Model):
         verbose_name = 'article'
         verbose_name_plural = 'articles'
         ordering = ['-published_date', '-created_at']
-        unique_together = ['issue', 'slug']
     
     def __str__(self):
         return self.title[:100]
@@ -271,15 +344,44 @@ class Article(models.Model):
         super().save(*args, **kwargs)
     
     @property
-    def journal(self):
+    def get_journal(self):
         """Convenience accessor for the journal."""
-        return self.issue.volume.journal
+        if self.journal:
+            return self.journal
+        if self.issue and self.issue.volume and self.issue.volume.journal:
+            return self.issue.volume.journal
+        if self.volume and self.volume.journal:
+            return self.volume.journal
+        return None
     
     @property
-    def volume(self):
+    def get_volume(self):
         """Convenience accessor for the volume."""
-        return self.issue.volume
+        if self.volume:
+            return self.volume
+        if self.issue:
+            return self.issue.volume
+        return None
     
+    @property
+    def volume_number(self):
+        """Get volume number from volume or issue."""
+        vol = self.get_volume
+        return vol.volume_number if vol else None
+
+    @property
+    def issue_number(self):
+        """Get issue number if available."""
+        return self.issue.issue_number if self.issue else None
+
+    @property
+    def year(self):
+        """Get publication year."""
+        if self.published_date:
+            return self.published_date.year
+        vol = self.get_volume
+        return vol.year if vol else None
+
     @property
     def pages(self):
         """Page range as string."""
@@ -296,8 +398,17 @@ class Article(models.Model):
         """Generate a basic citation string."""
         author_list = self.get_author_list()
         year = self.published_date.year if self.published_date else ''
-        journal = self.journal.short_title or self.journal.title
-        return f'{author_list} ({year}). {self.title}. {journal}, {self.volume.volume_number}({self.issue.issue_number}), {self.pages}.'
+        journal_obj = self.get_journal
+        journal_title = (journal_obj.short_title or journal_obj.title) if journal_obj else 'Unknown Journal'
+        
+        volume_info = ""
+        volume_obj = self.get_volume
+        if volume_obj:
+            volume_info = f"{volume_obj.volume_number}"
+            if self.issue:
+                volume_info += f"({self.issue.issue_number})"
+        
+        return f'{author_list} ({year}). {self.title}. {journal_title}, {volume_info}, {self.pages}.'
     
     def get_author_list(self):
         """Get formatted author list for citations."""
@@ -357,12 +468,6 @@ class ArticleAuthor(models.Model):
         help_text='Description of author\'s contribution'
     )
     
-    # Affiliation override (if different from author's default)
-    affiliation_override = models.TextField(
-        blank=True,
-        help_text='Override affiliation for this specific article'
-    )
-    
     class Meta:
         verbose_name = 'article author'
         verbose_name_plural = 'article authors'
@@ -371,11 +476,6 @@ class ArticleAuthor(models.Model):
     
     def __str__(self):
         return f'{self.author.full_name} - {self.article.title[:50]}'
-    
-    @property
-    def affiliation(self):
-        """Return override affiliation if set, otherwise author's default."""
-        return self.affiliation_override or self.author.affiliation
 
 
 class FileType(models.TextChoices):

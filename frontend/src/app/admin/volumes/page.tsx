@@ -10,8 +10,12 @@ export default function AdminVolumesPage() {
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedJournal, setSelectedJournal] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingVolume, setEditingVolume] = useState<any>(null);
   const [newVolume, setNewVolume] = useState({ number: '', year: new Date().getFullYear().toString() });
   const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  // ... (useQuery hooks remain the same)
 
   // Fetch subjects
   const { data: subjects } = useQuery({
@@ -19,10 +23,10 @@ export default function AdminVolumesPage() {
     queryFn: journalsApi.subjects,
   });
 
-  // Fetch journals filtered by subject
+  // Fetch journals filtered by subject (include all journals for admin)
   const { data: journals } = useQuery({
-    queryKey: ['journals-by-subject', selectedSubject],
-    queryFn: () => journalsApi.list({ subject: selectedSubject || undefined }),
+    queryKey: ['admin-journals-by-subject', selectedSubject],
+    queryFn: () => journalsApi.adminList({ subjects__slug: selectedSubject || undefined }),
   });
 
   // Fetch volumes for selected journal
@@ -58,9 +62,12 @@ export default function AdminVolumesPage() {
 
     setCreating(true);
     try {
+      // Find the actual journal ID from the slug
+      const journalId = journalsList.find((j: any) => j.slug === selectedJournal)?.id;
+      
       await volumesApi.create({
-        journal: selectedJournal,
-        number: parseInt(newVolume.number),
+        journal: journalId,
+        volume_number: parseInt(newVolume.number),
         year: parseInt(newVolume.year),
       });
       toast.success('Volume created successfully!');
@@ -71,6 +78,44 @@ export default function AdminVolumesPage() {
       toast.error(error.response?.data?.detail || 'Failed to create volume');
     } finally {
       setCreating(false);
+    }
+  };
+
+  // Update volume
+  const handleUpdateVolume = async () => {
+    if (!editingVolume || !editingVolume.volume_number || !editingVolume.year) {
+      toast.error('Please fill all fields');
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      await volumesApi.update(editingVolume.id, {
+        volume_number: parseInt(editingVolume.volume_number),
+        year: parseInt(editingVolume.year),
+      });
+      toast.success('Volume updated successfully!');
+      setEditingVolume(null);
+      refetchVolumes();
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to update volume');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Delete volume
+  const handleDeleteVolume = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this volume? This will delete all associated issues and articles.')) {
+      return;
+    }
+
+    try {
+      await volumesApi.delete(id);
+      toast.success('Volume deleted successfully');
+      refetchVolumes();
+    } catch (error: any) {
+      toast.error('Failed to delete volume');
     }
   };
 
@@ -211,10 +256,28 @@ export default function AdminVolumesPage() {
                 {volumesList.map((volume: any) => (
                   <tr key={volume.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 font-medium text-gray-900">
-                      Volume {volume.number}
+                      {editingVolume?.id === volume.id ? (
+                        <input
+                          type="number"
+                          value={editingVolume.volume_number}
+                          onChange={(e) => setEditingVolume({ ...editingVolume, volume_number: e.target.value })}
+                          className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-academic-blue"
+                        />
+                      ) : (
+                        `Volume ${volume.volume_number}`
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {volume.year}
+                      {editingVolume?.id === volume.id ? (
+                        <input
+                          type="number"
+                          value={editingVolume.year}
+                          onChange={(e) => setEditingVolume({ ...editingVolume, year: e.target.value })}
+                          className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-academic-blue"
+                        />
+                      ) : (
+                        volume.year
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {volume.issue_count || 0}
@@ -224,18 +287,44 @@ export default function AdminVolumesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        {editingVolume?.id === volume.id ? (
+                          <>
+                            <button
+                              onClick={handleUpdateVolume}
+                              disabled={updating}
+                              className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded hover:bg-green-700 disabled:opacity-50"
+                            >
+                              {updating ? '...' : 'Save'}
+                            </button>
+                            <button
+                              onClick={() => setEditingVolume(null)}
+                              className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-bold rounded hover:bg-gray-300"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
                         <button
+                              onClick={() => setEditingVolume({ 
+                                id: volume.id, 
+                                volume_number: volume.volume_number.toString(), 
+                                year: volume.year.toString() 
+                              })}
                           className="p-2 text-gray-400 hover:text-academic-blue transition-colors"
                           title="Edit"
                         >
                           <FiEdit2 className="w-4 h-4" />
                         </button>
                         <button
+                              onClick={() => handleDeleteVolume(volume.id)}
                           className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                           title="Delete"
                         >
                           <FiTrash2 className="w-4 h-4" />
                         </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 
 interface IndexingEntry {
   id: number;
+  category: string;
   title: string;
   logo_url?: string;
   url: string;
@@ -26,8 +27,8 @@ export default function IndexingManager({ journalId }: IndexingManagerProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get unique titles from existing entries for suggestions
-  const existingTitles = Array.from(new Set(entries.map(e => e.title))).sort();
+  // Get unique titles and categories from existing entries for suggestions
+  const existingCategories = Array.from(new Set(entries.map(e => e.category).filter(Boolean))).sort();
 
   useEffect(() => {
     fetchEntries();
@@ -55,15 +56,17 @@ export default function IndexingManager({ journalId }: IndexingManagerProps) {
   };
 
   const handleSave = async () => {
-    if (!editingEntry || !editingEntry.title) {
-      toast.error('Title is required');
+    if (!editingEntry || !editingEntry.category) {
+      toast.error('Category/Heading is required');
       return;
     }
 
     setLoading(true);
     const formData = new FormData();
     formData.append('journal', String(journalId));
-    formData.append('title', editingEntry.title || '');
+    formData.append('category', editingEntry.category || '');
+    // If title is not provided, use the category as title for backend requirements
+    formData.append('title', editingEntry.title || editingEntry.category || '');
     formData.append('url', editingEntry.url || '');
     formData.append('display_order', String(editingEntry.display_order || 0));
 
@@ -111,7 +114,7 @@ export default function IndexingManager({ journalId }: IndexingManagerProps) {
         {!editingEntry && (
           <button
             onClick={() => setEditingEntry({
-              title: '',
+              category: '',
               url: '',
               display_order: 0
             })}
@@ -131,34 +134,33 @@ export default function IndexingManager({ journalId }: IndexingManagerProps) {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Title (e.g. Scopus, PubMed)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category/Heading</label>
                 <div className="relative">
                   <input
                     type="text"
-                    list="titles-list"
+                    list="categories-list"
                     required
-                    value={editingEntry.title}
-                    onChange={(e) => setEditingEntry({ ...editingEntry, title: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-academic-blue"
-                    placeholder="Select or type title..."
+                    value={editingEntry.category}
+                    onChange={(e) => setEditingEntry({ ...editingEntry, category: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-academic-blue font-bold"
+                    placeholder="e.g. Research Integrity & Quality Assurance"
                   />
-                  <datalist id="titles-list">
-                    {existingTitles.map((t) => (
-                      <option key={t} value={t} />
+                  <datalist id="categories-list">
+                    {existingCategories.map((c) => (
+                      <option key={c} value={c} />
                     ))}
-                    {!existingTitles.includes('Scopus') && <option value="Scopus" />}
-                    {!existingTitles.includes('Web of Science') && <option value="Web of Science" />}
-                    {!existingTitles.includes('PubMed') && <option value="PubMed" />}
-                    {!existingTitles.includes('DOAJ') && <option value="DOAJ" />}
-                    {!existingTitles.includes('Google Scholar') && <option value="Google Scholar" />}
+                    {!existingCategories.includes('Research Integrity & Quality Assurance') && (
+                      <option value="Research Integrity & Quality Assurance" />
+                    )}
                   </datalist>
                 </div>
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700">URL</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">URL</label>
                 <div className="relative">
                   <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                     <FiLink className="w-4 h-4" />
@@ -172,46 +174,9 @@ export default function IndexingManager({ journalId }: IndexingManagerProps) {
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Logo</label>
-                <div className="flex items-center gap-4">
-                  <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-gray-200 bg-white">
-                    {(imagePreview || editingEntry.logo_url) ? (
-                      <Image
-                        src={imagePreview || editingEntry.logo_url!}
-                        alt="Logo Preview"
-                        fill
-                        className="object-contain"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <FiImage className="w-8 h-8" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleImageSelect}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-white"
-                    >
-                      <FiUpload /> {editingEntry.id ? 'Change' : 'Upload'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Display Order</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
                 <input
                   type="number"
                   value={editingEntry.display_order}
@@ -220,20 +185,57 @@ export default function IndexingManager({ journalId }: IndexingManagerProps) {
                 />
               </div>
             </div>
+
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+              <div className="flex items-start gap-4">
+                <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-200 bg-white">
+                  {(imagePreview || editingEntry.logo_url) ? (
+                    <Image
+                      src={imagePreview || editingEntry.logo_url!}
+                      alt="Logo Preview"
+                      fill
+                      className="object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">
+                      <FiImage className="w-10 h-10" />
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageSelect}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-white transition-colors shadow-sm"
+                  >
+                    <FiUpload /> {editingEntry.id ? 'Change Logo' : 'Upload Logo'}
+                  </button>
+                  <p className="text-[10px] text-gray-500">Supported: JPG, PNG, WEBP. Max size 2MB.</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex gap-3 pt-4 border-t">
+          <div className="flex gap-3 pt-6 border-t mt-4">
             <button
               type="button"
               onClick={handleSave}
-              className="inline-flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700"
+              className="inline-flex items-center gap-2 px-8 py-2.5 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 shadow-md transition-all active:scale-95"
             >
               <FiSave /> {editingEntry.id ? 'Update Entry' : 'Save Entry'}
             </button>
             <button
               type="button"
               onClick={() => { setEditingEntry(null); setImagePreview(null); setImageFile(null); }}
-              className="px-6 py-2 border rounded-lg hover:bg-white"
+              className="px-8 py-2.5 border border-gray-300 rounded-lg hover:bg-white text-gray-700 font-medium transition-all"
             >
               Cancel
             </button>
@@ -243,20 +245,25 @@ export default function IndexingManager({ journalId }: IndexingManagerProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {entries.map((entry) => (
-          <div key={entry.id} className="bg-white p-4 rounded-xl border border-gray-100 flex items-center gap-4 shadow-sm group">
-            <div className="relative w-12 h-12 rounded overflow-hidden border border-gray-100 flex-shrink-0 bg-gray-50">
+          <div key={entry.id} className="bg-white p-4 rounded-xl border border-gray-100 flex items-center gap-4 shadow-sm group hover:shadow-md transition-shadow">
+            <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-gray-100 flex-shrink-0 bg-gray-50">
               {entry.logo_url ? (
-                <Image src={entry.logo_url} alt={entry.title} fill className="object-contain" />
+                <Image src={entry.logo_url} alt={entry.category} fill className="object-contain p-1" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-50">
-                  <FiImage className="w-5 h-5" />
+                  <FiImage className="w-6 h-6" />
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-gray-900 truncate">{entry.title}</p>
+              <p className="font-bold text-gray-900 truncate text-sm">
+                {entry.category}
+              </p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+                Indexing Entry
+              </p>
               {entry.url && (
-                <a href={entry.url} target="_blank" rel="noopener noreferrer" className="text-xs text-academic-blue hover:underline flex items-center gap-1">
+                <a href={entry.url} target="_blank" rel="noopener noreferrer" className="text-xs text-academic-blue hover:underline flex items-center gap-1 mt-1">
                   <FiLink className="w-3 h-3" /> Visit Link
                 </a>
               )}
@@ -265,14 +272,14 @@ export default function IndexingManager({ journalId }: IndexingManagerProps) {
               <button
                 type="button"
                 onClick={() => setEditingEntry(entry)}
-                className="p-2 text-gray-400 hover:text-academic-blue transition-colors"
+                className="p-2 text-gray-400 hover:text-academic-blue transition-colors rounded-full hover:bg-gray-100"
               >
                 <FiEdit2 className="w-4 h-4" />
               </button>
               <button
                 type="button"
                 onClick={() => handleDelete(entry.id)}
-                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50"
               >
                 <FiTrash2 className="w-4 h-4" />
               </button>
@@ -280,12 +287,13 @@ export default function IndexingManager({ journalId }: IndexingManagerProps) {
           </div>
         ))}
         {entries.length === 0 && !editingEntry && (
-          <div className="col-span-full text-center py-8 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-            No indexing services added yet.
+          <div className="col-span-full text-center py-12 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+            <FiImage className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+            <p className="font-medium">No indexing services added yet.</p>
+            <p className="text-sm">Click the button above to add your first entry.</p>
           </div>
         )}
       </div>
     </div>
   );
 }
-

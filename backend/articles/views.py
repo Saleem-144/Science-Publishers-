@@ -1,5 +1,7 @@
 """Views for articles app."""
 
+import logging
+
 from rest_framework import generics, filters, status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
@@ -14,6 +16,8 @@ from .models import (
     Author, Article, ArticleAuthor, ArticleFile,
     ArticleHTMLContent, Figure, Table
 )
+
+logger = logging.getLogger(__name__)
 from journals.models import Journal
 from issues.models import Issue
 from .serializers import (
@@ -23,6 +27,7 @@ from .serializers import (
     ArticleCreateUpdateSerializer, ArticleAuthorBulkSerializer,
     ArticleFileSerializer,
 )
+from xml_parser.services import process_article_xml
 
 
 # =============================================================================
@@ -39,27 +44,37 @@ class ArticleListView(generics.ListAPIView):
     - issue: Filter by issue ID
     - journal: Filter by journal ID
     - type: Filter by article type
+    - is_special_issue: Filter by special issue
     - search: Search in title, abstract
     """
     permission_classes = [AllowAny]
     serializer_class = ArticleListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['issue', 'article_type', 'is_open_access']
-    search_fields = ['title', 'abstract', 'keywords']
+    filterset_fields = ['issue', 'volume', 'article_type', 'is_open_access', 'is_special_issue']
+    search_fields = ['title', 'abstract', 'keywords', 'keywords_display']
     ordering_fields = ['published_date', 'title', 'view_count']
     ordering = ['-published_date']
     
     def get_queryset(self):
         queryset = Article.objects.filter(status='published')
         
-        # Filter by journal
-        journal_id = self.request.query_params.get('journal')
-        if journal_id:
-            queryset = queryset.filter(issue__volume__journal_id=journal_id)
+        # Filter by journal (supports ID or slug)
+        journal_param = self.request.query_params.get('journal')
+        if journal_param:
+            if journal_param.isdigit():
+                queryset = queryset.filter(
+                    Q(journal_id=journal_param) | 
+                    Q(issue__volume__journal_id=journal_param) |
+                    Q(volume__journal_id=journal_param)
+                ).distinct()
+            else:
+                queryset = queryset.filter(
+                    Q(journal__slug=journal_param) | 
+                    Q(issue__volume__journal__slug=journal_param) |
+                    Q(volume__journal__slug=journal_param)
+                ).distinct()
         
-        return queryset.select_related(
-            'issue__volume__journal'
-        ).prefetch_related('article_authors__author')
+        return queryset.prefetch_related('article_authors__author')
 
 
 class ArticleSearchView(generics.ListAPIView):
@@ -82,10 +97,35 @@ class ArticleSearchView(generics.ListAPIView):
             Q(title__icontains=query) |
             Q(abstract__icontains=query) |
             Q(keywords__icontains=query) |
+            Q(keywords_display__icontains=query) |
             Q(article_authors__author__last_name__icontains=query)
-        ).distinct().select_related(
-            'issue__volume__journal'
-        ).prefetch_related('article_authors__author')
+        ).distinct().prefetch_related('article_authors__author')
+
+
+class SpecialIssuesArticlesView(generics.ListAPIView):
+    """
+    List articles marked as special issue.
+    
+    GET /api/v1/articles/special-issues/
+    """
+    permission_classes = [AllowAny]
+    serializer_class = ArticleListSerializer
+    
+    def get_queryset(self):
+        journal_slug = self.request.query_params.get('journal_slug')
+        queryset = Article.objects.filter(
+            status='published',
+            is_special_issue=True
+        )
+        
+        if journal_slug:
+            queryset = queryset.filter(
+                Q(journal__slug=journal_slug) |
+                Q(issue__volume__journal__slug=journal_slug) |
+                Q(volume__journal__slug=journal_slug)
+            ).distinct()
+            
+        return queryset.prefetch_related('article_authors__author')
 
 
 class FeaturedArticlesView(generics.ListAPIView):
@@ -164,11 +204,20 @@ class ArticleBySlugView(generics.RetrieveAPIView):
         
         article = get_object_or_404(
             Article.objects.select_related(
+                'html_content', 
+                'journal', 
+                'volume__journal', 
                 'issue__volume__journal'
             ).prefetch_related(
-                'article_authors__author', 'files', 'figures', 'tables'
+                'article_authors__author', 
+                'files', 
+                'figures', 
+                'tables',
+                'journal__subjects'
             ),
-            issue__volume__journal__slug=journal_slug,
+            Q(journal__slug=journal_slug) | 
+            Q(issue__volume__journal__slug=journal_slug) |
+            Q(volume__journal__slug=journal_slug),
             slug=article_slug,
             status='published'
         )
@@ -191,8 +240,10 @@ class ArticleAbstractView(generics.RetrieveAPIView):
         article_slug = self.kwargs['article_slug']
         
         return get_object_or_404(
-            Article.objects.select_related('html_content'),
-            issue__volume__journal__slug=journal_slug,
+            Article.objects.select_related('html_content').prefetch_related('article_authors__author'),
+            Q(journal__slug=journal_slug) | 
+            Q(issue__volume__journal__slug=journal_slug) |
+            Q(volume__journal__slug=journal_slug),
             slug=article_slug,
             status='published'
         )
@@ -212,10 +263,12 @@ class ArticleFullTextView(generics.RetrieveAPIView):
         article_slug = self.kwargs['article_slug']
         
         return get_object_or_404(
-            Article.objects.select_related(
-                'html_content'
-            ).prefetch_related('figures', 'tables'),
-            issue__volume__journal__slug=journal_slug,
+            Article.objects.select_related('html_content').prefetch_related(
+                'article_authors__author', 'figures', 'tables'
+            ),
+            Q(journal__slug=journal_slug) | 
+            Q(issue__volume__journal__slug=journal_slug) |
+            Q(volume__journal__slug=journal_slug),
             slug=article_slug,
             status='published'
         )
@@ -232,19 +285,27 @@ class ArticlePDFView(APIView):
     def get(self, request, journal_slug, article_slug):
         article = get_object_or_404(
             Article,
-            issue__volume__journal__slug=journal_slug,
+            Q(journal__slug=journal_slug) | 
+            Q(issue__volume__journal__slug=journal_slug) |
+            Q(volume__journal__slug=journal_slug),
             slug=article_slug,
             status='published'
         )
         
-        # Get primary PDF file
+        # Try new direct pdf_file first
+        if article.pdf_file:
+            article.increment_download_count()
+            response = FileResponse(
+                article.pdf_file.open('rb'),
+                content_type='application/pdf'
+            )
+            response['Content-Disposition'] = f'attachment; filename="{article.slug}.pdf"'
+            return response
+
+        # Fallback to ArticleFile related model
         pdf_file = article.files.filter(
-            file_type='pdf',
-            is_primary=True
-        ).first()
-        
-        if not pdf_file:
-            pdf_file = article.files.filter(file_type='pdf').first()
+            file_type='pdf'
+        ).order_by('-is_primary', '-created_at').first()
         
         if not pdf_file or not pdf_file.file:
             return Response(
@@ -258,7 +319,41 @@ class ArticlePDFView(APIView):
             pdf_file.file.open('rb'),
             content_type='application/pdf'
         )
-        response['Content-Disposition'] = f'inline; filename="{pdf_file.original_filename or "article.pdf"}"'
+        response['Content-Disposition'] = f'attachment; filename="{pdf_file.original_filename or article.slug + ".pdf"}"'
+        return response
+
+
+class ArticleXMLDownloadView(APIView):
+    """
+    Download article XML.
+    
+    GET /api/v1/articles/by-journal/{journal_slug}/{article_slug}/xml/
+    """
+    permission_classes = [AllowAny]
+    
+    def get(self, request, journal_slug, article_slug):
+        article = get_object_or_404(
+            Article,
+            Q(journal__slug=journal_slug) | 
+            Q(issue__volume__journal__slug=journal_slug) |
+            Q(volume__journal__slug=journal_slug),
+            slug=article_slug,
+            status='published'
+        )
+        
+        if not article.xml_file:
+            return Response(
+                {'error': 'XML not available'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        article.increment_download_count()
+        
+        response = FileResponse(
+            article.xml_file.open('rb'),
+            content_type='application/xml'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{article.slug}.xml"'
         return response
 
 
@@ -272,10 +367,10 @@ class ArticleHTMLDownloadView(APIView):
     
     def get(self, request, journal_slug, article_slug):
         article = get_object_or_404(
-            Article.objects.select_related(
-                'html_content', 'issue__volume__journal'
-            ).prefetch_related('article_authors__author', 'figures'),
-            issue__volume__journal__slug=journal_slug,
+            Article.objects.prefetch_related('article_authors__author', 'figures'),
+            Q(journal__slug=journal_slug) | 
+            Q(issue__volume__journal__slug=journal_slug) |
+            Q(volume__journal__slug=journal_slug),
             slug=article_slug,
             status='published'
         )
@@ -440,17 +535,32 @@ class ArticleAdminListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = ArticleListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['issue', 'status', 'article_type']
-    search_fields = ['title', 'doi']
+    filterset_fields = ['issue', 'status', 'article_type', 'is_special_issue']
+    search_fields = ['title', 'doi', 'article_id_code']
     ordering = ['-created_at']
     
     def get_queryset(self):
-        queryset = Article.objects.all()
+        queryset = Article.objects.select_related(
+            'issue__volume__journal', 
+            'volume__journal',
+            'journal'
+        ).prefetch_related('article_authors__author')
         
-        # Filter by journal
-        journal_id = self.request.query_params.get('journal')
-        if journal_id:
-            queryset = queryset.filter(issue__volume__journal_id=journal_id)
+        # Filter by journal (supports ID or slug)
+        journal_param = self.request.query_params.get('journal')
+        if journal_param:
+            if journal_param.isdigit():
+                queryset = queryset.filter(
+                    Q(journal_id=journal_param) | 
+                    Q(issue__volume__journal_id=journal_param) |
+                    Q(volume__journal_id=journal_param)
+                ).distinct()
+            else:
+                queryset = queryset.filter(
+                    Q(journal__slug=journal_param) | 
+                    Q(issue__volume__journal__slug=journal_param) |
+                    Q(volume__journal__slug=journal_param)
+                ).distinct()
         
         return queryset
 
@@ -463,6 +573,12 @@ class ArticleCreateView(generics.CreateAPIView):
     """
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = ArticleCreateUpdateSerializer
+    parser_classes = [MultiPartParser, FormParser]
+
+    def perform_create(self, serializer):
+        article = serializer.save()
+        if article.xml_file:
+            process_article_xml(article.id)
 
 
 class ArticleAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -472,12 +588,63 @@ class ArticleAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     GET/PUT/PATCH/DELETE /api/v1/articles/admin/{id}/
     """
     permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = Article.objects.all()
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def get_queryset(self):
+        return Article.objects.select_related(
+            'html_content', 
+            'journal', 
+            'volume__journal', 
+            'issue__volume__journal'
+        ).prefetch_related(
+            'article_authors__author', 
+            'files', 
+            'figures', 
+            'tables',
+            'journal__subjects'
+        )
     
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
             return ArticleCreateUpdateSerializer
         return ArticleDetailSerializer
+
+    def perform_update(self, serializer):
+        try:
+            article = serializer.save()
+            # Trigger XML processing if file is new or if status is pending/failed
+            # Also log if we are triggering processing
+            should_process = 'xml_file' in self.request.FILES
+            
+            if not should_process and article.xml_file:
+                try:
+                    # Check if HTML content exists and its status
+                    status = article.html_content.parsing_status
+                    if status in ['pending', 'failed']:
+                        logger.info(f"Triggering XML processing for article {article.id} because status is {status}")
+                        should_process = True
+                except ArticleHTMLContent.DoesNotExist:
+                    logger.info(f"Triggering XML processing for article {article.id} because HTML content record is missing")
+                    should_process = True
+            
+            if should_process and article.xml_file:
+                logger.info(f"Starting XML processing for article {article.id}...")
+                process_article_xml(article.id)
+            elif not article.xml_file:
+                logger.warning(f"No XML file found for article {article.id}, skipping processing.")
+        except Exception as e:
+            logger.error(f"Error saving/processing article {article.id if 'article' in locals() else 'unknown'}: {str(e)}", exc_info=True)
+            raise e
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if not serializer.is_valid():
+            logger.warning(f"Validation errors for article update: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
 
 class ArticleAuthorsUpdateView(APIView):

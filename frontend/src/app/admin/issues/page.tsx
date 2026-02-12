@@ -11,8 +11,10 @@ export default function AdminIssuesPage() {
   const [selectedJournal, setSelectedJournal] = useState('');
   const [selectedVolume, setSelectedVolume] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingIssue, setEditingIssue] = useState<any>(null);
   const [newIssue, setNewIssue] = useState({ number: '', title: '' });
   const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   // Fetch subjects
   const { data: subjects } = useQuery({
@@ -20,10 +22,10 @@ export default function AdminIssuesPage() {
     queryFn: journalsApi.subjects,
   });
 
-  // Fetch journals filtered by subject
+  // Fetch journals filtered by subject (include all journals for admin)
   const { data: journals } = useQuery({
-    queryKey: ['journals-by-subject', selectedSubject],
-    queryFn: () => journalsApi.list({ subject: selectedSubject || undefined }),
+    queryKey: ['admin-journals-by-subject', selectedSubject],
+    queryFn: () => journalsApi.adminList({ subjects__slug: selectedSubject || undefined }),
   });
 
   // Fetch volumes for selected journal
@@ -75,7 +77,7 @@ export default function AdminIssuesPage() {
     try {
       await issuesApi.create({
         volume: parseInt(selectedVolume),
-        number: parseInt(newIssue.number),
+        issue_number: parseInt(newIssue.number),
         title: newIssue.title || undefined,
       });
       toast.success('Issue created successfully!');
@@ -86,6 +88,44 @@ export default function AdminIssuesPage() {
       toast.error(error.response?.data?.detail || 'Failed to create issue');
     } finally {
       setCreating(false);
+    }
+  };
+
+  // Update issue
+  const handleUpdateIssue = async () => {
+    if (!editingIssue || !editingIssue.issue_number) {
+      toast.error('Issue number is required');
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      await issuesApi.update(editingIssue.id, {
+        issue_number: parseInt(editingIssue.issue_number),
+        title: editingIssue.title || undefined,
+      });
+      toast.success('Issue updated successfully!');
+      setEditingIssue(null);
+      refetchIssues();
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to update issue');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // Delete issue
+  const handleDeleteIssue = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this issue? This will delete all associated articles.')) {
+      return;
+    }
+
+    try {
+      await issuesApi.delete(id);
+      toast.success('Issue deleted successfully');
+      refetchIssues();
+    } catch (error: any) {
+      toast.error('Failed to delete issue');
     }
   };
 
@@ -152,7 +192,7 @@ export default function AdminIssuesPage() {
               <option value="">-- Select Volume --</option>
               {volumesList.map((volume: any) => (
                 <option key={volume.id} value={volume.id}>
-                  Volume {volume.number} ({volume.year})
+                  Volume {volume.volume_number} ({volume.year})
                 </option>
               ))}
             </select>
@@ -167,7 +207,7 @@ export default function AdminIssuesPage() {
             <div className="flex items-center gap-2">
               <FiFileText className="w-5 h-5 text-academic-navy" />
               <h3 className="font-semibold text-gray-900">
-                Issues for Volume {volumesList.find((v: any) => v.id === parseInt(selectedVolume))?.number}
+                Issues for Volume {volumesList.find((v: any) => v.id === parseInt(selectedVolume))?.volume_number}
               </h3>
               </div>
             <button
@@ -244,28 +284,72 @@ export default function AdminIssuesPage() {
                 {issuesList.map((issue: any) => (
                 <tr key={issue.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 font-medium text-gray-900">
-                      Issue {issue.number}
+                      {editingIssue?.id === issue.id ? (
+                        <input
+                          type="number"
+                          value={editingIssue.issue_number}
+                          onChange={(e) => setEditingIssue({ ...editingIssue, issue_number: e.target.value })}
+                          className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-academic-blue"
+                        />
+                      ) : (
+                        `Issue ${issue.issue_number}`
+                      )}
                   </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {issue.title || '-'}
+                      {editingIssue?.id === issue.id ? (
+                        <input
+                          type="text"
+                          value={editingIssue.title}
+                          onChange={(e) => setEditingIssue({ ...editingIssue, title: e.target.value })}
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-academic-blue"
+                        />
+                      ) : (
+                        issue.title || '-'
+                      )}
                   </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {issue.article_count || 0}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
+                        {editingIssue?.id === issue.id ? (
+                          <>
+                            <button
+                              onClick={handleUpdateIssue}
+                              disabled={updating}
+                              className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded hover:bg-green-700 disabled:opacity-50"
+                            >
+                              {updating ? '...' : 'Save'}
+                            </button>
+                            <button
+                              onClick={() => setEditingIssue(null)}
+                              className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-bold rounded hover:bg-gray-300"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
                         <button
+                              onClick={() => setEditingIssue({ 
+                                id: issue.id, 
+                                issue_number: issue.issue_number.toString(), 
+                                title: issue.title || '' 
+                              })}
                           className="p-2 text-gray-400 hover:text-academic-blue transition-colors"
                           title="Edit"
                         >
                         <FiEdit2 className="w-4 h-4" />
                       </button>
                         <button
+                              onClick={() => handleDeleteIssue(issue.id)}
                           className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                           title="Delete"
                         >
                         <FiTrash2 className="w-4 h-4" />
                       </button>
+                          </>
+                        )}
                     </div>
                   </td>
                 </tr>

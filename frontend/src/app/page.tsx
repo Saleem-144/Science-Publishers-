@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
-import { FiArrowRight, FiBook, FiFileText, FiUsers, FiAward, FiCheckCircle, FiGlobe, FiSend, FiArchive, FiEdit3, FiImage, FiShield, FiTarget, FiLayers, FiUserCheck, FiGitMerge, FiList, FiBell, FiCalendar } from 'react-icons/fi';
-import { journalsApi, articlesApi, affiliationsApi, announcementsApi } from '@/lib/api';
+import { FiArrowRight, FiBook, FiFileText, FiUsers, FiAward, FiCheckCircle, FiGlobe, FiSend, FiArchive, FiEdit3, FiImage, FiShield, FiTarget, FiLayers, FiUserCheck, FiGitMerge, FiList, FiBell, FiCalendar, FiUserPlus, FiEdit } from 'react-icons/fi';
+import { journalsApi, articlesApi, affiliationsApi, announcementsApi, ctaButtonsApi } from '@/lib/api';
 import { JournalCard } from '@/components/JournalCard';
 import { ArticleCard } from '@/components/ArticleCard';
 
@@ -48,6 +48,11 @@ export default function HomePage() {
 
     return () => clearInterval(interval);
   }, []);
+
+  const { data: ctaButtons } = useQuery({
+    queryKey: ['cta-buttons'],
+    queryFn: ctaButtonsApi.list,
+  });
 
   const { data: featuredJournals, isLoading: journalsLoading } = useQuery({
     queryKey: ['featured-journals'],
@@ -155,45 +160,27 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Stats Bar */}
-        <div className="relative bg-black/30 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {[
-                { icon: FiBook, value: '50+', label: 'Journals' },
-                { icon: FiFileText, value: '10,000+', label: 'Articles' },
-                { icon: FiUsers, value: '25,000+', label: 'Authors' },
-                { icon: FiAward, value: '100%', label: 'Peer Reviewed' },
-              ].map((stat, index) => (
-                <div key={index} className="flex items-center gap-4">
-                  <div className="p-3 bg-ivory/10 rounded-lg">
-                    <stat.icon className="w-6 h-6 text-academic-gold" />
+        {/* CTA Buttons in Hero Section */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {(ctaButtons?.results || ctaButtons || []).map((btn: any) => (
+              <Link
+                key={btn.id}
+                href={`/apply/${btn.slug}`}
+                className="group relative flex flex-col items-center justify-center p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-academic-gold hover:border-academic-gold transition-all duration-300 text-center"
+              >
+                <div className="p-3 bg-white/10 rounded-xl mb-3 group-hover:bg-white/20 transition-colors">
+                  {btn.slug === 'editorial-board' && <FiUsers className="w-6 h-6 text-white" />}
+                  {btn.slug === 'reviewer' && <FiUserCheck className="w-6 h-6 text-white" />}
+                  {btn.slug === 'call-for-editors' && <FiEdit className="w-6 h-6 text-white" />}
+                  {btn.slug === 'section-editor' && <FiLayers className="w-6 h-6 text-white" />}
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                    <p className="text-sm text-blue-200">{stat.label}</p>
+                <span className="font-bold text-sm tracking-wide uppercase">{btn.label}</span>
+                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <FiArrowRight className="w-4 h-4" />
                   </div>
-                </div>
+              </Link>
               ))}
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-6 pt-6 border-t border-white/10">
-              {[
-                { icon: FiCheckCircle, value: '150+', label: 'EBM' },
-                { icon: FiGlobe, value: '200+', label: 'Affiliations & Partnerships' },
-                { icon: FiSend, value: '5,000+', label: 'Submitted Manuscripts' },
-                { icon: FiArchive, value: '3,500+', label: 'Published Manuscripts' },
-              ].map((stat, index) => (
-                <div key={index} className="flex items-center gap-4">
-                  <div className="p-3 bg-ivory/10 rounded-lg">
-                    <stat.icon className="w-6 h-6 text-academic-gold" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                    <p className="text-sm text-blue-200">{stat.label}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
@@ -372,6 +359,38 @@ export default function HomePage() {
               Learn More About Our Services
               <FiArrowRight />
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section - Dark Background */}
+      <section className="relative bg-academic-navy text-white py-16 overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }} />
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { icon: FiBook, value: '50+', label: 'Journals' },
+              { icon: FiFileText, value: '10,000+', label: 'Articles' },
+              { icon: FiUsers, value: '25,000+', label: 'Authors' },
+              { icon: FiAward, value: '100%', label: 'Peer Reviewed' },
+              { icon: FiCheckCircle, value: '150+', label: 'EBM' },
+              { icon: FiGlobe, value: '200+', label: 'Affiliations' },
+              { icon: FiSend, value: '5,000+', label: 'Submissions' },
+              { icon: FiArchive, value: '3,500+', label: 'Published' },
+            ].map((stat, index) => (
+              <div key={index} className="flex flex-col items-center text-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all">
+                <div className="p-3 bg-academic-gold/20 rounded-xl mb-4">
+                  <stat.icon className="w-8 h-8 text-academic-gold" />
+                </div>
+                <p className="text-3xl font-bold mb-1">{stat.value}</p>
+                <p className="text-xs text-blue-200 uppercase tracking-widest font-bold">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -626,6 +645,7 @@ export default function HomePage() {
                           src={affiliation.logo_url}
                           alt={affiliation.name}
                           fill
+                          sizes="160px"
                           className="object-contain"
                         />
                       </div>
@@ -652,6 +672,7 @@ export default function HomePage() {
                           src={affiliation.logo_url}
                           alt={affiliation.name}
                           fill
+                          sizes="160px"
                           className="object-contain"
                         />
                       </div>

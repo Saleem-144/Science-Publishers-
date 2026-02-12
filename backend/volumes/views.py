@@ -34,7 +34,7 @@ class VolumeListView(generics.ListAPIView):
     ordering = ['-year', '-volume_number']
     
     def get_queryset(self):
-        return Volume.objects.filter(is_active=True)
+        return Volume.objects.filter(is_active=True).select_related('journal')
 
 
 class VolumeDetailView(generics.RetrieveAPIView):
@@ -45,7 +45,9 @@ class VolumeDetailView(generics.RetrieveAPIView):
     """
     permission_classes = [AllowAny]
     serializer_class = VolumeDetailSerializer
-    queryset = Volume.objects.filter(is_active=True)
+    
+    def get_queryset(self):
+        return Volume.objects.filter(is_active=True).select_related('journal')
 
 
 class VolumesByJournalView(generics.ListAPIView):
@@ -102,7 +104,9 @@ class VolumeAdminListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['journal', 'is_active']
     ordering = ['-year', '-volume_number']
-    queryset = Volume.objects.all()
+    
+    def get_queryset(self):
+        return Volume.objects.all().select_related('journal')
 
 
 class VolumeCreateView(generics.CreateAPIView):
@@ -122,7 +126,9 @@ class VolumeAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     GET/PUT/PATCH/DELETE /api/v1/volumes/admin/{id}/
     """
     permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = Volume.objects.all()
+    
+    def get_queryset(self):
+        return Volume.objects.all().select_related('journal')
     
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:

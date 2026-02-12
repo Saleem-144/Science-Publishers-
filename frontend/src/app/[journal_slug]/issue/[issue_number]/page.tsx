@@ -68,7 +68,7 @@ export default function IssuePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-blue-200 mb-2">{journal?.title}</p>
           <h1 className="text-3xl font-serif font-bold mb-4">
-            Volume {issue?.volume?.number}, Issue {issue?.number}
+            Volume {issue?.volume_number}, Issue {issue?.issue_number}
           </h1>
           {issue?.publication_date && (
             <div className="flex items-center gap-2 text-blue-100">

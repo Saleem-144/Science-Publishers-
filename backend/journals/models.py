@@ -292,11 +292,7 @@ class Journal(models.Model):
     @property
     def total_articles(self):
         """Count of published articles in this journal."""
-        from articles.models import Article
-        return Article.objects.filter(
-            issue__volume__journal=self,
-            status='published'
-        ).count()
+        return self.articles_direct.filter(status='published').count()
 
 
 class CorporateAffiliation(models.Model):
@@ -517,6 +513,11 @@ class JournalIndexing(models.Model):
         related_name='indexing_entries',
         help_text='The journal this indexing entry belongs to'
     )
+    category = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text='Category/Heading for grouping (e.g. "Research Integrity & Quality Assurance")'
+    )
     title = models.CharField(
         max_length=200,
         help_text='Name of the indexing service (e.g. Scopus)'
@@ -546,3 +547,65 @@ class JournalIndexing(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.journal.title}"
+
+
+class CTAButton(models.Model):
+    """
+    Customizable CTA buttons for the homepage hero section.
+    """
+    SLUG_CHOICES = [
+        ('editorial-board', 'Become a Editorial Board Member'),
+        ('reviewer', 'Become a Reviewer'),
+        ('call-for-editors', 'Call For Editors'),
+        ('section-editor', 'Become a section Editor'),
+    ]
+    
+    slug = models.SlugField(max_length=50, choices=SLUG_CHOICES, unique=True)
+    label = models.CharField(max_length=255)
+    notification_email = models.EmailField(help_text="Form submissions will be sent to this email")
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name = "CTA Button"
+        verbose_name_plural = "CTA Buttons"
+        
+    def __str__(self):
+        return self.label
+
+
+class CTAFormSubmission(models.Model):
+    """
+    Submissions from the homepage CTA forms.
+    """
+    TITLE_CHOICES = [
+        ('Mr.', 'Mr.'),
+        ('Mrs.', 'Mrs.'),
+        ('Ms.', 'Ms.'),
+        ('Prof.', 'Prof.'),
+        ('Dr.', 'Dr.'),
+    ]
+    
+    button = models.ForeignKey(CTAButton, on_delete=models.CASCADE, related_name='submissions')
+    title = models.CharField(max_length=10, choices=TITLE_CHOICES)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    qualification = models.CharField("Last Academic Qualification", max_length=255)
+    affiliation = models.CharField(max_length=255)
+    journal = models.ForeignKey(Journal, on_delete=models.SET_NULL, null=True, blank=True)
+    country = models.CharField(max_length=100)
+    expertise = models.CharField("Field of Expertise", max_length=255)
+    orcid_id = models.CharField("ORCID ID", max_length=50, blank=True)
+    scopus_id = models.CharField("Scopus ID", max_length=50, blank=True)
+    cv_file = models.FileField("Upload CV", upload_to='cta_submissions/cvs/')
+    comments = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "CTA Form Submission"
+        verbose_name_plural = "CTA Form Submissions"
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.button.label}"

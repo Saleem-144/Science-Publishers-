@@ -4,7 +4,7 @@
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://4kzwh7j8-8000.euw.devtunnels.ms/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
 // Create axios instance
 export const api: AxiosInstance = axios.create({
@@ -37,9 +37,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
-      try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (refreshToken) {
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+      
+      if (refreshToken) {
+        try {
           const response = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, {
             refresh: refreshToken,
           });
@@ -49,12 +50,27 @@ api.interceptors.response.use(
           
           originalRequest.headers.Authorization = `Bearer ${access}`;
           return api(originalRequest);
+        } catch (refreshError) {
+          // Refresh failed, clear tokens
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          
+          // Only redirect to login if we're currently in the admin section
+          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+            window.location.href = '/admin/login';
+          }
         }
-      } catch (refreshError) {
-        // Refresh failed, clear tokens
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/admin/login';
+      } else {
+        // No refresh token but got 401, clear whatever we have
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          
+          // Only redirect to login if we're currently in the admin section
+          if (window.location.pathname.startsWith('/admin') && window.location.pathname !== '/admin/login') {
+            window.location.href = '/admin/login';
+          }
+        }
       }
     }
     
@@ -93,7 +109,16 @@ export const authApi = {
 // =============================================================================
 
 export const journalsApi = {
-  list: async (params?: { subject?: string; search?: string; page?: number }) => {
+  list: async (params?: { 
+    subject?: string;
+    subjects__slug?: string; 
+    search?: string; 
+    issn?: string;
+    is_active?: boolean;
+    is_featured?: boolean;
+    page?: number 
+  }) => {
+    // Map 'subject' to 'subjects__slug' if needed, but the backend also has a custom get_queryset
     const response = await api.get('/journals/', { params });
     return response.data;
   },
@@ -109,12 +134,12 @@ export const journalsApi = {
   },
   
   getById: async (id: number) => {
-    const response = await api.get(`/journals/${id}/`);
+    const response = await api.get(`/journals/admin/${id}/`);
     return response.data;
   },
 
   get: async (id: string | number) => {
-    const response = await api.get(`/journals/${id}/`);
+    const response = await api.get(`/journals/admin/${id}/`);
     return response.data;
   },
   
@@ -124,6 +149,26 @@ export const journalsApi = {
   },
   
   // Admin
+  adminList: async (params?: any) => {
+    const response = await api.get('/journals/admin/', { params });
+    return response.data;
+  },
+
+  createSubject: async (data: any) => {
+    const response = await api.post('/journals/admin/subjects/create/', data);
+    return response.data;
+  },
+
+  updateSubject: async (id: number, data: any) => {
+    const response = await api.patch(`/journals/admin/subjects/${id}/`, data);
+    return response.data;
+  },
+
+  deleteSubject: async (id: number) => {
+    const response = await api.delete(`/journals/admin/subjects/${id}/`);
+    return response.data;
+  },
+
   create: async (data: any) => {
     const response = await api.post('/journals/admin/create/', data);
     return response.data;
@@ -169,6 +214,11 @@ export const volumesApi = {
     return response.data;
   },
   
+  getById: async (id: number) => {
+    const response = await api.get(`/volumes/admin/${id}/`);
+    return response.data;
+  },
+  
   // Admin
   create: async (data: any) => {
     const response = await api.post('/volumes/admin/create/', data);
@@ -202,7 +252,7 @@ export const issuesApi = {
   },
   
   getById: async (id: number) => {
-    const response = await api.get(`/issues/${id}/`);
+    const response = await api.get(`/issues/admin/${id}/`);
     return response.data;
   },
   
@@ -233,8 +283,21 @@ export const issuesApi = {
 // =============================================================================
 
 export const articlesApi = {
-  list: async (params?: { journal?: number; issue?: number; search?: string; page?: number }) => {
+  list: async (params?: { 
+    journal?: number; 
+    volume?: number;
+    issue?: number; 
+    search?: string; 
+    page?: number; 
+    is_special_issue?: boolean 
+  }) => {
     const response = await api.get('/articles/', { params });
+    return response.data;
+  },
+  
+  specialIssues: async (journalSlug?: string) => {
+    const params = journalSlug ? { journal_slug: journalSlug } : {};
+    const response = await api.get('/articles/special-issues/', { params });
     return response.data;
   },
   
@@ -273,6 +336,10 @@ export const articlesApi = {
     return `${API_BASE_URL}/articles/by-journal/${journalSlug}/${articleSlug}/pdf/`;
   },
   
+  getXmlUrl: (journalSlug: string, articleSlug: string) => {
+    return `${API_BASE_URL}/articles/by-journal/${journalSlug}/${articleSlug}/xml/`;
+  },
+  
   getHtmlDownloadUrl: (journalSlug: string, articleSlug: string) => {
     return `${API_BASE_URL}/articles/by-journal/${journalSlug}/${articleSlug}/html-download/`;
   },
@@ -284,7 +351,7 @@ export const articlesApi = {
   
   // Admin
   get: async (id: string | number) => {
-    const response = await api.get(`/articles/${id}/`);
+    const response = await api.get(`/articles/admin/${id}/`);
     return response.data;
   },
 
@@ -297,9 +364,23 @@ export const articlesApi = {
     const response = await api.post('/articles/admin/create/', data);
     return response.data;
   },
+
+  createWithFiles: async (formData: FormData) => {
+    const response = await api.post('/articles/admin/create/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
   
   update: async (id: number, data: any) => {
     const response = await api.patch(`/articles/admin/${id}/`, data);
+    return response.data;
+  },
+
+  updateWithFiles: async (id: number, formData: FormData) => {
+    const response = await api.patch(`/articles/admin/${id}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
   
@@ -626,6 +707,46 @@ export const indexingApi = {
     const response = await api.delete(`/journals/admin/indexing/${id}/`);
     return response.data;
   }
+};
+
+// =============================================================================
+// CTA Buttons & Forms API
+// =============================================================================
+
+export const ctaButtonsApi = {
+  // Public
+  list: async () => {
+    const response = await api.get('/journals/cta-buttons/');
+    return response.data;
+  },
+  
+  getBySlug: async (slug: string) => {
+    const response = await api.get(`/journals/cta-buttons/by-slug/${slug}/`);
+    return response.data;
+  },
+  
+  submitForm: async (formData: FormData) => {
+    const response = await api.post('/journals/cta-buttons/submit/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+  
+  // Admin
+  adminList: async () => {
+    const response = await api.get('/journals/admin/cta-buttons/');
+    return response.data;
+  },
+  
+  update: async (id: number, data: any) => {
+    const response = await api.patch(`/journals/admin/cta-buttons/${id}/`, data);
+    return response.data;
+  },
+  
+  submissions: async () => {
+    const response = await api.get('/journals/admin/cta-submissions/');
+    return response.data;
+  },
 };
 
 export default api;

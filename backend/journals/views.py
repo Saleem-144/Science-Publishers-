@@ -5,9 +5,9 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q
+from django.db.models import Q, Count, OuterRef, Subquery
 
-from .models import Subject, Journal, Announcement, CorporateAffiliation, CTACard, EditorialBoardMember, JournalIndexing
+from .models import Subject, Journal, Announcement, CorporateAffiliation, CTACard, EditorialBoardMember, JournalIndexing, CTAButton, CTAFormSubmission
 from .serializers import (
     SubjectSerializer,
     SubjectListSerializer,
@@ -23,8 +23,9 @@ from .serializers import (
     CTACardCreateUpdateSerializer,
     EditorialBoardMemberSerializer,
     JournalIndexingSerializer,
+    CTAButtonSerializer,
+    CTAFormSubmissionSerializer
 )
-
 
 # =============================================================================
 # Public Journal Views
@@ -36,17 +37,39 @@ class JournalListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = JournalListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['is_featured', 'subjects', 'issn_online', 'issn_print']
+    filterset_fields = {
+        'is_featured': ['exact'],
+        'subjects': ['exact'],
+        'issn_online': ['exact', 'icontains'],
+        'issn_print': ['exact', 'icontains'],
+    }
     search_fields = ['title', 'short_title', 'description', 'issn_online', 'issn_print']
     ordering_fields = ['title', 'created_at']
     ordering = ['title']
     
     def get_queryset(self):
         queryset = Journal.objects.filter(is_active=True)
+        
         # Custom filtering for subject slug if provided in params
         subject_slug = self.request.query_params.get('subjects__slug')
         if subject_slug:
-            queryset = queryset.filter(subjects__slug=subject_slug)
+            # Filter by subject slug, including journals in sub-subjects
+            try:
+                subject = Subject.objects.get(slug=subject_slug)
+                # Get all descendant subject IDs (1 level deep for now as per current structure)
+                subject_ids = [subject.id] + list(subject.children.values_list('id', flat=True))
+                queryset = queryset.filter(subjects__id__in=subject_ids).distinct()
+            except Subject.DoesNotExist:
+                queryset = queryset.none()
+        
+        # Generic ISSN filter (checks both online and print)
+        issn = self.request.query_params.get('issn')
+        if issn:
+            queryset = queryset.filter(
+                Q(issn_online__icontains=issn) | 
+                Q(issn_print__icontains=issn)
+            )
+                
         return queryset
 
 
@@ -57,7 +80,7 @@ class FeaturedJournalsView(generics.ListAPIView):
     serializer_class = JournalListSerializer
     
     def get_queryset(self):
-        return Journal.objects.filter(is_active=True, is_featured=True)
+        return Journal.objects.filter(is_active=True, is_featured=True).prefetch_related('subjects')
 
 
 class JournalSearchView(generics.ListAPIView):
@@ -90,7 +113,11 @@ class JournalBySlugView(generics.RetrieveAPIView):
     lookup_field = 'slug'
     
     def get_queryset(self):
-        return Journal.objects.filter(is_active=True)
+        return Journal.objects.filter(is_active=True).prefetch_related(
+            'subjects', 
+            'editorial_board_members', 
+            'indexing_entries'
+        )
 
 
 class JournalDetailView(generics.RetrieveAPIView):
@@ -100,7 +127,11 @@ class JournalDetailView(generics.RetrieveAPIView):
     serializer_class = JournalDetailSerializer
     
     def get_queryset(self):
-        return Journal.objects.filter(is_active=True)
+        return Journal.objects.filter(is_active=True).prefetch_related(
+            'subjects', 
+            'editorial_board_members', 
+            'indexing_entries'
+        )
 
 
 # =============================================================================
@@ -143,7 +174,7 @@ class JournalsBySubjectView(generics.ListAPIView):
         return Journal.objects.filter(
             is_active=True,
             subjects__slug=slug
-        ).distinct()
+        ).prefetch_related('subjects').distinct()
 
 
 # =============================================================================
@@ -156,13 +187,13 @@ class JournalAdminListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = JournalListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['is_active', 'is_featured']
-    search_fields = ['title', 'short_title', 'description']
+    filterset_fields = ['is_active', 'is_featured', 'subjects', 'subjects__slug']
+    search_fields = ['title', 'short_title', 'description', 'issn_online', 'issn_print']
     ordering_fields = ['title', 'created_at', 'updated_at']
     ordering = ['-updated_at']
     
     def get_queryset(self):
-        return Journal.objects.all()
+        return Journal.objects.all().prefetch_related('subjects')
 
 
 class JournalCreateView(generics.CreateAPIView):
@@ -269,6 +300,68 @@ class AnnouncementDetailView(generics.RetrieveAPIView):
     
     def get_queryset(self):
         return Announcement.objects.filter(is_published=True)
+
+
+# =============================================================================
+# CTA Button Views
+# =============================================================================
+
+class CTAButtonListView(generics.ListAPIView):
+    """Public: List active CTA buttons."""
+    permission_classes = [AllowAny]
+    serializer_class = CTAButtonSerializer
+    
+    def get_queryset(self):
+        return CTAButton.objects.filter(is_active=True)
+
+
+class CTAButtonBySlugView(generics.RetrieveAPIView):
+    """Public: Get CTA button by slug."""
+    permission_classes = [AllowAny]
+    serializer_class = CTAButtonSerializer
+    lookup_field = 'slug'
+    
+    def get_queryset(self):
+        return CTAButton.objects.filter(is_active=True)
+
+
+class CTAButtonAdminListView(generics.ListAPIView):
+    """Admin: List all CTA buttons."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = CTAButtonSerializer
+    queryset = CTAButton.objects.all()
+
+
+class CTAButtonAdminDetailView(generics.RetrieveUpdateAPIView):
+    """Admin: Update a CTA button."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = CTAButtonSerializer
+    queryset = CTAButton.objects.all()
+
+
+class CTAFormSubmissionCreateView(generics.CreateAPIView):
+    """Public: Submit a CTA form."""
+    permission_classes = [AllowAny]
+    serializer_class = CTAFormSubmissionSerializer
+    queryset = CTAFormSubmission.objects.all()
+    
+    def perform_create(self, serializer):
+        submission = serializer.save()
+        # TODO: Implement email sending logic here using submission.button.notification_email
+        print(f"DEBUG: Form submitted for {submission.button.label}. Email notification would be sent to {submission.button.notification_email}")
+
+
+class CTAFormSubmissionAdminListView(generics.ListAPIView):
+    """Admin: List all form submissions."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = CTAFormSubmissionSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['first_name', 'last_name', 'email', 'affiliation']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        return CTAFormSubmission.objects.all()
 
 
 # =============================================================================

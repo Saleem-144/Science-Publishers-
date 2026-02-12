@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiArrowLeft, FiSave, FiUpload, FiX, FiImage, FiFileText, FiCheckCircle, FiPlus } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiUpload, FiX, FiImage, FiFileText, FiCheckCircle, FiPlus, FiGlobe, FiMail, FiShield } from 'react-icons/fi';
 import { journalsApi } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useQuery } from '@tanstack/react-query';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import EditorialBoardManager from '@/components/admin/EditorialBoardManager';
 import IndexingManager from '@/components/admin/IndexingManager';
@@ -18,6 +19,7 @@ export default function EditJournalPage() {
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [selectedSubject, setSelectedSubject] = useState('');
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [existingCoverImage, setExistingCoverImage] = useState<string | null>(null);
@@ -47,29 +49,46 @@ export default function EditJournalPage() {
     aims_and_scope: '',
     open_thematic_issue: '',
     submission_url: '',
+    primary_color: '#1a365d',
+    secondary_color: '#2b6cb0',
   });
 
+  // Fetch subjects for dropdown
+  const { data: subjects } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: journalsApi.subjects,
+  });
+
+  const subjectsList = subjects?.results || subjects || [];
+
   useEffect(() => {
-    const fetchJournal = async () => {
-      try {
+  const fetchJournal = async () => {
+    try {
         const journal = await journalsApi.get(journalId);
-        setFormData({
-          title: journal.title || '',
+      setFormData({
+        title: journal.title || '',
           short_title: journal.short_title || '',
-          slug: journal.slug || '',
-          description: journal.description || '',
+        slug: journal.slug || '',
+        description: journal.description || '',
           short_description: journal.short_description || '',
-          issn_print: journal.issn_print || '',
-          issn_online: journal.issn_online || '',
+        issn_print: journal.issn_print || '',
+        issn_online: journal.issn_online || '',
           publisher: journal.publisher || 'Aethra Science Publishers',
-          editor_in_chief: journal.editor_in_chief || '',
+        editor_in_chief: journal.editor_in_chief || '',
           frequency: journal.frequency || 'Monthly',
-          is_active: journal.is_active ?? true,
-          is_featured: journal.is_featured ?? false,
+        is_active: journal.is_active ?? true,
+        is_featured: journal.is_featured ?? false,
           aims_and_scope: journal.aims_and_scope || '',
           open_thematic_issue: journal.open_thematic_issue || '',
           submission_url: journal.submission_url || '',
-        });
+          primary_color: journal.primary_color || '#1a365d',
+          secondary_color: journal.secondary_color || '#2b6cb0',
+      });
+        
+        if (journal.subjects && journal.subjects.length > 0) {
+          setSelectedSubject(journal.subjects[0].id.toString());
+        }
+        
         if (journal.cover_image) {
           setExistingCoverImage(journal.cover_image);
         }
@@ -79,10 +98,10 @@ export default function EditJournalPage() {
         if (journal.editor_in_chief_image) {
           setExistingEditorImage(journal.editor_in_chief_image);
         }
-      } catch (error) {
+    } catch (error) {
         toast.error('Failed to fetch journal');
-        router.push('/admin/journals');
-      } finally {
+      router.push('/admin/journals');
+    } finally {
         setFetching(false);
       }
     };
@@ -146,10 +165,14 @@ export default function EditJournalPage() {
     setLoading(true);
 
     try {
-      const submitData = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        submitData.append(key, String(value));
-      });
+        const submitData = new FormData();
+        Object.entries(formData).forEach(([key, value]) => {
+          submitData.append(key, String(value));
+        });
+
+      if (selectedSubject) {
+        submitData.append('subject_ids', selectedSubject);
+      }
 
       if (coverImage) {
         submitData.append('cover_image', coverImage);
@@ -161,8 +184,7 @@ export default function EditJournalPage() {
         submitData.append('editor_in_chief_image', editorImage);
       }
 
-      await journalsApi.updateWithImage(parseInt(journalId), submitData);
-      
+        await journalsApi.updateWithImage(parseInt(journalId), submitData);
       toast.success('Journal updated successfully!');
       router.push('/admin/journals');
     } catch (error: any) {
@@ -245,34 +267,55 @@ export default function EditJournalPage() {
 
         {/* Right Column - Media & Meta (4/12) */}
         <div className="xl:col-span-4 space-y-8">
-          {/* Cover Image */}
+          {/* Subject Selection */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <FiCheckCircle className="text-academic-blue" /> Primary Category
+            </h2>
+            <div>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Select Subject *</label>
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all font-medium"
+              >
+                <option value="">-- Choose Subject --</option>
+                {subjectsList.map((subject: any) => (
+                  <option key={subject.id} value={subject.id}>{subject.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+        {/* Cover Image */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <FiImage className="text-academic-blue" /> Cover Image
             </h2>
-            
-            <div className="space-y-4">
-              {displayImage ? (
+          
+          <div className="space-y-4">
+            {displayImage ? (
                 <div className="relative group">
                   <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden border-2 border-gray-100 shadow-inner">
-                    <Image
-                      src={displayImage}
-                      alt="Cover preview"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute top-3 right-3 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg opacity-0 group-hover:opacity-100"
-                  >
-                    <FiX className="w-4 h-4" />
-                  </button>
+                  <Image
+                    src={displayImage}
+                    alt="Cover preview"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
-              ) : (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
+          <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                    className="absolute top-3 right-3 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg opacity-0 group-hover:opacity-100"
+          >
+                  <FiX className="w-4 h-4" />
+          </button>
+          </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
                   className="w-full aspect-[3/4] border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-academic-blue hover:bg-academic-blue/5 transition-all group"
                 >
                   <div className="p-4 rounded-full bg-gray-50 group-hover:bg-academic-blue/10 transition-colors mb-3">
@@ -280,26 +323,26 @@ export default function EditJournalPage() {
                   </div>
                   <p className="text-gray-600 font-bold">Upload Cover</p>
                   <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider font-semibold">PNG, JPG up to 5MB</p>
-                </div>
-              )}
+        </div>
+            )}
 
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageSelect}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageSelect}
                 accept="image/*"
-                className="hidden"
-              />
+              className="hidden"
+            />
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
+        <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 font-semibold hover:bg-white transition-colors"
-              >
+        >
                 <FiUpload /> {displayImage ? 'Change Cover' : 'Choose Cover File'}
-              </button>
-            </div>
-          </div>
+        </button>
+      </div>
+        </div>
 
           {/* Meta Information */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
@@ -308,77 +351,77 @@ export default function EditJournalPage() {
             </h2>
 
             <div className="space-y-4">
-              <div>
+          <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Journal Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              <input
+                type="text"
+              required
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all font-medium"
-                />
-              </div>
+              />
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Short Title</label>
-                  <input
-                    type="text"
-                    value={formData.short_title}
-                    onChange={(e) => setFormData({ ...formData, short_title: e.target.value })}
+              <input
+                type="text"
+                value={formData.short_title}
+                onChange={(e) => setFormData({ ...formData, short_title: e.target.value })}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all"
-                  />
-                </div>
-                <div>
+              />
+            </div>
+            <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">URL Slug *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+              <input
+                type="text"
+                required
+                value={formData.slug}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all font-mono text-sm"
-                  />
-                </div>
-              </div>
+              />
+            </div>
+            </div>
 
-              <div>
+          <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Short Description</label>
-                <textarea
+              <textarea
                   rows={3}
-                  value={formData.short_description}
-                  onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+              value={formData.short_description}
+              onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all resize-none"
-                />
-              </div>
+            />
+          </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">ISSN (Print)</label>
-                  <input
-                    type="text"
-                    value={formData.issn_print}
-                    onChange={(e) => setFormData({ ...formData, issn_print: e.target.value })}
+              <input
+                type="text"
+                value={formData.issn_print}
+                onChange={(e) => setFormData({ ...formData, issn_print: e.target.value })}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all font-mono"
-                  />
-                </div>
-                <div>
+              />
+            </div>
+            <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">ISSN (Online)</label>
-                  <input
-                    type="text"
-                    value={formData.issn_online}
-                    onChange={(e) => setFormData({ ...formData, issn_online: e.target.value })}
+              <input
+                type="text"
+                value={formData.issn_online}
+                onChange={(e) => setFormData({ ...formData, issn_online: e.target.value })}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all font-mono"
-                  />
-                </div>
-              </div>
+              />
+            </div>
+            </div>
 
-              <div>
+            <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Editor-in-Chief</label>
                 <div className="flex items-center gap-4">
-                  <input
-                    type="text"
-                    value={formData.editor_in_chief}
-                    onChange={(e) => setFormData({ ...formData, editor_in_chief: e.target.value })}
+              <input
+                type="text"
+                value={formData.editor_in_chief}
+                onChange={(e) => setFormData({ ...formData, editor_in_chief: e.target.value })}
                     className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all font-medium"
                     placeholder="Enter name..."
                   />
@@ -410,33 +453,55 @@ export default function EditJournalPage() {
                       onChange={handleEditorImageSelect}
                       accept="image/*"
                       className="hidden"
-                    />
-                  </div>
+              />
+            </div>
                 </div>
-                {(editorImagePreview || editorImage) && (
-                  <p className="text-[10px] text-green-600 mt-1 font-bold">New photo selected</p>
-                )}
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+            <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Frequency</label>
+              <select
+                value={formData.frequency}
+                onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all"
+              >
+                <option value="Monthly">Monthly</option>
+                    <option value="Bi-monthly">Bi-monthly</option>
+                <option value="Quarterly">Quarterly</option>
+                <option value="Annually">Annually</option>
+              </select>
+            </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Publisher</label>
+                  <input
+                    type="text"
+                    value={formData.publisher}
+                    onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all font-medium"
+                  />
+                </div>
+            </div>
 
               <div className="flex items-center gap-6 p-2 bg-gray-50 rounded-xl border border-gray-100">
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="w-4 h-4 text-academic-blue border-gray-300 rounded focus:ring-academic-blue"
-                  />
+                <input
+                  type="checkbox"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                className="w-4 h-4 text-academic-blue border-gray-300 rounded focus:ring-academic-blue"
+                />
                   <span className="text-sm font-bold text-gray-600 group-hover:text-gray-900 transition-colors">Active</span>
-                </label>
+              </label>
                 <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_featured}
-                    onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                    className="w-4 h-4 text-academic-blue border-gray-300 rounded focus:ring-academic-blue"
-                  />
+                <input
+                  type="checkbox"
+                  checked={formData.is_featured}
+                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                className="w-4 h-4 text-academic-blue border-gray-300 rounded focus:ring-academic-blue"
+                />
                   <span className="text-sm font-bold text-gray-600 group-hover:text-gray-900 transition-colors">Featured</span>
-                </label>
+              </label>
               </div>
             </div>
           </div>
@@ -444,12 +509,14 @@ export default function EditJournalPage() {
           {/* Action Buttons & Files */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
             <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <FiFileText className="text-academic-gold" /> Actions & Files
+              <FiFileText className="text-academic-gold" /> Submissions & Files
             </h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Submission URL</label>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                  <FiPlus className="w-3 h-3" /> Submission URL
+                </label>
                 <input
                   type="url"
                   value={formData.submission_url}
@@ -459,7 +526,7 @@ export default function EditJournalPage() {
                 />
               </div>
 
-              <div>
+              <div className="pt-2 border-t border-gray-100">
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Journal Flyer (PDF)</label>
                 <div className="flex flex-col gap-3 mt-2">
                   <input
@@ -469,7 +536,7 @@ export default function EditJournalPage() {
                     accept="application/pdf"
                     className="hidden"
                   />
-                  <button
+            <button
                     type="button"
                     onClick={() => flyerInputRef.current?.click()}
                     className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl text-gray-600 font-bold hover:border-academic-blue hover:bg-academic-blue/5 transition-all"
@@ -490,6 +557,49 @@ export default function EditJournalPage() {
                       )}
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Branding Colors */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <FiShield className="text-academic-blue" /> Branding Colors
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Primary Color</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={formData.primary_color}
+                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                    className="w-10 h-10 border-0 p-0 rounded-lg overflow-hidden cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={formData.primary_color}
+                    onChange={(e) => setFormData({ ...formData, primary_color: e.target.value })}
+                    className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Secondary Color</label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={formData.secondary_color}
+                    onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                    className="w-10 h-10 border-0 p-0 rounded-lg overflow-hidden cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={formData.secondary_color}
+                    onChange={(e) => setFormData({ ...formData, secondary_color: e.target.value })}
+                    className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-mono"
+                  />
                 </div>
               </div>
             </div>

@@ -35,7 +35,7 @@ class IssueListView(generics.ListAPIView):
     ordering = ['-publication_date', '-issue_number']
     
     def get_queryset(self):
-        queryset = Issue.objects.filter(is_active=True)
+        queryset = Issue.objects.filter(is_active=True).select_related('volume__journal')
         
         # Filter by journal (across all volumes)
         journal_id = self.request.query_params.get('journal')
@@ -53,7 +53,9 @@ class IssueDetailView(generics.RetrieveAPIView):
     """
     permission_classes = [AllowAny]
     serializer_class = IssueDetailSerializer
-    queryset = Issue.objects.filter(is_active=True)
+    
+    def get_queryset(self):
+        return Issue.objects.filter(is_active=True).select_related('volume__journal')
 
 
 class IssuesByVolumeView(generics.ListAPIView):
@@ -155,7 +157,7 @@ class IssueAdminListView(generics.ListAPIView):
     ordering = ['-volume__year', '-volume__volume_number', '-issue_number']
     
     def get_queryset(self):
-        queryset = Issue.objects.all()
+        queryset = Issue.objects.all().select_related('volume__journal')
         
         # Filter by journal
         journal_id = self.request.query_params.get('journal')
@@ -182,7 +184,9 @@ class IssueAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     GET/PUT/PATCH/DELETE /api/v1/issues/admin/{id}/
     """
     permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = Issue.objects.all()
+    
+    def get_queryset(self):
+        return Issue.objects.all().select_related('volume__journal')
     
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:

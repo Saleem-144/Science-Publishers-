@@ -7,9 +7,10 @@ import { Footer } from './Footer';
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdminRoute = pathname?.startsWith('/admin');
+  const isApplyRoute = pathname?.startsWith('/apply');
 
-  if (isAdminRoute) {
-    // Admin pages have their own layout - no header/footer
+  if (isAdminRoute || isApplyRoute) {
+    // Admin and Apply pages have their own layout - no header/footer
     return <>{children}</>;
   }
 
@@ -21,6 +22,11 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
     </>
   );
 }
+
+
+
+
+
 
 
 

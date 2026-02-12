@@ -1,14 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { FiPlus, FiEdit2, FiTrash2, FiEye, FiFileText, FiFilter } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiEye, FiFileText, FiFilter, FiSearch, FiChevronUp, FiChevronDown } from 'react-icons/fi';
 import { journalsApi, volumesApi, issuesApi, articlesApi } from '@/lib/api';
+import toast from 'react-hot-toast';
 
 export default function AdminArticlesPage() {
+  const queryClient = useQueryClient();
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedJournal, setSelectedJournal] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ field: string; direction: 'asc' | 'desc' }>({
+    field: 'published_date',
+    direction: 'desc',
+  });
 
   // Fetch subjects
   const { data: subjects } = useQuery({
@@ -19,37 +26,64 @@ export default function AdminArticlesPage() {
   // Fetch journals filtered by subject
   const { data: journals } = useQuery({
     queryKey: ['journals-by-subject', selectedSubject],
-    queryFn: () => journalsApi.list({ subject: selectedSubject || undefined }),
+    queryFn: () => journalsApi.list({ subjects__slug: selectedSubject || undefined }),
   });
 
-  // Fetch articles
+  // Fetch articles with search, filtering and sorting
   const { data: articles, isLoading } = useQuery({
-    queryKey: ['admin-articles'],
-    queryFn: () => articlesApi.adminList(),
+    queryKey: ['admin-articles', searchQuery, selectedJournal, sortConfig],
+    queryFn: () => articlesApi.adminList({ 
+      search: searchQuery || undefined,
+      journal: selectedJournal || undefined,
+      ordering: `${sortConfig.direction === 'desc' ? '-' : ''}${sortConfig.field}`
+    }),
   });
 
   const subjectsList = subjects?.results || subjects || [];
   const journalsList = journals?.results || journals || [];
   const articlesList = articles?.results || articles || [];
 
-  // Filter journals by selected subject
+  // Local filtering for subject (since backend filter is by journal_id or slug)
   const filteredJournals = selectedSubject
     ? journalsList.filter((j: any) => 
         j.subjects?.some((s: any) => s.slug === selectedSubject)
       )
     : journalsList;
 
-  // Filter articles by selected journal
-  const filteredArticles = selectedJournal
-    ? articlesList.filter((a: any) => 
-        a.issue?.volume?.journal?.slug === selectedJournal
-      )
-    : articlesList;
+  // We now use articlesList directly since Journal filtering is handled by the API
+  const filteredArticles = articlesList;
 
   // Reset journal selection when subject changes
   const handleSubjectChange = (value: string) => {
     setSelectedSubject(value);
     setSelectedJournal('');
+  };
+
+  const handleSort = (field: string) => {
+    setSortConfig((prev) => ({
+      field,
+      direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc',
+    }));
+  };
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortConfig.field !== field) return null;
+    return sortConfig.direction === 'asc' ? <FiChevronUp className="inline ml-1" /> : <FiChevronDown className="inline ml-1" />;
+  };
+
+  const handleDelete = async (id: number, title: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${title}"?`)) {
+      return;
+    }
+
+    try {
+      await articlesApi.delete(id);
+      toast.success('Article deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+    } catch (error: any) {
+      console.error('Error deleting article:', error);
+      toast.error(error.response?.data?.detail || 'Failed to delete article');
+    }
   };
 
   return (
@@ -65,8 +99,9 @@ export default function AdminArticlesPage() {
         </Link>
       </div>
 
-      {/* Filters */}
+      {/* Filters & Search */}
       <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4 flex-wrap">
           <FiFilter className="w-5 h-5 text-gray-500" />
           <div className="flex items-center gap-2">
@@ -99,14 +134,29 @@ export default function AdminArticlesPage() {
           ))}
         </select>
           </div>
-          {(selectedSubject || selectedJournal) && (
+            {(selectedSubject || selectedJournal || searchQuery) && (
             <button
-              onClick={() => { setSelectedSubject(''); setSelectedJournal(''); }}
+                onClick={() => { setSelectedSubject(''); setSelectedJournal(''); setSearchQuery(''); }}
               className="text-sm text-academic-blue hover:text-academic-navy"
             >
-              Clear filters
+                Clear all
             </button>
           )}
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative min-w-[300px]">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search by article title..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-academic-blue focus:border-academic-blue sm:text-sm"
+            />
+          </div>
         </div>
       </div>
 
@@ -120,11 +170,21 @@ export default function AdminArticlesPage() {
             <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Title</th>
+                <th 
+                  className="text-left px-6 py-3 text-sm font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handleSort('title')}
+                >
+                  Title <SortIcon field="title" />
+                </th>
                 <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Journal</th>
                 <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Volume/Issue</th>
                 <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Status</th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Date</th>
+                <th 
+                  className="text-left px-6 py-3 text-sm font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handleSort('published_date')}
+                >
+                  Date <SortIcon field="published_date" />
+                </th>
                 <th className="text-right px-6 py-3 text-sm font-semibold text-gray-600">Actions</th>
                 </tr>
               </thead>
@@ -135,13 +195,13 @@ export default function AdminArticlesPage() {
                     <p className="font-medium text-gray-900 line-clamp-1 max-w-xs">{article.title}</p>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    {article.issue?.volume?.journal?.title || 'N/A'}
+                    {article.journal_info?.title || 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                    {article.issue?.volume ? (
+                    {article.volume_number ? (
                       <>
-                        Vol. {article.issue.volume.number}
-                        {article.issue?.number && `, Issue ${article.issue.number}`}
+                        Vol. {article.volume_number}
+                        {article.issue_number && `, Issue ${article.issue_number}`}
                       </>
                     ) : 'N/A'}
                     </td>
@@ -164,9 +224,9 @@ export default function AdminArticlesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
-                      {article.issue?.volume?.journal?.slug && (
+                      {(article.journal_slug || article.journal_info?.slug) && (
                         <Link
-                          href={`/${article.issue.volume.journal.slug}/article/${article.slug}`}
+                          href={`/${article.journal_slug || article.journal_info.slug}/article/${article.slug}`}
                           className="p-2 text-gray-400 hover:text-academic-blue transition-colors"
                           title="View"
                         >
@@ -181,6 +241,7 @@ export default function AdminArticlesPage() {
                           <FiEdit2 className="w-4 h-4" />
                         </Link>
                         <button
+                          onClick={() => handleDelete(article.id, article.title)}
                         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                           title="Delete"
                         >
