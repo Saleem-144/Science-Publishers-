@@ -13,6 +13,7 @@ URL patterns:
 
 from django.db import models
 from django.utils.text import slugify
+from django.utils.functional import cached_property
 import uuid
 
 
@@ -111,7 +112,7 @@ class ArticleStatus(models.TextChoices):
     """Publication status of an article."""
     DRAFT = 'draft', 'Draft'
     PUBLISHED = 'published', 'Published'
-    RETRACTED = 'retracted', 'Retracted'
+    ARCHIVE = 'archive', 'Archive'
 
 
 class Article(models.Model):
@@ -152,6 +153,7 @@ class Article(models.Model):
         'Article ID',
         max_length=50,
         blank=True,
+        db_index=True,
         help_text='Custom article identifier (e.g., JS-2024-001)'
     )
     title = models.TextField(
@@ -159,12 +161,14 @@ class Article(models.Model):
     )
     slug = models.SlugField(
         max_length=300,
+        db_index=True,
         help_text='URL-friendly identifier'
     )
     doi = models.CharField(
         'DOI',
         max_length=100,
         blank=True,
+        db_index=True,
         help_text='Digital Object Identifier (e.g., 10.1000/xyz123)'
     )
     
@@ -186,6 +190,11 @@ class Article(models.Model):
         default=False,
         help_text='Tick if this article belongs to a Special Issue'
     )
+    is_preface = models.BooleanField(
+        'Is Preface',
+        default=False,
+        help_text='Tick if this article is the preface/editorial for the volume'
+    )
     
     # Content
     abstract = models.TextField(
@@ -203,11 +212,15 @@ class Article(models.Model):
         blank=True,
         help_text='Keywords to be displayed on the website'
     )
-    license_text = models.CharField(
+    license_text = models.TextField(
         'License',
-        max_length=255,
         default='CC BY License',
-        help_text='Licensing information'
+        help_text='Licensing information (supports HTML for links)'
+    )
+    cite_as = models.TextField(
+        'Cite As',
+        blank=True,
+        help_text='Custom citation text. If empty, a default citation will be generated.'
     )
     
     # Files
@@ -241,6 +254,27 @@ class Article(models.Model):
         upload_to='articles/mobi/',
         blank=True,
         null=True
+    )
+    ris_file = models.FileField(
+        'RIS Citation',
+        upload_to='articles/citations/',
+        blank=True,
+        null=True,
+        help_text='RIS citation file'
+    )
+    bib_file = models.FileField(
+        'BibTeX Citation',
+        upload_to='articles/citations/',
+        blank=True,
+        null=True,
+        help_text='BibTeX citation file'
+    )
+    endnote_file = models.FileField(
+        'EndNote Citation',
+        upload_to='articles/citations/',
+        blank=True,
+        null=True,
+        help_text='EndNote citation file'
     )
     
     # Page information
@@ -343,7 +377,7 @@ class Article(models.Model):
             self.meta_title = self.title[:200]
         super().save(*args, **kwargs)
     
-    @property
+    @cached_property
     def get_journal(self):
         """Convenience accessor for the journal."""
         if self.journal:
@@ -354,7 +388,7 @@ class Article(models.Model):
             return self.volume.journal
         return None
     
-    @property
+    @cached_property
     def get_volume(self):
         """Convenience accessor for the volume."""
         if self.volume:
@@ -376,11 +410,13 @@ class Article(models.Model):
 
     @property
     def year(self):
-        """Get publication year."""
+        """Get publication year. Prioritizes Volume year, then Published Date year."""
+        vol = self.get_volume
+        if vol and vol.year:
+            return vol.year
         if self.published_date:
             return self.published_date.year
-        vol = self.get_volume
-        return vol.year if vol else None
+        return None
 
     @property
     def pages(self):
@@ -636,6 +672,80 @@ class ArticleHTMLContent(models.Model):
     
     def __str__(self):
         return f'HTML Content for: {self.article.title[:50]}'
+
+    def get_resolved_body_html(self, request=None):
+        """Resolve figure references in body HTML on the fly."""
+        return self._resolve_refs(self.body_html, request)
+
+    def get_resolved_abstract_html(self, request=None):
+        """Resolve figure references in abstract HTML on the fly."""
+        return self._resolve_refs(self.abstract_html, request)
+
+    def _resolve_refs(self, html, request=None):
+        import re
+        if not html:
+            return html
+            
+        figures = self.article.figures.all()
+        figure_map = {}
+        
+        # Determine base URL for relative paths
+        base_url = ""
+        if request:
+            base_url = request.build_absolute_uri('/')[:-1]
+        elif hasattr(settings, 'BACKEND_URL'):
+            base_url = settings.BACKEND_URL.rstrip('/')
+        else:
+            base_url = "http://127.0.0.1:8000" # Fallback for local dev
+
+        for fig in figures:
+            if fig.image:
+                url = fig.image.url
+                if not url.startswith('http'):
+                    url = f"{base_url}{url}"
+                    
+                filename = fig.original_filename or fig.image.name.split('/')[-1]
+                figure_map[filename] = url
+                
+                # Also map without extension
+                base_name = filename.rsplit('.', 1)[0] if '.' in filename else filename
+                figure_map[base_name] = url
+                
+                if fig.figure_id:
+                    figure_map[fig.figure_id] = url
+                    figure_map[f"fig-{fig.figure_id}"] = url
+                    # Also handle case-insensitive
+                    figure_map[fig.figure_id.lower()] = url
+                    figure_map[f"fig-{fig.figure_id.lower()}"] = url
+
+        def replace_placeholder(match):
+            ref = match.group(1).strip()
+            # Try original, lowercase, and clean versions
+            clean_ref = ref.split('/')[-1] if '/' in ref else ref
+            search_keys = [ref, ref.lower(), clean_ref, clean_ref.lower()]
+            
+            for key in search_keys:
+                if key in figure_map:
+                    return figure_map[key]
+            
+            # Try removing 'fig-' prefix
+            for key in search_keys:
+                if key.startswith('fig-') and key[4:] in figure_map:
+                    return figure_map[key[4:]]
+                
+            # Try adding 'fig-' prefix
+            for key in search_keys:
+                if not key.startswith('fig-') and f"fig-{key}" in figure_map:
+                    return figure_map[f"fig-{key}"]
+
+            # Try partial matches as last resort
+            for key, url in figure_map.items():
+                if clean_ref.lower() in key.lower() or key.lower() in clean_ref.lower():
+                    return url
+            
+            return f"{base_url}/media/placeholder.png"
+            
+        return re.sub(r'\{\{FIGURE:([^}]+)\}\}', replace_placeholder, html)
 
 
 class Figure(models.Model):

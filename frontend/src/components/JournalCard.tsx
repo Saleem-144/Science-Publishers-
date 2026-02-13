@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useQueryClient } from '@tanstack/react-query';
+import { journalsApi } from '@/lib/api';
 import { FiBook, FiFileText, FiArrowRight } from 'react-icons/fi';
 
 interface Subject {
@@ -41,6 +43,16 @@ const MOCK_COVER_IMAGES: { [key: string]: string } = {
 const DEFAULT_EDITOR_IMAGE = 'https://ui-avatars.com/api/?name=Editor&background=1a365d&color=fff&size=128';
 
 export function JournalCard({ journal, viewMode = 'grid' }: JournalCardProps) {
+  const queryClient = useQueryClient();
+  
+  const handleMouseEnter = () => {
+    queryClient.prefetchQuery({
+      queryKey: ['journal', journal.slug],
+      queryFn: () => journalsApi.getBySlug(journal.slug),
+      staleTime: 60 * 1000,
+    });
+  };
+
   const editorName = journal.editor_in_chief || 'TBA';
   const editorImage = journal.editor_in_chief_image || 
     DEFAULT_EDITOR_IMAGE.replace('Editor', encodeURIComponent(editorName.split(' ').map(n => n[0]).join('')));
@@ -48,7 +60,11 @@ export function JournalCard({ journal, viewMode = 'grid' }: JournalCardProps) {
 
   if (viewMode === 'list') {
     return (
-      <Link href={`/${journal.slug}`} className="group block">
+      <Link 
+        href={`/${journal.slug}`} 
+        className="group block"
+        onMouseEnter={handleMouseEnter}
+      >
         <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 flex flex-col md:flex-row h-auto md:h-48">
           {/* Image Section */}
           <div className="w-full md:w-48 h-48 relative flex-shrink-0 overflow-hidden">
@@ -129,7 +145,11 @@ export function JournalCard({ journal, viewMode = 'grid' }: JournalCardProps) {
   }
 
   return (
-    <Link href={`/${journal.slug}`} className="group block">
+    <Link 
+      href={`/${journal.slug}`} 
+      className="group block"
+      onMouseEnter={handleMouseEnter}
+    >
       <article className="bg-ivory rounded-xl shadow-md border border-ivory-200 overflow-hidden hover:shadow-xl transition-all duration-300 h-[480px] w-full flex flex-col">
         {/* Journal Cover Image Section */}
         <div className="h-48 relative flex-shrink-0 overflow-hidden">

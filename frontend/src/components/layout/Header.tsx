@@ -32,7 +32,7 @@ const navLinks: NavLink[] = [
     label: 'Information',
     children: [
       {
-        label: 'ForAuthors',
+        label: 'For Authors',
         children: [
           { href: '/information/for-authors/archiving-policies', label: 'Archiving policies' },
           { href: '/information/for-authors/article-processing-charges-policy', label: 'Article processing charges policy' },
@@ -46,7 +46,7 @@ const navLinks: NavLink[] = [
         ],
       },
       {
-        label: 'ForEditorsAndReviewers',
+        label: 'For Editors And Reviewers',
         children: [
           { href: '/information/for-editors-and-reviewers/editorial-management', label: 'Editorial management' },
           { href: '/information/for-editors-and-reviewers/editorial-policies', label: 'Editorial policies' },
@@ -60,7 +60,7 @@ const navLinks: NavLink[] = [
         ],
       },
       {
-        label: 'EthicalGuidelines',
+        label: 'Ethical Guidelines',
         children: [
           { href: '/information/ethical-guidelines/allegations-from-whistleblowers', label: 'Allegations from whistleblowers' },
           { href: '/information/ethical-guidelines/aethra-advisory-board', label: 'Aethra advisory board' },
@@ -515,7 +515,7 @@ export function Header() {
               }}
               className="block px-4 py-3 rounded-lg font-medium transition-colors text-black bg-yellow-500 hover:bg-yellow-600 mt-2 text-center shadow-sm"
             >
-              PublishWithUs
+              Publish With Us
             </Link>
           </nav>
         </div>

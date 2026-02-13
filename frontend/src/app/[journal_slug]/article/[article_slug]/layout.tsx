@@ -67,8 +67,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       'citation_issn': article.journal_info?.issn_online || article.journal_info?.issn_print || '',
       'citation_doi': article.doi || '',
       'citation_pdf_url': article.pdf_file || '',
-      'citation_abstract_html_url': `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/${params.journal_slug}/article/${params.article_slug}`,
-      'citation_fulltext_html_url': `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/${params.journal_slug}/article/${params.article_slug}/fulltext`,
+      'citation_abstract_html_url': `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/${params.journal_slug}/article/${params.article_slug}/abstract`,
+      'citation_fulltext_html_url': `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/${params.journal_slug}/article/${params.article_slug}`,
       'citation_language': 'en',
     }
   };

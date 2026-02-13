@@ -112,5 +112,5 @@ class Issue(models.Model):
     
     @property
     def total_articles(self):
-        """Count of published articles in this issue."""
-        return self.articles.filter(status='published').count()
+        """Count of published/archived articles in this issue."""
+        return self.articles.filter(status__in=['published', 'archive']).count()

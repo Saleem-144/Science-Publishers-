@@ -80,5 +80,5 @@ class Volume(models.Model):
         from articles.models import Article
         return Article.objects.filter(
             issue__volume=self,
-            status='published'
+            status__in=['published', 'archive']
         ).count()

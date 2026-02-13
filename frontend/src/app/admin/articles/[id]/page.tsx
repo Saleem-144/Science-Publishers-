@@ -48,6 +48,7 @@ export default function EditArticlePage() {
     revised_date: '',
     accepted_date: '',
     published_date: '',
+    cite_as: '',
   });
 
   // Existing files info
@@ -57,6 +58,9 @@ export default function EditArticlePage() {
     epub_file: null,
     prc_file: null,
     mobi_file: null,
+    ris_file: null,
+    bib_file: null,
+    endnote_file: null,
   });
 
   // New files to upload
@@ -66,6 +70,9 @@ export default function EditArticlePage() {
     epub_file: null,
     prc_file: null,
     mobi_file: null,
+    ris_file: null,
+    bib_file: null,
+    endnote_file: null,
   });
 
   // Fetch subjects
@@ -129,6 +136,7 @@ export default function EditArticlePage() {
           revised_date: article.revised_date || '',
           accepted_date: article.accepted_date || '',
           published_date: article.published_date || '',
+          cite_as: article.cite_as || '',
         });
 
         setArticleAuthors(article.authors || []);
@@ -168,6 +176,9 @@ export default function EditArticlePage() {
           epub_file: article.epub_file || null,
           prc_file: article.prc_file || null,
           mobi_file: article.mobi_file || null,
+          ris_file: article.ris_file || null,
+          bib_file: article.bib_file || null,
+          endnote_file: article.endnote_file || null,
         });
 
       } catch (error) {
@@ -455,14 +466,27 @@ export default function EditArticlePage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
                   />
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    License
+                    License / Copyright Text
                   </label>
-                  <input
-                    type="text"
+                  <textarea
                     value={formData.license_text}
                     onChange={(e) => setFormData({ ...formData, license_text: e.target.value })}
+                    rows={3}
+                    placeholder="Enter license or copyright info. HTML links are supported."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cite As (Custom Text)
+                  </label>
+                  <textarea
+                    value={formData.cite_as}
+                    onChange={(e) => setFormData({ ...formData, cite_as: e.target.value })}
+                    rows={3}
+                    placeholder="Enter custom citation text. If empty, a default will be generated."
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
                   />
                 </div>
@@ -564,7 +588,7 @@ export default function EditArticlePage() {
                   >
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
-                    <option value="retracted">Retracted</option>
+                    <option value="archive">Archive</option>
                   </select>
                 </div>
               </div>
@@ -703,6 +727,9 @@ export default function EditArticlePage() {
                 { label: 'ePUB File', key: 'epub_file', accept: '.epub' },
                 { label: 'PRC File', key: 'prc_file', accept: '.prc' },
                 { label: 'Mobi File', key: 'mobi_file', accept: '.mobi' },
+                { label: 'RIS Citation (.ris)', key: 'ris_file', accept: '.ris' },
+                { label: 'BibTeX Citation (.bib)', key: 'bib_file', accept: '.bib' },
+                { label: 'EndNote Citation (.enw)', key: 'endnote_file', accept: '.enw' },
               ].map((fileConfig) => (
                 <div key={fileConfig.key} className="space-y-2">
                   <span className="block text-sm font-medium text-gray-700">{fileConfig.label}</span>

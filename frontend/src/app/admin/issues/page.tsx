@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { FiPlus, FiEdit2, FiTrash2, FiFileText, FiLayers } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiFileText, FiLayers, FiFilter, FiSearch, FiX } from 'react-icons/fi';
 import { journalsApi, volumesApi, issuesApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -10,6 +10,7 @@ export default function AdminIssuesPage() {
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedJournal, setSelectedJournal] = useState('');
   const [selectedVolume, setSelectedVolume] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingIssue, setEditingIssue] = useState<any>(null);
   const [newIssue, setNewIssue] = useState({ number: '', title: '' });
@@ -31,14 +32,14 @@ export default function AdminIssuesPage() {
   // Fetch volumes for selected journal
   const { data: volumes } = useQuery({
     queryKey: ['volumes-by-journal', selectedJournal],
-    queryFn: () => volumesApi.listByJournal(selectedJournal),
+    queryFn: () => volumesApi.adminList({ journal: selectedJournal }),
     enabled: !!selectedJournal,
   });
 
   // Fetch issues for selected volume
   const { data: issues, isLoading: issuesLoading, refetch: refetchIssues } = useQuery({
     queryKey: ['issues-by-volume', selectedVolume],
-    queryFn: () => issuesApi.listByVolume(parseInt(selectedVolume)),
+    queryFn: () => issuesApi.adminList({ volume: selectedVolume }),
     enabled: !!selectedVolume,
   });
 
@@ -47,12 +48,11 @@ export default function AdminIssuesPage() {
   const volumesList = volumes?.results || volumes || [];
   const issuesList = issues?.results || issues || [];
 
-  // Filter journals by selected subject
-  const filteredJournals = selectedSubject
-    ? journalsList.filter((j: any) => 
-        j.subjects?.some((s: any) => s.slug === selectedSubject)
-      )
-    : journalsList;
+  // Filter issues by search query
+  const filteredIssues = issuesList.filter((i: any) => 
+    i.issue_number.toString().includes(searchQuery) || 
+    (i.title && i.title.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   // Reset selections when parent changes
   const handleSubjectChange = (value: string) => {
@@ -135,61 +135,51 @@ export default function AdminIssuesPage() {
         <h1 className="text-2xl font-bold text-gray-900">Manage Issues</h1>
       </div>
 
-      {/* Cascading Filters */}
-      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Select Volume</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Subject Dropdown */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              1. Select Subject
-            </label>
+      {/* Single Line Filter Bar */}
+      <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Subject Filter */}
+          <div className="flex items-center gap-2">
+            <FiFilter className="w-4 h-4 text-gray-400" />
             <select
               value={selectedSubject}
               onChange={(e) => handleSubjectChange(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+              className="min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
             >
-              <option value="">-- Select Subject --</option>
+              <option value="">All Subjects</option>
               {subjectsList.map((subject: any) => (
                 <option key={subject.id} value={subject.slug}>
                   {subject.name}
                 </option>
               ))}
             </select>
-            </div>
+          </div>
 
-          {/* Journal Dropdown */}
-              <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              2. Select Journal
-            </label>
-                <select
+          {/* Journal Filter */}
+          <div className="flex items-center gap-2">
+            <select
               value={selectedJournal}
               onChange={(e) => handleJournalChange(e.target.value)}
-              disabled={!selectedSubject}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue disabled:bg-gray-100 disabled:cursor-not-allowed"
-                >
-              <option value="">-- Select Journal --</option>
-              {filteredJournals.map((journal: any) => (
-                <option key={journal.id} value={journal.slug}>
+              className="min-w-[200px] max-w-[300px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+            >
+              <option value="">Select Journal</option>
+              {journalsList.map((journal: any) => (
+                <option key={journal.id} value={journal.id}>
                   {journal.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                </option>
+              ))}
+            </select>
+          </div>
 
-          {/* Volume Dropdown */}
-              <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              3. Select Volume
-            </label>
+          {/* Volume Filter */}
+          <div className="flex items-center gap-2">
             <select
               value={selectedVolume}
               onChange={(e) => setSelectedVolume(e.target.value)}
               disabled={!selectedJournal}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue disabled:bg-gray-50 disabled:text-gray-400"
             >
-              <option value="">-- Select Volume --</option>
+              <option value="">Select Volume</option>
               {volumesList.map((volume: any) => (
                 <option key={volume.id} value={volume.id}>
                   Volume {volume.volume_number} ({volume.year})
@@ -197,8 +187,32 @@ export default function AdminIssuesPage() {
               ))}
             </select>
           </div>
+
+          {/* Search Bar */}
+          <div className="relative flex-1 min-w-[200px]">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FiSearch className="h-4 w-4 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search issues..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+            />
+          </div>
+
+          {(selectedSubject || selectedJournal || selectedVolume || searchQuery) && (
+            <button
+              onClick={() => { setSelectedSubject(''); setSelectedJournal(''); setSelectedVolume(''); setSearchQuery(''); }}
+              className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+              title="Clear all filters"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+          )}
         </div>
-              </div>
+      </div>
 
       {/* Issues List & Create Form */}
       {selectedVolume ? (
@@ -281,7 +295,7 @@ export default function AdminIssuesPage() {
               </tr>
             </thead>
               <tbody className="divide-y divide-gray-100">
-                {issuesList.map((issue: any) => (
+                {filteredIssues.map((issue: any) => (
                 <tr key={issue.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {editingIssue?.id === issue.id ? (
@@ -308,7 +322,7 @@ export default function AdminIssuesPage() {
                       )}
                   </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
-                      {issue.article_count || 0}
+                      {issue.total_articles || 0}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">

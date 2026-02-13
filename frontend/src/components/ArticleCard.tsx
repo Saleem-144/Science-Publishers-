@@ -23,7 +23,8 @@ interface Article {
   published_date?: string;
   is_open_access?: boolean;
   is_special_issue?: boolean;
-  article_type?: string; // e.g., "research", "review", "case_report"
+  is_preface?: boolean;
+  article_type?: string; 
   article_type_display?: string; // Human-readable: "Research Article", "Review Article"
   journal_slug?: string; // Direct from API
   journal_title?: string; // Direct from API
@@ -88,6 +89,13 @@ export function ArticleCard({ article, compact = false }: ArticleCardProps) {
         <span className="inline-flex items-center px-3 py-1 bg-academic-blue/10 text-academic-blue text-[10px] font-bold uppercase tracking-wider rounded-md border border-academic-blue/20">
           {articleType}
         </span>
+
+        {/* Preface Tag */}
+        {article.is_preface && (
+          <span className="inline-flex items-center gap-1 px-3 py-1 bg-academic-gold text-academic-navy text-[10px] font-black uppercase tracking-widest rounded-md shadow-sm">
+            Preface
+          </span>
+        )}
         
         {/* Special Issue Tag */}
         {article.is_special_issue && (
@@ -156,17 +164,20 @@ export function ArticleCard({ article, compact = false }: ArticleCardProps) {
       <div className="mt-4 pt-3 border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link 
-            href={`/${journalSlug}`}
+            href={`/${journalSlug}/article/${article.slug}/abstract`}
             className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-academic-navy hover:text-academic-blue transition-colors"
           >
             <FiBookOpen className="w-3.5 h-3.5" />
-            {journalTitle}
+            Cite As
           </Link>
 
           {article.license_text && (
             <div className="hidden sm:flex items-center gap-1 text-[10px] text-gray-400 font-medium">
-              <FiAward className="w-3 h-3" />
-              {article.license_text}
+              <FiAward className="w-3 h-3 flex-shrink-0" />
+              <div 
+                className="article-license-links"
+                dangerouslySetInnerHTML={{ __html: article.license_text }}
+              />
             </div>
           )}
         </div>

@@ -164,33 +164,6 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-academic-navy text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Contact us today to learn how our services can support your publishing goals.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-academic-gold text-academic-navy font-semibold rounded-lg hover:bg-yellow-400 transition-colors"
-            >
-              <FiMail className="w-5 h-5" />
-              Contact Us
-            </Link>
-            <Link
-              href="/journals"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-white/50 text-white font-semibold rounded-lg hover:bg-white/10 transition-colors"
-            >
-              Browse Journals
-              <FiArrowRight className="w-5 h-5" />
-            </Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

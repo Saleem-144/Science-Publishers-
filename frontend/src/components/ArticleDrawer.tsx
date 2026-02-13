@@ -1,23 +1,117 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { 
   FiX, FiUser, FiDownload, FiList, FiGrid, FiShare2, 
   FiCheck, FiCopy, FiFile, FiFileText, FiMail, FiMapPin, FiBookOpen,
-  FiInfo, FiShield
+  FiInfo, FiShield, FiExternalLink
 } from 'react-icons/fi';
+import * as SiIcons from 'react-icons/si';
 import toast from 'react-hot-toast';
-import { articlesApi } from '@/lib/api';
+import { articlesApi, siteApi } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
+
+// Mapping of platform IDs to icons and labels
+const SOCIAL_PLATFORMS: Record<string, { label: string; icon: string | null; color: string; domain: string }> = {
+  blogger: { label: 'Blogger', icon: 'SiBlogger', color: 'text-[#FF5722]', domain: 'blogger.com' },
+  bluesky: { label: 'Bluesky', icon: 'SiBluesky', color: 'text-[#0085FF]', domain: 'bsky.app' },
+  buffer: { label: 'Buffer', icon: 'SiBuffer', color: 'text-[#000000]', domain: 'buffer.com' },
+  diaspora: { label: 'Diaspora', icon: 'SiDiaspora', color: 'text-[#000000]', domain: 'diasporafoundation.org' },
+  digg: { label: 'Digg', icon: 'SiDigg', color: 'text-[#000000]', domain: 'digg.com' },
+  diigo: { label: 'Diigo', icon: null, color: 'text-[#3399FF]', domain: 'diigo.com' },
+  douban: { label: 'Douban', icon: 'SiDouban', color: 'text-[#007722]', domain: 'douban.com' },
+  evernote: { label: 'Evernote', icon: 'SiEvernote', color: 'text-[#00A82D]', domain: 'evernote.com' },
+  facebook: { label: 'Facebook', icon: 'SiFacebook', color: 'text-[#1877F2]', domain: 'facebook.com' },
+  fark: { label: 'Fark', icon: null, color: 'text-[#000000]', domain: 'fark.com' },
+  flipboard: { label: 'Flipboard', icon: 'SiFlipboard', color: 'text-[#E12828]', domain: 'flipboard.com' },
+  gab: { label: 'Gab', icon: null, color: 'text-[#00C853]', domain: 'gab.com' },
+  pocket: { label: 'Pocket (GetPocket)', icon: 'SiPocket', color: 'text-[#EF4056]', domain: 'getpocket.com' },
+  gmail: { label: 'Gmail', icon: 'SiGmail', color: 'text-[#EA4335]', domain: 'gmail.com' },
+  google_bookmarks: { label: 'Google Bookmarks', icon: null, color: 'text-[#4285F4]', domain: 'google.com' },
+  hacker_news: { label: 'Hacker News', icon: null, color: 'text-[#FF6600]', domain: 'news.ycombinator.com' },
+  houzz: { label: 'Houzz', icon: 'SiHouzz', color: 'text-[#7AC142]', domain: 'houzz.com' },
+  instapaper: { label: 'Instapaper', icon: 'SiInstapaper', color: 'text-[#000000]', domain: 'instapaper.com' },
+  iorbix: { label: 'Iorbix', icon: null, color: 'text-[#000000]', domain: 'iorbix.com' },
+  kakao: { label: 'Kakao', icon: 'SiKakaotalk', color: 'text-[#FFE812]', domain: 'kakao.com' },
+  kindle: { label: 'Kindle It', icon: null, color: 'text-[#000000]', domain: 'amazon.com' },
+  koo: { label: 'Koo App', icon: null, color: 'text-[#FACD00]', domain: 'kooapp.com' },
+  line: { label: 'Line', icon: 'SiLine', color: 'text-[#00C300]', domain: 'line.me' },
+  linkedin: { label: 'LinkedIn', icon: 'SiLinkedin', color: 'text-[#0A66C2]', domain: 'linkedin.com' },
+  livejournal: { label: 'LiveJournal', icon: 'SiLivejournal', color: 'text-[#00B0EA]', domain: 'livejournal.com' },
+  mail_ru: { label: 'Mail.ru', icon: 'SiMaildotru', color: 'text-[#005FF9]', domain: 'mail.ru' },
+  meneame: { label: 'Meneame', icon: null, color: 'text-[#FF5917]', domain: 'meneame.net' },
+  messenger: { label: 'Messenger', icon: 'SiMessenger', color: 'text-[#006AFF]', domain: 'messenger.com' },
+  ms_teams: { label: 'Microsoft Teams', icon: null, color: 'text-[#6264A7]', domain: 'teams.microsoft.com' },
+  naver: { label: 'Naver', icon: 'SiNaver', color: 'text-[#03C75A]', domain: 'naver.com' },
+  nextdoor: { label: 'Nextdoor', icon: 'SiNextdoor', color: 'text-[#00B246]', domain: 'nextdoor.com' },
+  odnoklassniki: { label: 'Odnoklassniki', icon: 'SiOdnoklassniki', color: 'text-[#EE8208]', domain: 'ok.ru' },
+  outlook: { label: 'Outlook', icon: 'SiMicrosoftoutlook', color: 'text-[#0078D4]', domain: 'outlook.com' },
+  pinboard: { label: 'Pinboard', icon: 'SiPinboard', color: 'text-[#0000E6]', domain: 'pinboard.in' },
+  pinterest: { label: 'Pinterest', icon: 'SiPinterest', color: 'text-[#BD081C]', domain: 'pinterest.com' },
+  plurk: { label: 'Plurk', icon: 'SiPlurk', color: 'text-[#FF574D]', domain: 'plurk.com' },
+  qzone: { label: 'Qzone', icon: 'SiQzone', color: 'text-[#FECE00]', domain: 'qzone.qq.com' },
+  reddit: { label: 'Reddit', icon: 'SiReddit', color: 'text-[#FF4500]', domain: 'reddit.com' },
+  refind: { label: 'Refind', icon: null, color: 'text-[#3B5998]', domain: 'refind.com' },
+  renren: { label: 'Renren', icon: 'SiRenren', color: 'text-[#005EAC]', domain: 'renren.com' },
+  skype: { label: 'Skype', icon: 'SiSkype', color: 'text-[#00AFF0]', domain: 'skype.com' },
+  surfingbird: { label: 'Surfingbird', icon: null, color: 'text-[#000000]', domain: 'surfingbird.ru' },
+  telegram: { label: 'Telegram', icon: 'SiTelegram', color: 'text-[#26A5E4]', domain: 'telegram.org' },
+  tencent_qq: { label: 'Tencent QQ', icon: 'SiTencentqq', color: 'text-[#EB1923]', domain: 'qq.com' },
+  threema: { label: 'Threema', icon: 'SiThreema', color: 'text-[#000000]', domain: 'threema.ch' },
+  trello: { label: 'Trello', icon: 'SiTrello', color: 'text-[#0079BF]', domain: 'trello.com' },
+  tumblr: { label: 'Tumblr', icon: 'SiTumblr', color: 'text-[#36465D]', domain: 'tumblr.com' },
+  twitter: { label: 'Twitter', icon: 'SiX', color: 'text-[#000000]', domain: 'twitter.com' },
+  vk: { label: 'VK', icon: 'SiVk', color: 'text-[#4C75A3]', domain: 'vk.com' },
+  wechat: { label: 'WeChat', icon: 'SiWechat', color: 'text-[#07C160]', domain: 'wechat.com' },
+  weibo: { label: 'Weibo', icon: 'SiSinaweibo', color: 'text-[#E6162D]', domain: 'weibo.com' },
+  whatsapp: { label: 'WhatsApp', icon: 'SiWhatsapp', color: 'text-[#25D366]', domain: 'whatsapp.com' },
+  wordpress: { label: 'WordPress', icon: 'SiWordpress', color: 'text-[#21759B]', domain: 'wordpress.com' },
+  xing: { label: 'Xing', icon: 'SiXing', color: 'text-[#006567]', domain: 'xing.com' },
+  yahoo_mail: { label: 'Yahoo Mail', icon: null, color: 'text-[#6001D2]', domain: 'yahoo.com' },
+  yummly: { label: 'Yummly', icon: null, color: 'text-[#ED1C24]', domain: 'yummly.com' },
+  blm: { label: 'BLM', icon: null, color: 'text-[#000000]', domain: 'blacklivesmatter.com' },
+};
+
+const SocialIcon = ({ id, className }: { id: string, className: string }) => {
+  const platform = SOCIAL_PLATFORMS[id];
+  if (!platform) return <FiShare2 className={className} />;
+
+  const Icon = platform.icon ? (SiIcons as any)[platform.icon] : null;
+  
+  if (Icon) {
+    return <Icon className={className} />;
+  }
+  
+  // Fallback to favicon
+  return (
+    <img 
+      src={`https://www.google.com/s2/favicons?sz=64&domain=${platform.domain}`} 
+      alt={platform.label} 
+      className={`${className} object-contain`}
+      onError={(e) => {
+        (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?sz=64&domain=google.com';
+      }}
+    />
+  );
+};
 
 interface ArticleDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | null;
+  type: 'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | 'cite' | null;
   data: any;
 }
 
 export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProps) {
   const [copied, setStatus] = useState(false);
+
+  // Fetch site settings for social links
+  const { data: settings } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: siteApi.getSettings,
+    enabled: isOpen && type === 'share',
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -75,12 +169,18 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
                     )}
                     {author.orcid_id && (
                       <div className="flex items-center gap-2.5 text-[11px] font-bold text-gray-500">
-                        <img src="https://orcid.org/assets/vectors/orcid.logo.icon.svg" alt="ORCID" className="w-3.5 h-3.5" />
+                        <Image 
+                          src="https://orcid.org/assets/vectors/orcid.logo.icon.svg" 
+                          alt="ORCID" 
+                          width={14} 
+                          height={14}
+                          className="w-3.5 h-3.5" 
+                        />
                         <a 
                           href={author.orcid_id.startsWith('http') ? author.orcid_id : `https://orcid.org/${author.orcid_id}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="hover:text-academic-blue transition-colors"
+                          className="hover:text-academic-blue transition-colors" 
                         >
                           {author.orcid_id.replace('https://orcid.org/', '')}
                         </a>
@@ -182,7 +282,7 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
               </div>
               <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Tables & Figures</h3>
             </div>
-
+            
             {(data.tables?.length > 0 || data.figures?.length > 0) ? (
               <div className="space-y-12">
                 {/* Tables */}
@@ -205,11 +305,20 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
                   <div key={figure.id} className="space-y-4 group">
                     <h4 className="text-sm font-black text-academic-blue uppercase tracking-wider">{figure.label || 'Figure'}</h4>
                     <div className="overflow-hidden rounded-xl border border-gray-100 shadow-sm bg-white p-2">
-                      <img 
-                        src={figure.image_file} 
-                        alt={figure.label} 
-                        className="w-full h-auto rounded-lg shadow-sm"
-                      />
+                      <div className="relative w-full aspect-video">
+                        {(figure.image_url || figure.image) ? (
+                          <Image 
+                            src={figure.image_url || figure.image} 
+                            alt={figure.label || "Figure"} 
+                            fill
+                            className="object-contain rounded-lg shadow-sm"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                            <FiGrid className="w-8 h-8 text-gray-200" />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -221,10 +330,103 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
             )}
           </div>
         );
+      case 'cite':
+        const citationFiles = [
+          { label: 'RIS (EndNote, Reference Manager)', url: data.ris_file, key: 'ris' },
+          { label: 'BibTeX (LaTeX)', url: data.bib_file, key: 'bib' },
+          { label: 'EndNote (ENW)', url: data.endnote_file, key: 'endnote' },
+        ].filter(f => f.url);
+
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
+              <div className="w-8 h-8 bg-academic-navy/5 rounded-lg flex items-center justify-center text-academic-navy">
+                <FiBookOpen className="w-4 h-4" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Cite As</h3>
+            </div>
+            
+            <div className="bg-academic-navy/[0.02] p-6 rounded-2xl border border-gray-100 space-y-4">
+              <div className="text-sm font-serif leading-relaxed text-gray-700">
+                {data.cite_as ? (
+                  <div dangerouslySetInnerHTML={{ __html: data.cite_as }} />
+                ) : (
+                  <>
+                    {data.authors?.[0]?.last_name} et al. {data.title}. 
+                    <span className="italic"> {data.journal_info?.title}</span>, {new Date(data.published_date).getFullYear()}; {data.volume_info?.volume_number || '20'}: {data.article_id_code || 'e187421'}.
+                    <br />
+                    <span className="text-academic-blue break-all text-[11px]">http://dx.doi.org/{data.doi}</span>
+                  </>
+                )}
+              </div>
+              
+              <button
+                onClick={() => {
+                  const text = data.cite_as ? 
+                    data.cite_as.replace(/<[^>]*>?/gm, '') : 
+                    `${data.authors?.[0]?.last_name} et al. ${data.title}. ${data.journal_info?.title}, ${new Date(data.published_date).getFullYear()}; ${data.volume_info?.volume_number || '20'}: ${data.article_id_code || 'e187421'}. DOI: ${data.doi}`;
+                  navigator.clipboard.writeText(text);
+                  toast.success('Citation copied to clipboard!');
+                }}
+                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-academic-blue hover:text-academic-navy transition-colors"
+              >
+                <FiCopy className="w-3 h-3" />
+                Copy Citation
+              </button>
+            </div>
+
+            {citationFiles.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Download Citation</h4>
+                <div className="grid grid-cols-1 gap-2">
+                  {citationFiles.map((file) => (
+                    <a
+                      key={file.key}
+                      href={file.url}
+                      download
+                      className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl hover:border-academic-blue hover:shadow-sm transition-all group"
+                    >
+                      <span className="text-[11px] font-bold text-gray-600">{file.label}</span>
+                      <FiDownload className="w-3.5 h-3.5 text-gray-300 group-hover:text-academic-blue" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
       case 'share':
+        const activeSocials = settings?.social_links 
+          ? Object.entries(settings.social_links).filter(([_, url]) => !!url)
+          : [];
+
         return (
           <div className="space-y-6">
             <h3 className="text-xl font-bold text-academic-navy border-b pb-2">Share Article</h3>
+            
+            <div className="grid grid-cols-4 gap-4">
+              {activeSocials.map(([id, url]) => {
+                const platform = SOCIAL_PLATFORMS[id];
+                if (!platform) return null;
+                
+                return (
+                  <a
+                    key={id}
+                    href={url as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex flex-col items-center gap-2 p-3 rounded-xl border border-gray-100 hover:border-academic-blue hover:bg-blue-50 transition-all group`}
+                    title={platform.label}
+                  >
+                    <div className="w-6 h-6 transition-transform group-hover:scale-110">
+                      <SocialIcon id={id} className={`w-full h-full ${platform.color}`} />
+                    </div>
+                    <span className="text-[8px] font-black uppercase tracking-tighter text-gray-400 group-hover:text-academic-navy truncate w-full text-center">{platform.label}</span>
+                  </a>
+                );
+              })}
+            </div>
+
             <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 space-y-4">
               <p className="text-sm text-gray-600 font-medium">Copy article URL:</p>
               <div className="flex gap-2">
@@ -458,4 +660,3 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
     </div>
   );
 }
-

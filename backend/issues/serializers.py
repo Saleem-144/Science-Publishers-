@@ -52,7 +52,11 @@ class IssueDetailSerializer(serializers.ModelSerializer):
     
     def get_articles(self, obj):
         from articles.serializers import ArticleListSerializer
-        articles = obj.articles.filter(status='published').order_by('page_start', 'created_at')
+        articles = obj.articles.all().order_by('page_start', 'created_at')
+        # If not admin, only show published/archive
+        request = self.context.get('request')
+        if not (request and request.user and request.user.is_staff):
+            articles = articles.filter(status__in=['published', 'archive'])
         return ArticleListSerializer(articles, many=True).data
 
 

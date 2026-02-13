@@ -32,14 +32,18 @@ export default function VolumeDetailPage() {
 
   const articles = articlesData?.results || articlesData || [];
 
-  // Group articles by issue
-  const groupedArticles = articles.reduce((acc: any, article: any) => {
-    const issueNum = article.issue_number || 'No Issue';
-    const key = issueNum === 'No Issue' ? 'Other Articles' : `Issue ${issueNum}`;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(article);
+  // Separate prefaces and group other articles by issue
+  const { prefaces, groupedIssues } = articles.reduce((acc: any, article: any) => {
+    if (article.is_preface) {
+      acc.prefaces.push(article);
+    } else {
+      const issueNum = article.issue_number || 'No Issue';
+      const key = issueNum === 'No Issue' ? 'Other Articles' : `Issue ${issueNum}`;
+      if (!acc.groupedIssues[key]) acc.groupedIssues[key] = [];
+      acc.groupedIssues[key].push(article);
+    }
     return acc;
-  }, {});
+  }, { prefaces: [], groupedIssues: {} });
 
   if (volumeLoading || articlesLoading) {
     return (
@@ -115,8 +119,23 @@ export default function VolumeDetailPage() {
         </header>
 
         <div className="space-y-12">
-          {Object.keys(groupedArticles).length > 0 ? (
-            Object.entries(groupedArticles).map(([issueKey, issueArticles]: [string, any]) => (
+          {/* Volume Preface Section */}
+          {prefaces.length > 0 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-black uppercase tracking-[0.2em] text-academic-gold bg-academic-gold/10 px-3 py-1 rounded">Preface</span>
+                <div className="h-px flex-1 bg-academic-gold/20"></div>
+              </div>
+              <div className="space-y-4">
+                {prefaces.map((article: any) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {Object.keys(groupedIssues).length > 0 ? (
+            Object.entries(groupedIssues).map(([issueKey, issueArticles]: [string, any]) => (
               <div key={issueKey} className="space-y-6">
                 <div className="flex items-center gap-4">
                   <h2 className="text-xl font-black text-academic-navy uppercase tracking-wider whitespace-nowrap">
@@ -131,11 +150,11 @@ export default function VolumeDetailPage() {
                 </div>
               </div>
             ))
-          ) : (
+          ) : prefaces.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
               <p className="text-gray-400 italic">No articles found in this volume.</p>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

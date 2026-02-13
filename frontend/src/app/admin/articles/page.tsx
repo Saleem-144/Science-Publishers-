@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import { FiPlus, FiEdit2, FiTrash2, FiEye, FiFileText, FiFilter, FiSearch, FiChevronUp, FiChevronDown } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiEye, FiFileText, FiFilter, FiSearch, FiChevronUp, FiChevronDown, FiCheck, FiX } from 'react-icons/fi';
 import { journalsApi, volumesApi, issuesApi, articlesApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,7 @@ export default function AdminArticlesPage() {
   const queryClient = useQueryClient();
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedJournal, setSelectedJournal] = useState('');
+  const [selectedVolume, setSelectedVolume] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState<{ field: string; direction: 'asc' | 'desc' }>({
     field: 'published_date',
@@ -25,22 +26,31 @@ export default function AdminArticlesPage() {
 
   // Fetch journals filtered by subject
   const { data: journals } = useQuery({
-    queryKey: ['journals-by-subject', selectedSubject],
-    queryFn: () => journalsApi.list({ subjects__slug: selectedSubject || undefined }),
+    queryKey: ['journals-admin-list', selectedSubject],
+    queryFn: () => journalsApi.adminList({ subjects__slug: selectedSubject || undefined }),
+  });
+
+  // Fetch volumes for selected journal
+  const { data: volumes } = useQuery({
+    queryKey: ['volumes-by-journal', selectedJournal],
+    queryFn: () => volumesApi.listByJournal(selectedJournal),
+    enabled: !!selectedJournal,
   });
 
   // Fetch articles with search, filtering and sorting
   const { data: articles, isLoading } = useQuery({
-    queryKey: ['admin-articles', searchQuery, selectedJournal, sortConfig],
+    queryKey: ['admin-articles', searchQuery, selectedJournal, selectedVolume, sortConfig],
     queryFn: () => articlesApi.adminList({ 
       search: searchQuery || undefined,
       journal: selectedJournal || undefined,
+      volume: selectedVolume || undefined,
       ordering: `${sortConfig.direction === 'desc' ? '-' : ''}${sortConfig.field}`
     }),
   });
 
   const subjectsList = subjects?.results || subjects || [];
   const journalsList = journals?.results || journals || [];
+  const volumesList = volumes?.results || volumes || [];
   const articlesList = articles?.results || articles || [];
 
   // Local filtering for subject (since backend filter is by journal_id or slug)
@@ -53,10 +63,17 @@ export default function AdminArticlesPage() {
   // We now use articlesList directly since Journal filtering is handled by the API
   const filteredArticles = articlesList;
 
-  // Reset journal selection when subject changes
+  // Reset journal/volume selection when subject changes
   const handleSubjectChange = (value: string) => {
     setSelectedSubject(value);
     setSelectedJournal('');
+    setSelectedVolume('');
+  };
+
+  // Reset volume selection when journal changes
+  const handleJournalChange = (value: string) => {
+    setSelectedJournal(value);
+    setSelectedVolume('');
   };
 
   const handleSort = (field: string) => {
@@ -86,6 +103,20 @@ export default function AdminArticlesPage() {
     }
   };
 
+  const handleTogglePreface = async (article: any) => {
+    try {
+      const newValue = !article.is_preface;
+      await articlesApi.update(article.id, { is_preface: newValue });
+      toast.success(newValue ? 'Article set as preface' : 'Preface status removed');
+      queryClient.invalidateQueries({ queryKey: ['admin-articles'] });
+      queryClient.invalidateQueries({ queryKey: ['journal-articles'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-articles'] });
+    } catch (error: any) {
+      console.error('Error toggling preface status:', error);
+      toast.error('Failed to update preface status');
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -101,15 +132,13 @@ export default function AdminArticlesPage() {
 
       {/* Filters & Search */}
       <div className="bg-white rounded-xl shadow-md p-4 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 flex-wrap">
-          <FiFilter className="w-5 h-5 text-gray-500" />
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Subject:</label>
+            <FiFilter className="w-4 h-4 text-gray-400" />
             <select
               value={selectedSubject}
               onChange={(e) => handleSubjectChange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+              className="min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
             >
               <option value="">All Subjects</option>
               {subjectsList.map((subject: any) => (
@@ -119,33 +148,40 @@ export default function AdminArticlesPage() {
               ))}
             </select>
         </div>
+
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Journal:</label>
         <select
           value={selectedJournal}
-          onChange={(e) => setSelectedJournal(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+              onChange={(e) => handleJournalChange(e.target.value)}
+              className="min-w-[200px] max-w-[300px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
         >
           <option value="">All Journals</option>
-              {filteredJournals.map((journal: any) => (
+              {journalsList.map((journal: any) => (
                 <option key={journal.id} value={journal.slug}>
               {journal.title}
             </option>
           ))}
         </select>
           </div>
-            {(selectedSubject || selectedJournal || searchQuery) && (
-            <button
-                onClick={() => { setSelectedSubject(''); setSelectedJournal(''); setSearchQuery(''); }}
-              className="text-sm text-academic-blue hover:text-academic-navy"
+
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedVolume}
+              onChange={(e) => setSelectedVolume(e.target.value)}
+              disabled={!selectedJournal}
+              className="min-w-[150px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue disabled:bg-gray-50 disabled:text-gray-400"
             >
-                Clear all
-            </button>
-          )}
+              <option value="">All Volumes</option>
+              {volumesList.map((vol: any) => (
+                <option key={vol.id} value={vol.id}>
+                  Vol. {vol.volume_number} ({vol.year})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Search Bar */}
-          <div className="relative min-w-[300px]">
+          <div className="relative flex-1 min-w-[300px]">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiSearch className="h-4 w-4 text-gray-400" />
             </div>
@@ -154,9 +190,19 @@ export default function AdminArticlesPage() {
               placeholder="Search by article title..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-academic-blue focus:border-academic-blue sm:text-sm"
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
             />
           </div>
+
+          {(selectedSubject || selectedJournal || selectedVolume || searchQuery) && (
+            <button
+              onClick={() => { setSelectedSubject(''); setSelectedJournal(''); setSelectedVolume(''); setSearchQuery(''); }}
+              className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+              title="Clear all filters"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -170,6 +216,9 @@ export default function AdminArticlesPage() {
             <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">
+                  Preface
+                </th>
                 <th 
                   className="text-left px-6 py-3 text-sm font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 transition-colors"
                   onClick={() => handleSort('title')}
@@ -192,7 +241,25 @@ export default function AdminArticlesPage() {
               {filteredArticles.map((article: any) => (
                   <tr key={article.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
+                      <div 
+                        onClick={() => handleTogglePreface(article)}
+                        className={`w-5 h-5 rounded border cursor-pointer flex items-center justify-center transition-all ${
+                          article.is_preface 
+                            ? 'bg-academic-gold border-academic-gold text-white' 
+                            : 'bg-white border-gray-300 hover:border-academic-gold'
+                        }`}
+                        title={article.is_preface ? "Remove preface status" : "Set as preface"}
+                      >
+                        {article.is_preface && <FiCheck className="w-3.5 h-3.5 stroke-[4]" />}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
                     <p className="font-medium text-gray-900 line-clamp-1 max-w-xs">{article.title}</p>
+                    {article.is_preface && (
+                      <span className="inline-flex items-center mt-1 px-1.5 py-0.5 bg-academic-gold/10 text-academic-gold text-[9px] font-black uppercase tracking-widest rounded border border-academic-gold/20">
+                        Preface
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {article.journal_info?.title || 'N/A'}
@@ -206,11 +273,13 @@ export default function AdminArticlesPage() {
                     ) : 'N/A'}
                     </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full uppercase tracking-wider ${
                       article.status === 'published'
                         ? 'bg-green-100 text-green-700'
                         : article.status === 'draft'
                         ? 'bg-yellow-100 text-yellow-700'
+                        : article.status === 'archive'
+                        ? 'bg-blue-100 text-blue-700'
                         : 'bg-gray-100 text-gray-600'
                     }`}>
                       {article.status || 'Draft'}

@@ -114,11 +114,17 @@ export default function HomePage() {
             className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
             style={{
               opacity: index === currentImageIndex ? 1 : 0,
-              backgroundImage: `url("${image}")`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
             }}
-          />
+          >
+            <Image
+              src={image}
+              alt=""
+              fill
+              priority={index === 0}
+              className="object-cover"
+              sizes="100vw"
+            />
+          </div>
         ))}
         
         {/* Dark Overlay for Text Readability */}
@@ -689,33 +695,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="bg-academic-navy py-10 md:py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-white mb-6">
-            Ready to Contribute to Science?
-          </h2>
-          <p className="text-lg text-blue-200 mb-8">
-            Submit your research to one of our peer-reviewed journals and join
-            thousands of researchers advancing knowledge worldwide.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/journals"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-academic-gold text-academic-navy font-semibold rounded-lg hover:bg-yellow-400 transition-colors"
-            >
-              Find Your Journal
-              <FiArrowRight />
-            </Link>
-            <Link
-              href="/about"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-white/50 text-white font-semibold rounded-lg hover:bg-ivory/10 transition-colors"
-            >
-              Learn More
-            </Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

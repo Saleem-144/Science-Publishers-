@@ -160,6 +160,7 @@ class JournalListSerializer(serializers.ModelSerializer):
     total_articles = serializers.IntegerField(read_only=True)
     editor_in_chief_image = serializers.SerializerMethodField()
     cover_image = serializers.SerializerMethodField()
+    banner_image = serializers.SerializerMethodField()
     logo = serializers.SerializerMethodField()
     
     class Meta:
@@ -167,10 +168,11 @@ class JournalListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'slug', 'short_title', 'short_description',
             'issn_print', 'issn_online',
-            'cover_image', 'logo', 'primary_color',
+            'cover_image', 'banner_image', 'logo', 'primary_color',
             'editor_in_chief', 'editor_in_chief_image',
             'is_featured', 'is_active', 'subjects',
-            'total_volumes', 'total_articles'
+            'total_volumes', 'total_articles',
+            'submission_url', 'login_url'
         ]
 
     def _get_absolute_url(self, field):
@@ -186,6 +188,9 @@ class JournalListSerializer(serializers.ModelSerializer):
 
     def get_cover_image(self, obj):
         return self._get_absolute_url(obj.cover_image)
+
+    def get_banner_image(self, obj):
+        return self._get_absolute_url(obj.banner_image)
 
     def get_logo(self, obj):
         return self._get_absolute_url(obj.logo)
@@ -207,6 +212,7 @@ class JournalDetailSerializer(serializers.ModelSerializer):
     indexing_entries = serializers.SerializerMethodField()
     flyer_pdf = serializers.SerializerMethodField()
     cover_image = serializers.SerializerMethodField()
+    banner_image = serializers.SerializerMethodField()
     logo = serializers.SerializerMethodField()
     favicon = serializers.SerializerMethodField()
     editor_in_chief_image = serializers.SerializerMethodField()
@@ -217,13 +223,13 @@ class JournalDetailSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'short_title',
             'description', 'short_description',
             'issn_print', 'issn_online',
-            'cover_image', 'logo', 'favicon',
+            'cover_image', 'banner_image', 'logo', 'favicon',
             'primary_color', 'secondary_color',
             'editor_in_chief', 'editor_in_chief_image',
             'publisher', 'founding_year', 'frequency',
             'aims_and_scope', 'indexing', 'open_thematic_issue',
             'author_guidelines', 'peer_review_policy',
-            'submission_url', 'flyer_pdf',
+            'submission_url', 'login_url', 'flyer_pdf',
             'contact_email', 'website_url',
             'subjects', 'subject_ids',
             'is_active', 'is_featured',
@@ -247,6 +253,9 @@ class JournalDetailSerializer(serializers.ModelSerializer):
 
     def get_cover_image(self, obj):
         return self._get_absolute_url(obj.cover_image)
+
+    def get_banner_image(self, obj):
+        return self._get_absolute_url(obj.banner_image)
 
     def get_logo(self, obj):
         return self._get_absolute_url(obj.logo)
@@ -300,19 +309,93 @@ class JournalCreateUpdateSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'short_title',
             'description', 'short_description',
             'issn_print', 'issn_online',
-            'cover_image', 'logo', 'favicon',
+            'cover_image', 'banner_image', 'logo', 'favicon',
             'primary_color', 'secondary_color',
             'editor_in_chief', 'editor_in_chief_image',
             'publisher', 'founding_year', 'frequency',
             'aims_and_scope', 'indexing', 'open_thematic_issue',
             'author_guidelines', 'peer_review_policy',
-            'submission_url', 'flyer_pdf',
+            'submission_url', 'login_url', 'flyer_pdf',
             'contact_email', 'website_url',
             'subject_ids',
             'is_active', 'is_featured',
             'meta_title', 'meta_description', 'meta_keywords',
         ]
         read_only_fields = ['id']
+
+    def to_internal_value(self, data):
+        # 1. Normalize data to a plain mutable dictionary
+        if hasattr(data, 'dict'):
+            # From multipart/form-data (QueryDict)
+            processed_data = data.dict()
+            # QueryDict.dict() only keeps the last value for each key.
+            # For ManyToMany fields, we must use getlist() to get all values.
+            if 'subject_ids' in data:
+                processed_data['subject_ids'] = data.getlist('subject_ids')
+        else:
+            # From JSON or already a dict
+            processed_data = dict(data)
+
+        # 2. Handle subject_ids (PrimaryKeyRelatedField with many=True)
+        if 'subject_ids' in processed_data:
+            val = processed_data['subject_ids']
+            
+            # If it's a single string like "1,2", split it into a list
+            if isinstance(val, str):
+                if val.strip() and val not in ['null', 'undefined']:
+                    if ',' in val:
+                        processed_data['subject_ids'] = [v.strip() for v in val.split(',') if v.strip()]
+                    else:
+                        processed_data['subject_ids'] = [val]
+                else:
+                    processed_data.pop('subject_ids')
+            # If it's already a list, clean it up
+            elif isinstance(val, list):
+                # Ensure no nested lists and remove garbage values
+                clean_list = []
+                for item in val:
+                    if isinstance(item, list):
+                        clean_list.extend([str(i) for v in item for i in (v if isinstance(v, list) else [v]) if str(i).strip() not in ['', 'null', 'undefined']])
+                    elif str(item).strip() not in ['', 'null', 'undefined']:
+                        clean_list.append(str(item))
+                processed_data['subject_ids'] = clean_list
+            # If it's a single integer or other type, wrap in list
+            elif val is not None:
+                processed_data['subject_ids'] = [str(val)]
+            else:
+                processed_data.pop('subject_ids')
+
+        # 3. Handle Boolean fields ( FormData sends "true"/"false" as strings)
+        for field in ['is_active', 'is_featured']:
+            if field in processed_data:
+                val = processed_data[field]
+                if isinstance(val, str):
+                    processed_data[field] = val.lower() == 'true'
+
+        # 4. Handle Numeric fields
+        if 'founding_year' in processed_data:
+            val = processed_data['founding_year']
+            if val in ['', 'null', 'undefined', None]:
+                processed_data['founding_year'] = None
+
+        # 5. Handle File field clearing and existing URL protection
+        file_fields = ['cover_image', 'banner_image', 'logo', 'favicon', 'editor_in_chief_image', 'flyer_pdf']
+        for field in file_fields:
+            if field in processed_data:
+                val = processed_data[field]
+                if val in ['', 'null', 'undefined', None]:
+                    processed_data[field] = None
+                elif isinstance(val, str) and (val.startswith('http') or '/media/' in val):
+                    # This is an existing image URL, not a new file upload. 
+                    # Remove it so DRF doesn't try to validate a string as a file.
+                    processed_data.pop(field)
+                
+        # 6. Remove Read-only fields that might be sent by the frontend
+        read_only = ['id', 'created_at', 'updated_at', 'total_volumes', 'total_articles', 'current_issue']
+        for field in read_only:
+            processed_data.pop(field, None)
+                
+        return super().to_internal_value(processed_data)
     
     def create(self, validated_data):
         subject_ids = validated_data.pop('subject_ids', [])

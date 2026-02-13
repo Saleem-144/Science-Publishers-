@@ -11,6 +11,7 @@ class VolumeListSerializer(serializers.ModelSerializer):
     journal_slug = serializers.CharField(source='journal.slug', read_only=True)
     total_issues = serializers.IntegerField(read_only=True)
     total_articles = serializers.IntegerField(read_only=True)
+    issues = serializers.SerializerMethodField()
     
     class Meta:
         model = Volume
@@ -19,8 +20,17 @@ class VolumeListSerializer(serializers.ModelSerializer):
             'volume_number', 'title', 'year',
             'cover_image', 'is_active',
             'total_issues', 'total_articles',
-            'display_name'
+            'display_name', 'issues'
         ]
+
+    def get_issues(self, obj):
+        from issues.serializers import IssueListSerializer
+        issues = obj.issues.all().order_by('-issue_number')
+        # If not admin, only show active
+        request = self.context.get('request')
+        if not (request and request.user and request.user.is_staff):
+            issues = issues.filter(is_active=True)
+        return IssueListSerializer(issues, many=True).data
 
 
 class VolumeDetailSerializer(serializers.ModelSerializer):
@@ -31,6 +41,7 @@ class VolumeDetailSerializer(serializers.ModelSerializer):
     total_issues = serializers.IntegerField(read_only=True)
     total_articles = serializers.IntegerField(read_only=True)
     issues = serializers.SerializerMethodField()
+    articles = serializers.SerializerMethodField()
     
     class Meta:
         model = Volume
@@ -39,15 +50,29 @@ class VolumeDetailSerializer(serializers.ModelSerializer):
             'volume_number', 'title', 'year', 'description',
             'cover_image', 'is_active',
             'total_issues', 'total_articles',
-            'display_name', 'issues',
+            'display_name', 'issues', 'articles',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
     
     def get_issues(self, obj):
         from issues.serializers import IssueListSerializer
-        issues = obj.issues.filter(is_active=True).order_by('-issue_number')
+        issues = obj.issues.all().order_by('-issue_number')
+        # If not admin, only show active
+        request = self.context.get('request')
+        if not (request and request.user and request.user.is_staff):
+            issues = issues.filter(is_active=True)
         return IssueListSerializer(issues, many=True).data
+
+    def get_articles(self, obj):
+        from articles.serializers import ArticleListSerializer
+        # Get articles linked directly to volume (like prefaces)
+        articles = obj.articles.all().order_by('is_preface', 'page_start', 'created_at')
+        # If not admin, only show published/archive
+        request = self.context.get('request')
+        if not (request and request.user and request.user.is_staff):
+            articles = articles.filter(status__in=['published', 'archive'])
+        return ArticleListSerializer(articles, many=True).data
 
 
 class VolumeCreateUpdateSerializer(serializers.ModelSerializer):

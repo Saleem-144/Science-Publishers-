@@ -23,6 +23,11 @@ export default function EditJournalPage() {
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [existingCoverImage, setExistingCoverImage] = useState<string | null>(null);
+  
+  const [bannerImage, setBannerImage] = useState<File | null>(null);
+  const [bannerImagePreview, setBannerImagePreview] = useState<string | null>(null);
+  const [existingBannerImage, setExistingBannerImage] = useState<string | null>(null);
+  
   const [flyerFile, setFlyerFile] = useState<File | null>(null);
   const [existingFlyer, setExistingFlyer] = useState<string | null>(null);
   const [editorImage, setEditorImage] = useState<File | null>(null);
@@ -30,6 +35,7 @@ export default function EditJournalPage() {
   const [existingEditorImage, setExistingEditorImage] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const flyerInputRef = useRef<HTMLInputElement>(null);
   const editorImageInputRef = useRef<HTMLInputElement>(null);
   
@@ -49,6 +55,8 @@ export default function EditJournalPage() {
     aims_and_scope: '',
     open_thematic_issue: '',
     submission_url: '',
+    login_url: '',
+    founding_year: '',
     primary_color: '#1a365d',
     secondary_color: '#2b6cb0',
   });
@@ -81,6 +89,8 @@ export default function EditJournalPage() {
           aims_and_scope: journal.aims_and_scope || '',
           open_thematic_issue: journal.open_thematic_issue || '',
           submission_url: journal.submission_url || '',
+          login_url: journal.login_url || '',
+          founding_year: journal.founding_year?.toString() || '',
           primary_color: journal.primary_color || '#1a365d',
           secondary_color: journal.secondary_color || '#2b6cb0',
       });
@@ -91,6 +101,9 @@ export default function EditJournalPage() {
         
         if (journal.cover_image) {
           setExistingCoverImage(journal.cover_image);
+        }
+        if (journal.banner_image) {
+          setExistingBannerImage(journal.banner_image);
         }
         if (journal.flyer_pdf) {
           setExistingFlyer(journal.flyer_pdf);
@@ -120,6 +133,22 @@ export default function EditJournalPage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setCoverImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBannerSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      setBannerImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBannerImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -155,8 +184,18 @@ export default function EditJournalPage() {
   const handleRemoveImage = () => {
     setCoverImage(null);
     setCoverImagePreview(null);
+    setExistingCoverImage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveBanner = () => {
+    setBannerImage(null);
+    setBannerImagePreview(null);
+    setExistingBannerImage(null);
+    if (bannerInputRef.current) {
+      bannerInputRef.current.value = '';
     }
   };
 
@@ -166,29 +205,70 @@ export default function EditJournalPage() {
 
     try {
         const submitData = new FormData();
+        
+        // Append all form data except files and read-only fields
         Object.entries(formData).forEach(([key, value]) => {
-          submitData.append(key, String(value));
+          // Skip file fields and special handling for booleans
+          if (['cover_image', 'banner_image', 'logo', 'favicon', 'editor_in_chief_image', 'flyer_pdf'].includes(key)) {
+            return;
+          }
+          
+          // Only append if value is not null/undefined
+          if (value !== null && value !== undefined) {
+            submitData.append(key, String(value));
+          }
         });
 
       if (selectedSubject) {
         submitData.append('subject_ids', selectedSubject);
       }
 
+      console.log('Saving journal with data:');
+      for (let pair of (submitData as any).entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+
       if (coverImage) {
         submitData.append('cover_image', coverImage);
+      } else if (!existingCoverImage) {
+        submitData.append('cover_image', ''); // Explicitly clear if removed
       }
+
+      if (bannerImage) {
+        submitData.append('banner_image', bannerImage);
+      } else if (!existingBannerImage) {
+        submitData.append('banner_image', ''); // Explicitly clear if removed
+      }
+
       if (flyerFile) {
         submitData.append('flyer_pdf', flyerFile);
+      } else if (!existingFlyer) {
+        submitData.append('flyer_pdf', '');
       }
+
       if (editorImage) {
         submitData.append('editor_in_chief_image', editorImage);
+      } else if (!existingEditorImage) {
+        submitData.append('editor_in_chief_image', '');
       }
 
         await journalsApi.updateWithImage(parseInt(journalId), submitData);
       toast.success('Journal updated successfully!');
       router.push('/admin/journals');
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to update journal');
+      console.error('Journal update error:', error.response?.data);
+      const errors = error.response?.data;
+      if (errors && typeof errors === 'object') {
+        const firstError = Object.entries(errors)[0];
+        if (firstError) {
+          const [field, message] = firstError;
+          toast.error(`${field}: ${Array.isArray(message) ? message[0] : message}`);
+        } else {
+          toast.error('Failed to update journal');
+        }
+      } else {
+        toast.error(error.response?.data?.detail || 'Failed to update journal');
+      }
     } finally {
       setLoading(false);
     }
@@ -343,6 +423,52 @@ export default function EditJournalPage() {
         </button>
       </div>
         </div>
+
+          {/* Banner Image */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <FiImage className="text-academic-gold" /> Hero Banner Image
+            </h2>
+            
+            <div className="space-y-4">
+              {(bannerImagePreview || existingBannerImage) ? (
+                <div className="relative group">
+                  <div className="relative h-32 w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+                    <Image 
+                      src={bannerImagePreview || existingBannerImage || ''} 
+                      alt="Banner Preview" 
+                      fill 
+                      className="object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveBanner}
+                    className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <FiX className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => bannerInputRef.current?.click()}
+                  className="w-full h-32 flex flex-col items-center justify-center gap-2 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-academic-gold hover:bg-academic-gold/5 transition-all"
+                >
+                  <FiUpload className="w-8 h-8" />
+                  <span className="text-xs font-bold uppercase tracking-widest">Upload Banner</span>
+                  <span className="text-[10px]">1920x400 recommended</span>
+                </button>
+              )}
+              <input
+                type="file"
+                ref={bannerInputRef}
+                onChange={handleBannerSelect}
+                accept="image/*"
+                className="hidden"
+              />
+            </div>
+          </div>
 
           {/* Meta Information */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-6">
@@ -521,6 +647,19 @@ export default function EditJournalPage() {
                   type="url"
                   value={formData.submission_url}
                   onChange={(e) => setFormData({ ...formData, submission_url: e.target.value })}
+                  placeholder="https://..."
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all font-mono text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                  <FiPlus className="w-3 h-3" /> Login URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.login_url}
+                  onChange={(e) => setFormData({ ...formData, login_url: e.target.value })}
                   placeholder="https://..."
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all font-mono text-sm"
                 />

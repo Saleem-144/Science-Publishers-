@@ -37,6 +37,8 @@ urlpatterns = [
     path('admin/<int:pk>/authors/', views.ArticleAuthorsUpdateView.as_view(), name='admin_article_authors'),
     path('admin/<int:pk>/files/', views.ArticleFilesView.as_view(), name='admin_article_files'),
     path('admin/<int:pk>/files/<int:file_id>/', views.ArticleFileDeleteView.as_view(), name='admin_article_file_delete'),
+    path('admin/<int:pk>/figures/', views.ArticleFiguresView.as_view(), name='admin_article_figures'),
+    path('admin/<int:pk>/figures/<int:figure_id>/', views.ArticleFigureDetailView.as_view(), name='admin_article_figure_detail'),
     
     # Author admin
     path('admin/authors/', views.AuthorAdminListView.as_view(), name='admin_author_list'),

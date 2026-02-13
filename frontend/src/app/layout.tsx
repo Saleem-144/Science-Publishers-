@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono, Literata } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import { LayoutWrapper } from '@/components/layout/LayoutWrapper';
@@ -7,6 +7,11 @@ import { LayoutWrapper } from '@/components/layout/LayoutWrapper';
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+});
+
+const literata = Literata({
+  subsets: ['latin'],
+  variable: '--font-literata',
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -28,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased min-h-screen flex flex-col bg-ivory`}
+        className={`${inter.variable} ${literata.variable} ${jetbrainsMono.variable} font-sans antialiased min-h-screen flex flex-col bg-ivory`}
       >
         <Providers>
           <LayoutWrapper>{children}</LayoutWrapper>

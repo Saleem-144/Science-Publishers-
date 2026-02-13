@@ -9,13 +9,12 @@ import {
   FiCalendar, FiBook, FiFileText, FiUsers, 
   FiExternalLink, FiArrowRight, FiInfo, 
   FiChevronRight, FiDownload, FiEdit3,
-  FiStar
+  FiStar, FiArchive
 } from 'react-icons/fi';
 import { journalsApi, articlesApi, volumesApi } from '@/lib/api';
 import { ArticleCard } from '@/components/ArticleCard';
-import 'react-quill/dist/quill.snow.css';
 
-type TabType = 'home' | 'aims' | 'editorial' | 'about' | 'indexing' | 'thematic' | 'special';
+type TabType = 'home' | 'aims' | 'editorial' | 'about' | 'indexing' | 'thematic' | 'special' | 'archive';
 
 export default function JournalPage() {
   const params = useParams();
@@ -40,6 +39,12 @@ export default function JournalPage() {
     enabled: !!journalSlug,
   });
 
+  const { data: archivedArticles, isLoading: archiveLoading } = useQuery({
+    queryKey: ['journal-archived-articles', journalSlug],
+    queryFn: () => articlesApi.list({ journal: journalSlug, status: 'archive' }),
+    enabled: !!journalSlug,
+  });
+
   const { data: volumesData } = useQuery({
     queryKey: ['journal-volumes', journalSlug],
     queryFn: () => volumesApi.listByJournal(journalSlug),
@@ -48,23 +53,52 @@ export default function JournalPage() {
 
   const articlesList = articles?.results || articles || [];
   const specialArticlesList = specialArticles?.results || specialArticles || [];
+  const archivedList = archivedArticles?.results || archivedArticles || [];
   const volumesList = volumesData?.results || volumesData || [];
 
-  // Group articles by volume and issue
+  // Group articles by volume and then issue, identifying prefaces per volume
   const groupedArticles = articlesList.reduce((acc: any, article: any) => {
-    if (article.is_special_issue) return acc; // Skip special issues in normal grouping
+    // Skip articles that belong to other tabs
+    if (article.is_special_issue) return acc;
+    if (article.status === 'archive') return acc;
 
-    const volNum = article.volume_number || 'Unknown Volume';
-    const issueNum = article.issue_number || 'Unknown Issue';
-    const year = article.year || '';
-    const key = `Volume ${volNum}, Issue ${issueNum} (${year})`;
+    // Use strictly boolean check for preface
+    const isPreface = Boolean(article.is_preface);
     
-    if (!acc[key]) {
-      acc[key] = [];
+    // Defensive handling for volume/issue numbers
+    const volNumRaw = article.volume_number;
+    const issueNumRaw = article.issue_number;
+    
+    const volNum = volNumRaw ? parseInt(String(volNumRaw)) : 0;
+    const issueNum = issueNumRaw ? String(issueNumRaw) : 'Other';
+    const year = article.year || '';
+    
+    // Create a stable key for grouping
+    const volKey = volNum > 0 ? `Volume ${volNum} (${year})` : 'Recent Articles';
+    
+    if (!acc[volKey]) {
+      acc[volKey] = {
+        volNum: volNum,
+        prefaces: [],
+        issues: {}
+      };
     }
-    acc[key].push(article);
+
+    if (isPreface) {
+      acc[volKey].prefaces.push(article);
+    } else {
+      if (!acc[volKey].issues[issueNum]) {
+        acc[volKey].issues[issueNum] = [];
+      }
+      acc[volKey].issues[issueNum].push(article);
+    }
     return acc;
   }, {});
+
+  // Sort volumes (newest first) and issues (newest first)
+  const sortedVolKeys = Object.keys(groupedArticles).sort((a, b) => 
+    groupedArticles[b].volNum - groupedArticles[a].volNum
+  );
 
   if (journalLoading) {
     return (
@@ -94,20 +128,63 @@ export default function JournalPage() {
     switch (activeTab) {
       case 'home':
         return (
-          <div className="space-y-8">
-            {Object.keys(groupedArticles).length > 0 ? (
-              Object.entries(groupedArticles).map(([groupKey, groupArticles]: [string, any]) => (
-                <div key={groupKey} className="space-y-4">
-                  <div className="bg-gray-100 px-4 py-2 rounded-lg">
-                    <h3 className="text-lg font-bold text-academic-navy">{groupKey}</h3>
+          <div className="space-y-12">
+            {sortedVolKeys.length > 0 ? (
+              sortedVolKeys.map((volKey) => {
+                const volData = groupedArticles[volKey];
+                // Sort issue numbers descending within volume (handles numeric and 'Other')
+                const sortedIssueNums = Object.keys(volData.issues).sort((a, b) => {
+                  const numA = parseInt(a);
+                  const numB = parseInt(b);
+                  if (isNaN(numA) && isNaN(numB)) return a.localeCompare(b);
+                  if (isNaN(numA)) return 1;
+                  if (isNaN(numB)) return -1;
+                  return numB - numA;
+                });
+
+                return (
+                  <div key={volKey} className="space-y-8">
+                    {/* Volume Heading */}
+                    <div className="bg-academic-navy/5 border-l-4 border-academic-navy px-6 py-3 rounded-r-lg">
+                      <h3 className="text-xl font-black text-academic-navy tracking-tight">{volKey}</h3>
+                    </div>
+                    
+                    {/* Volume Preface Section */}
+                    {volData.prefaces.length > 0 && (
+                      <div className="space-y-4 px-2">
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-academic-gold bg-academic-gold/10 px-2 py-0.5 rounded">Preface</span>
+                          <div className="h-px flex-1 bg-academic-gold/20"></div>
+                        </div>
+                        <div className="space-y-4">
+                          {volData.prefaces.map((article: any) => (
+                            <ArticleCard key={article.id} article={article} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Issues within Volume */}
+                    <div className="space-y-8">
+                      {sortedIssueNums.map((issueNum) => (
+                        <div key={issueNum} className="space-y-4 px-2">
+                          <div className="flex items-center gap-3">
+                            <h4 className="text-sm font-bold text-gray-900 bg-gray-100 px-3 py-1 rounded-full whitespace-nowrap">
+                              Issue {issueNum}
+                            </h4>
+                            <div className="h-px flex-1 bg-gray-100"></div>
+                          </div>
+                          <div className="space-y-4">
+                            {volData.issues[issueNum].map((article: any) => (
+                              <ArticleCard key={article.id} article={article} />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-4">
-                    {groupArticles.map((article: any) => (
-                      <ArticleCard key={article.id} article={article} />
-                    ))}
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
                 <p className="text-gray-500">No recent articles published yet.</p>
@@ -135,6 +212,30 @@ export default function JournalPage() {
             ) : (
               <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
                 <p className="text-gray-500 italic">No special issue articles available at this time.</p>
+              </div>
+            )}
+          </div>
+        );
+      case 'archive':
+        return (
+          <div className={contentClasses}>
+            <h2 className="text-2xl font-bold text-academic-navy mb-6 border-b pb-2 flex items-center gap-2">
+              <FiArchive className="text-academic-blue" />
+              Archive
+            </h2>
+            {archiveLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-academic-blue"></div>
+              </div>
+            ) : archivedList.length > 0 ? (
+              <div className="space-y-4">
+                {archivedList.map((article: any) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
+                <p className="text-gray-500 italic">No archived articles available.</p>
               </div>
             )}
           </div>
@@ -316,11 +417,22 @@ export default function JournalPage() {
         className="relative py-12 md:py-16 text-white overflow-hidden"
         style={{ 
           backgroundColor: journal.primary_color || '#1e3a5f',
-          backgroundImage: `linear-gradient(135deg, ${journal.primary_color || '#1e3a5f'} 0%, ${journal.secondary_color || '#2563eb'} 100%)`
+          backgroundImage: journal.banner_image 
+            ? `url(${journal.banner_image})` 
+            : `linear-gradient(135deg, ${journal.primary_color || '#1e3a5f'} 0%, ${journal.secondary_color || '#2563eb'} 100%)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
         }}
       >
+        {/* Dark overlay if banner image exists */}
+        {journal.banner_image && (
+          <div className="absolute inset-0 bg-black/40" />
+        )}
+        
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl -mr-48 -mt-48"></div>
+          {!journal.banner_image && (
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl -mr-48 -mt-48"></div>
+          )}
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -460,6 +572,22 @@ export default function JournalPage() {
                 <span className="font-bold">Special Issues</span>
               </div>
               <FiChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'special' ? 'rotate-90' : ''}`} />
+            </button>
+
+            {/* Archive Tab Button */}
+            <button
+              onClick={() => setActiveTab('archive')}
+              className={`w-full flex items-center justify-between gap-3 px-4 py-4 rounded-xl shadow-sm border transition-all ${
+                activeTab === 'archive'
+                  ? 'bg-academic-navy text-white border-academic-navy ring-2 ring-academic-gold/50'
+                  : 'bg-white text-academic-navy border-gray-100 hover:border-academic-blue hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <FiArchive className={`w-5 h-5 ${activeTab === 'archive' ? 'text-white' : 'text-academic-blue'}`} />
+                <span className="font-bold">Archive</span>
+              </div>
+              <FiChevronRight className={`w-4 h-4 transition-transform ${activeTab === 'archive' ? 'rotate-90' : ''}`} />
             </button>
 
             {/* Volumes & Issues List */}

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { 
   FiHome, FiBook, FiFileText, FiUsers, FiSettings, 
   FiLogOut, FiMenu, FiX, FiLayers, FiGrid, FiGlobe, 
-  FiBell, FiChevronDown, FiChevronUp, FiImage, FiUserPlus
+  FiBell, FiChevronDown, FiChevronUp, FiImage, FiUserPlus, FiShare2
 } from 'react-icons/fi';
 
 export default function AdminLayout({
@@ -186,6 +186,20 @@ export default function AdminLayout({
             >
               <FiUserPlus className="w-5 h-5" />
               CTA Buttons
+            </Link>
+            
+            {/* Socials */}
+            <Link
+              href="/admin/socials"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                pathname?.startsWith('/admin/socials')
+                  ? 'bg-academic-gold text-academic-navy font-bold'
+                  : 'text-blue-100 hover:bg-white/10'
+              }`}
+            >
+              <FiShare2 className="w-5 h-5" />
+              Socials
             </Link>
 
             {/* News */}

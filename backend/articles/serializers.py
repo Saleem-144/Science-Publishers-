@@ -120,6 +120,9 @@ class TableSerializer(serializers.ModelSerializer):
 class ArticleHTMLContentSerializer(serializers.ModelSerializer):
     """Serializer for article HTML content."""
     
+    abstract_html = serializers.SerializerMethodField()
+    body_html = serializers.SerializerMethodField()
+    
     class Meta:
         model = ArticleHTMLContent
         fields = [
@@ -130,6 +133,12 @@ class ArticleHTMLContentSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'parsed_at', 'created_at', 'updated_at']
+
+    def get_abstract_html(self, obj):
+        return obj.get_resolved_abstract_html(self.context.get('request'))
+
+    def get_body_html(self, obj):
+        return obj.get_resolved_body_html(self.context.get('request'))
 
 
 class ArticleListSerializer(serializers.ModelSerializer):
@@ -155,7 +164,7 @@ class ArticleListSerializer(serializers.ModelSerializer):
             'status', 'abstract', 'keywords', 'keywords_display', 'pages',
             'volume_number', 'issue_number', 'year',
             'journal_info', 'journal_slug', 'volume_info', 'issue_info', 'issue',
-            'published_date', 'is_open_access', 'is_featured', 'is_special_issue',
+            'published_date', 'is_open_access', 'is_featured', 'is_special_issue', 'is_preface',
             'pdf_file', 'xml_file', 'epub_file', 'mobi_file', 'prc_file',
             'authors', 'view_count'
         ]
@@ -258,11 +267,12 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         model = Article
         fields = [
             'id', 'article_id_code', 'title', 'slug', 'doi', 'article_type', 'status',
-            'abstract', 'keywords', 'keywords_display', 'license_text',
+            'abstract', 'keywords', 'keywords_display', 'license_text', 'cite_as',
             'pages', 'page_start', 'page_end', 'article_number',
             'received_date', 'revised_date', 'accepted_date', 'published_date',
-            'is_open_access', 'is_featured', 'is_special_issue',
+            'is_open_access', 'is_featured', 'is_special_issue', 'is_preface',
             'xml_file', 'pdf_file', 'epub_file', 'prc_file', 'mobi_file',
+            'ris_file', 'bib_file', 'endnote_file',
             'view_count', 'download_count',
             'meta_title', 'meta_description',
             'journal', 'journal_info', 'volume', 'volume_info', 'issue', 'issue_info',
@@ -394,7 +404,7 @@ class ArticleAbstractSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'doi', 'article_type',
             'abstract', 'abstract_html', 'keywords', 'keywords_display',
             'journal_slug', 'published_date', 'received_date', 'revised_date', 'accepted_date',
-            'license_text', 'authors'
+            'license_text', 'cite_as', 'ris_file', 'bib_file', 'endnote_file', 'authors'
         ]
     
     def get_authors(self, obj):
@@ -439,7 +449,8 @@ class ArticleFullTextSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'doi',
             'abstract', 'keywords', 'keywords_display',
             'journal_slug', 'published_date', 'received_date', 'revised_date', 'accepted_date',
-            'license_text', 'authors', 'html_content', 'figures', 'tables'
+            'license_text', 'cite_as', 'ris_file', 'bib_file', 'endnote_file',
+            'authors', 'html_content', 'figures', 'tables'
         ]
     
     def get_authors(self, obj):
@@ -470,9 +481,10 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
         model = Article
         fields = [
             'id', 'journal', 'volume', 'issue', 'article_id_code', 'title', 'slug', 'doi', 
-            'article_type', 'status', 'is_special_issue',
-            'abstract', 'keywords', 'keywords_display', 'license_text',
+            'article_type', 'status', 'is_special_issue', 'is_preface',
+            'abstract', 'keywords', 'keywords_display', 'license_text', 'cite_as',
             'xml_file', 'pdf_file', 'epub_file', 'prc_file', 'mobi_file',
+            'ris_file', 'bib_file', 'endnote_file',
             'page_start', 'page_end', 'article_number',
             'received_date', 'revised_date', 'accepted_date', 'published_date',
             'is_open_access', 'is_featured',
@@ -481,41 +493,71 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def to_internal_value(self, data):
-        # Handle string input for JSON fields when using multipart/form-data
+        # 1. Normalize data to a plain mutable dictionary
         if hasattr(data, 'dict'):
-            data = data.dict()
+            # From multipart/form-data (QueryDict)
+            processed_data = data.dict()
+            # If multiple values were sent for a field (not common for articles but good for safety)
+            # if 'keywords' in data:
+            #     processed_data['keywords'] = data.getlist('keywords')
         else:
-            data = dict(data)
-        
-        # Handle keywords: convert comma-separated string to list
-        if 'keywords' in data:
-            keywords_val = data.get('keywords')
-            if isinstance(keywords_val, str):
-                if keywords_val.strip():
+            # From JSON or already a dict
+            processed_data = dict(data)
+
+        # 2. Handle keywords (JSON/List field)
+        if 'keywords' in processed_data:
+            val = processed_data.get('keywords')
+            if isinstance(val, str):
+                if val.strip():
                     try:
-                        # Try parsing as JSON first
+                        # Try parsing as JSON first (if frontend sent stringified list)
                         import json
-                        parsed = json.loads(keywords_val)
+                        parsed = json.loads(val)
                         if isinstance(parsed, list):
-                            data['keywords'] = parsed
+                            processed_data['keywords'] = parsed
                         else:
-                            data['keywords'] = [k.strip() for k in keywords_val.split(',') if k.strip()]
+                            processed_data['keywords'] = [k.strip() for k in val.split(',') if k.strip()]
                     except (json.JSONDecodeError, ValueError):
                         # Fallback to comma-separated
-                        data['keywords'] = [k.strip() for k in keywords_val.split(',') if k.strip()]
+                        processed_data['keywords'] = [k.strip() for k in val.split(',') if k.strip()]
                 else:
-                    data['keywords'] = []
+                    processed_data['keywords'] = []
 
-        # Handle empty strings for foreign keys and dates
+        # 3. Handle Boolean fields
+        bool_fields = ['is_open_access', 'is_featured', 'is_special_issue', 'is_preface']
+        for field in bool_fields:
+            if field in processed_data:
+                val = processed_data[field]
+                if isinstance(val, str):
+                    processed_data[field] = val.lower() == 'true'
+
+        # 4. Handle File fields and existing URL protection
+        file_fields = ['xml_file', 'pdf_file', 'epub_file', 'prc_file', 'mobi_file', 'ris_file', 'bib_file', 'endnote_file']
+        for field in file_fields:
+            if field in processed_data:
+                val = processed_data[field]
+                if val in ['', 'null', 'undefined', None]:
+                    processed_data[field] = None
+                elif isinstance(val, str) and (val.startswith('http') or '/media/' in val):
+                    # Existing URL, remove so it doesn't fail file validation
+                    processed_data.pop(field)
+
+        # 5. Handle empty strings for foreign keys and dates
         empty_to_none_fields = [
             'volume', 'issue', 'journal', 
             'received_date', 'revised_date', 'accepted_date', 'published_date'
         ]
         for field in empty_to_none_fields:
-            if field in data and data[field] == '':
-                data[field] = None
+            if field in processed_data:
+                if processed_data[field] in ['', 'null', 'undefined', None]:
+                    processed_data[field] = None
         
-        return super().to_internal_value(data)
+        # 6. Remove read-only fields
+        read_only = ['id', 'created_at', 'updated_at', 'parsing_status', 'parsed_at']
+        for field in read_only:
+            processed_data.pop(field, None)
+
+        return super().to_internal_value(processed_data)
 
 
 class ArticleAuthorLinkSerializer(serializers.Serializer):

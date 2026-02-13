@@ -1,12 +1,16 @@
 """Views for articles app."""
 
 import logging
+import uuid
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_control
 from rest_framework import generics, filters, status
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse, HttpResponse
@@ -25,7 +29,7 @@ from .serializers import (
     ArticleListSerializer, ArticleDetailSerializer,
     ArticleAbstractSerializer, ArticleFullTextSerializer,
     ArticleCreateUpdateSerializer, ArticleAuthorBulkSerializer,
-    ArticleFileSerializer,
+    ArticleFileSerializer, FigureSerializer,
 )
 from xml_parser.services import process_article_xml
 
@@ -50,13 +54,15 @@ class ArticleListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = ArticleListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['issue', 'volume', 'article_type', 'is_open_access', 'is_special_issue']
+    filterset_fields = ['issue', 'volume', 'status', 'article_type', 'is_open_access', 'is_special_issue']
     search_fields = ['title', 'abstract', 'keywords', 'keywords_display']
     ordering_fields = ['published_date', 'title', 'view_count']
     ordering = ['-published_date']
     
     def get_queryset(self):
-        queryset = Article.objects.filter(status='published')
+        queryset = Article.objects.filter(status__in=['published', 'archive']).select_related(
+            'journal', 'issue__volume__journal', 'volume__journal'
+        ).prefetch_related('article_authors__author')
         
         # Filter by journal (supports ID or slug)
         journal_param = self.request.query_params.get('journal')
@@ -92,7 +98,7 @@ class ArticleSearchView(generics.ListAPIView):
             return Article.objects.none()
         
         return Article.objects.filter(
-            status='published'
+            status__in=['published', 'archive']
         ).filter(
             Q(title__icontains=query) |
             Q(abstract__icontains=query) |
@@ -114,7 +120,7 @@ class SpecialIssuesArticlesView(generics.ListAPIView):
     def get_queryset(self):
         journal_slug = self.request.query_params.get('journal_slug')
         queryset = Article.objects.filter(
-            status='published',
+            status__in=['published', 'archive'],
             is_special_issue=True
         )
         
@@ -140,7 +146,7 @@ class FeaturedArticlesView(generics.ListAPIView):
     
     def get_queryset(self):
         return Article.objects.filter(
-            status='published',
+            status__in=['published', 'archive'],
             is_featured=True
         ).select_related(
             'issue__volume__journal'
@@ -153,6 +159,11 @@ class RecentArticlesView(generics.ListAPIView):
     
     GET /api/v1/articles/recent/
     """
+    # @method_decorator(cache_page(60 * 5))  # Disabled for testing
+    # @method_decorator(cache_control(max_age=300, public=True))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
     permission_classes = [AllowAny]
     serializer_class = ArticleListSerializer
     pagination_class = None
@@ -160,7 +171,9 @@ class RecentArticlesView(generics.ListAPIView):
     def get_queryset(self):
         # Optional filter by journal
         journal_slug = self.request.query_params.get('journal')
-        queryset = Article.objects.filter(status='published')
+        queryset = Article.objects.filter(status__in=['published', 'archive']).select_related(
+            'journal', 'issue__volume__journal', 'volume__journal'
+        ).prefetch_related('article_authors__author')
         
         if journal_slug:
             queryset = queryset.filter(issue__volume__journal__slug=journal_slug)
@@ -180,7 +193,7 @@ class ArticleDetailView(generics.RetrieveAPIView):
     serializer_class = ArticleDetailSerializer
     
     def get_queryset(self):
-        return Article.objects.filter(status='published')
+        return Article.objects.filter(status__in=['published', 'archive'])
     
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -207,7 +220,9 @@ class ArticleBySlugView(generics.RetrieveAPIView):
                 'html_content', 
                 'journal', 
                 'volume__journal', 
-                'issue__volume__journal'
+                'issue__volume__journal',
+                'issue__volume',
+                'volume'
             ).prefetch_related(
                 'article_authors__author', 
                 'files', 
@@ -219,7 +234,7 @@ class ArticleBySlugView(generics.RetrieveAPIView):
             Q(issue__volume__journal__slug=journal_slug) |
             Q(volume__journal__slug=journal_slug),
             slug=article_slug,
-            status='published'
+            status__in=['published', 'archive']
         )
         
         article.increment_view_count()
@@ -245,7 +260,7 @@ class ArticleAbstractView(generics.RetrieveAPIView):
             Q(issue__volume__journal__slug=journal_slug) |
             Q(volume__journal__slug=journal_slug),
             slug=article_slug,
-            status='published'
+            status__in=['published', 'archive']
         )
 
 
@@ -263,14 +278,23 @@ class ArticleFullTextView(generics.RetrieveAPIView):
         article_slug = self.kwargs['article_slug']
         
         return get_object_or_404(
-            Article.objects.select_related('html_content').prefetch_related(
-                'article_authors__author', 'figures', 'tables'
+            Article.objects.select_related(
+                'html_content',
+                'journal',
+                'volume__journal',
+                'issue__volume__journal',
+                'issue__volume',
+                'volume'
+            ).prefetch_related(
+                'article_authors__author', 
+                'figures', 
+                'tables'
             ),
             Q(journal__slug=journal_slug) | 
             Q(issue__volume__journal__slug=journal_slug) |
             Q(volume__journal__slug=journal_slug),
             slug=article_slug,
-            status='published'
+            status__in=['published', 'archive']
         )
 
 
@@ -289,7 +313,7 @@ class ArticlePDFView(APIView):
             Q(issue__volume__journal__slug=journal_slug) |
             Q(volume__journal__slug=journal_slug),
             slug=article_slug,
-            status='published'
+            status__in=['published', 'archive']
         )
         
         # Try new direct pdf_file first
@@ -338,7 +362,7 @@ class ArticleXMLDownloadView(APIView):
             Q(issue__volume__journal__slug=journal_slug) |
             Q(volume__journal__slug=journal_slug),
             slug=article_slug,
-            status='published'
+            status__in=['published', 'archive']
         )
         
         if not article.xml_file:
@@ -372,7 +396,7 @@ class ArticleHTMLDownloadView(APIView):
             Q(issue__volume__journal__slug=journal_slug) |
             Q(volume__journal__slug=journal_slug),
             slug=article_slug,
-            status='published'
+            status__in=['published', 'archive']
         )
         
         # Generate standalone HTML
@@ -470,7 +494,7 @@ class ArticlesByIssueView(generics.ListAPIView):
         issue_id = self.kwargs['issue_id']
         return Article.objects.filter(
             issue_id=issue_id,
-            status='published'
+            status__in=['published', 'archive']
         ).order_by('page_start', 'created_at')
 
 
@@ -518,7 +542,7 @@ class ArticlesByAuthorView(generics.ListAPIView):
         author_id = self.kwargs['pk']
         return Article.objects.filter(
             authors__id=author_id,
-            status='published'
+            status__in=['published', 'archive']
         ).order_by('-published_date')
 
 
@@ -535,7 +559,7 @@ class ArticleAdminListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = ArticleListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['issue', 'status', 'article_type', 'is_special_issue']
+    filterset_fields = ['issue', 'volume', 'status', 'article_type', 'is_special_issue', 'is_preface']
     search_fields = ['title', 'doi', 'article_id_code']
     ordering = ['-created_at']
     
@@ -573,7 +597,7 @@ class ArticleCreateView(generics.CreateAPIView):
     """
     permission_classes = [IsAuthenticated, IsAdminUser]
     serializer_class = ArticleCreateUpdateSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def perform_create(self, serializer):
         article = serializer.save()
@@ -588,7 +612,7 @@ class ArticleAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     GET/PUT/PATCH/DELETE /api/v1/articles/admin/{id}/
     """
     permission_classes = [IsAuthenticated, IsAdminUser]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get_queryset(self):
         return Article.objects.select_related(
@@ -728,6 +752,132 @@ class ArticleFileDeleteView(APIView):
             article_file.file.delete()
         
         article_file.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ArticleFiguresView(APIView):
+    """
+    List or upload figures for an article.
+    
+    GET /api/v1/articles/admin/{id}/figures/
+    POST /api/v1/articles/admin/{id}/figures/
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def get(self, request, pk):
+        article = get_object_or_404(Article, pk=pk)
+        figures = article.figures.all().order_by('display_order', 'figure_number')
+        serializer = FigureSerializer(figures, many=True, context={'request': request})
+        return Response(serializer.data)
+    
+    def post(self, request, pk):
+        article = get_object_or_404(Article, pk=pk)
+        
+        image = request.FILES.get('image')
+        if not image:
+            return Response(
+                {'error': 'No image provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        label = request.data.get('label', '')
+        caption = request.data.get('caption', '')
+        figure_id = request.data.get('figure_id', f"fig_{uuid.uuid4().hex[:6]}")
+        
+        # Determine next figure number
+        last_fig = article.figures.order_by('figure_number').last()
+        next_num = (last_fig.figure_number + 1) if last_fig else 1
+        
+        figure = Figure.objects.create(
+            article=article,
+            image=image,
+            label=label or f"Figure {next_num}",
+            caption=caption,
+            figure_id=figure_id,
+            figure_number=next_num,
+            original_filename=image.name
+        )
+        
+        # AUTO-SYNC: Update the article's HTML content to use this new image URL
+        from xml_parser.services import XMLProcessingService
+        try:
+            service = XMLProcessingService(article)
+            html_content = getattr(article, 'html_content', None)
+            if html_content:
+                html_content.body_html = service._resolve_figure_references(html_content.body_html)
+                html_content.abstract_html = service._resolve_figure_references(html_content.abstract_html)
+                html_content.save()
+        except Exception as e:
+            logger.error(f"Error syncing HTML after figure upload: {str(e)}")
+        
+        serializer = FigureSerializer(figure, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ArticleFigureDetailView(APIView):
+    """
+    Get, update, or delete a figure from an article.
+    
+    GET /api/v1/articles/admin/{id}/figures/{figure_id}/
+    PATCH /api/v1/articles/admin/{id}/figures/{figure_id}/
+    DELETE /api/v1/articles/admin/{id}/figures/{figure_id}/
+    """
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    
+    def get(self, request, pk, figure_id):
+        article = get_object_or_404(Article, pk=pk)
+        figure = get_object_or_404(Figure, pk=figure_id, article=article)
+        serializer = FigureSerializer(figure, context={'request': request})
+        return Response(serializer.data)
+
+    def patch(self, request, pk, figure_id):
+        article = get_object_or_404(Article, pk=pk)
+        figure = get_object_or_404(Figure, pk=figure_id, article=article)
+        
+        image = request.FILES.get('image')
+        if image:
+            # Delete old physical file if it exists to save space
+            if figure.image:
+                figure.image.delete(save=False)
+            figure.image = image
+            figure.original_filename = image.name
+            
+        if 'label' in request.data:
+            figure.label = request.data['label']
+        if 'caption' in request.data:
+            figure.caption = request.data['caption']
+        if 'figure_id' in request.data:
+            figure.figure_id = request.data['figure_id']
+            
+        figure.save()
+        
+        # AUTO-SYNC: Update the article's HTML content to use this new image URL
+        from xml_parser.services import XMLProcessingService
+        try:
+            service = XMLProcessingService(article)
+            html_content = getattr(article, 'html_content', None)
+            if html_content:
+                # This scans the body and abstract HTML and fixes <img> tags
+                html_content.body_html = service._resolve_figure_references(html_content.body_html)
+                html_content.abstract_html = service._resolve_figure_references(html_content.abstract_html)
+                html_content.save()
+        except Exception as e:
+            logger.error(f"Error syncing HTML after figure replacement: {str(e)}")
+
+        serializer = FigureSerializer(figure, context={'request': request})
+        return Response(serializer.data)
+
+    def delete(self, request, pk, figure_id):
+        article = get_object_or_404(Article, pk=pk)
+        figure = get_object_or_404(Figure, pk=figure_id, article=article)
+        
+        # Delete image file
+        if figure.image:
+            figure.image.delete()
+            
+        figure.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

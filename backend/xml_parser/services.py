@@ -119,13 +119,7 @@ class XMLProcessingService:
                 self.errors.extend(parsed.errors)
                 return False
             
-            # Store parsed content (ALWAYS overwrite these)
-            html_content.abstract_html = parsed.abstract_html
-            html_content.body_html = self._resolve_figure_references(parsed.body_html)
-            html_content.references_html = parsed.references_html
-            html_content.acknowledgments_html = parsed.acknowledgments_html
-            
-            # Store metadata as JSON
+            # 1. Store metadata as JSON
             html_content.figures_json = [
                 {
                     'id': f.figure_id,
@@ -145,9 +139,15 @@ class XMLProcessingService:
                 for t in parsed.tables
             ]
             
-            # Create Figure and Table records
+            # 2. Create Figure and Table records FIRST (so they exist for URL resolution)
             self._create_figure_records(parsed.figures)
             self._create_table_records(parsed.tables)
+            
+            # 3. Store parsed content with placeholders (Resolution happens on-the-fly in the Serializer)
+            html_content.abstract_html = parsed.abstract_html
+            html_content.body_html = parsed.body_html
+            html_content.references_html = parsed.references_html
+            html_content.acknowledgments_html = parsed.acknowledgments_html
             
             # Update article metadata if available
             # We overwrite if forced OR if current content is placeholder
@@ -307,16 +307,33 @@ class XMLProcessingService:
                 
                 if fig.figure_id:
                     figure_map[fig.figure_id] = fig.image.url
+                    # Also map with 'fig-' prefix just in case
+                    figure_map[f"fig-{fig.figure_id}"] = fig.image.url
         
         # Replace placeholders
         def replace_placeholder(match):
-            ref = match.group(1)
-            # Try to find matching figure
+            ref = match.group(1).strip()
+            
+            # 1. Clean up ref (remove subdirectories like 'images/fig1' -> 'fig1')
+            clean_ref = ref.split('/')[-1] if '/' in ref else ref
+            
+            # 2. Try to find matching figure
             if ref in figure_map:
                 return figure_map[ref]
-            # Try partial matches
+            if clean_ref in figure_map:
+                return figure_map[clean_ref]
+            
+            # 3. Try removing 'fig-' prefix if it exists in ref
+            if clean_ref.startswith('fig-') and clean_ref[4:] in figure_map:
+                return figure_map[clean_ref[4:]]
+                
+            # 4. Try adding 'fig-' prefix if it doesn't exist
+            if not clean_ref.startswith('fig-') and f"fig-{clean_ref}" in figure_map:
+                return figure_map[f"fig-{clean_ref}"]
+
+            # 5. Try partial matches
             for key, url in figure_map.items():
-                if ref in key or key in ref:
+                if clean_ref in key or key in clean_ref:
                     return url
             # Return placeholder URL for missing figures
             return f'/media/placeholder.png'

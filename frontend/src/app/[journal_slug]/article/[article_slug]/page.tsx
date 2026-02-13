@@ -4,12 +4,16 @@ import { useParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   FiChevronRight, FiDownload, FiUser, FiCalendar, 
   FiTag, FiBookOpen, FiHash, FiAward, FiArrowLeft, 
   FiArrowRight, FiList, FiGrid, FiShare2, FiInfo, FiExternalLink, FiBarChart2, FiClock, FiFileText
 } from 'react-icons/fi';
-import { journalsApi, articlesApi } from '@/lib/api';
+import { 
+  SiFacebook, SiLinkedin, SiWhatsapp, SiReddit, SiX
+} from 'react-icons/si';
+import { journalsApi, articlesApi, siteApi } from '@/lib/api';
 import { ArticleDrawer } from '@/components/ArticleDrawer';
 import Script from 'next/script';
 
@@ -26,7 +30,7 @@ export default function ArticlePage() {
   const articleSlug = params.article_slug as string;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerType, setDrawerType] = useState<'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | null>(null);
+  const [drawerType, setDrawerType] = useState<'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | 'cite' | null>(null);
 
   const { data: journal } = useQuery({
     queryKey: ['journal', journalSlug],
@@ -38,6 +42,11 @@ export default function ArticlePage() {
     queryKey: ['article', journalSlug, articleSlug],
     queryFn: () => articlesApi.getBySlug(journalSlug, articleSlug),
     enabled: !!journalSlug && !!articleSlug,
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ['site-settings'],
+    queryFn: siteApi.getSettings,
   });
 
   const { data: fullText, isLoading: fullTextLoading } = useQuery({
@@ -52,7 +61,7 @@ export default function ArticlePage() {
     }
   }, [fullText]);
 
-  const openDrawer = (type: 'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about') => {
+  const openDrawer = (type: 'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | 'cite') => {
     setDrawerType(type);
     setDrawerOpen(true);
   };
@@ -160,7 +169,7 @@ export default function ArticlePage() {
               {journal?.short_title || journal?.title || 'Journal'}
             </Link>
             <FiChevronRight className="w-3 h-3" />
-            <span className="text-gray-900">Article Details</span>
+            <span className="text-gray-900 font-black">Full Text</span>
           </nav>
         </div>
       </div>
@@ -182,7 +191,7 @@ export default function ArticlePage() {
           )}
               </div>
 
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-black text-gray-900 leading-[1.15]">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-semibold text-gray-900 leading-[1.15]">
             {article.title}
           </h1>
 
@@ -239,7 +248,7 @@ export default function ArticlePage() {
                   <span className="text-gray-400">Published:</span>
                   <span className="text-gray-900 font-black">{publishDate || 'Processing'}</span>
                 </div>
-              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <span className="text-gray-400">DOI:</span>
                   {article.doi ? (
                     <a href={`https://doi.org/${article.doi}`} target="_blank" rel="noopener noreferrer" className="text-academic-blue hover:underline">
@@ -248,12 +257,45 @@ export default function ArticlePage() {
                   ) : 'N/A'}
                 </div>
               </div>
+
+              {/* Quick Share Icons */}
+              <div className="flex items-center gap-2 pt-4">
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mr-2">Share:</span>
+                {[
+                  { id: 'facebook', icon: SiFacebook, color: 'hover:text-[#1877F2]' },
+                  { id: 'twitter', icon: SiX, color: 'hover:text-[#000000]' },
+                  { id: 'linkedin', icon: SiLinkedin, color: 'hover:text-[#0A66C2]' },
+                  { id: 'whatsapp', icon: SiWhatsapp, color: 'hover:text-[#25D366]' },
+                  { id: 'reddit', icon: SiReddit, color: 'hover:text-[#FF4500]' },
+                ].map((social) => {
+                  const url = settings?.social_links?.[social.id];
+                  if (!url) return null;
+                  return (
+                    <a
+                      key={social.id}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`p-2 bg-gray-50 rounded-lg text-gray-400 ${social.color} transition-all hover:bg-white hover:shadow-md border border-gray-100`}
+                    >
+                      <social.icon className="w-3.5 h-3.5" />
+                    </a>
+                  );
+                })}
+                <button
+                  onClick={() => openDrawer('share')}
+                  className="p-2 bg-gray-50 rounded-lg text-gray-400 hover:text-academic-blue transition-all hover:bg-white hover:shadow-md border border-gray-100"
+                  title="More sharing options"
+                >
+                  <FiShare2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </header>
 
             {/* Premium CTA Block */}
             <div className="flex flex-wrap items-center gap-2 bg-gray-50/50 p-2.5 rounded-2xl border border-gray-100 mt-4">
             <Link
-              href={`/${journalSlug}/article/${articleSlug}/fulltext`}
+              href={`/${journalSlug}/article/${articleSlug}/abstract`}
                 className="inline-flex items-center gap-2 px-5 py-2 bg-academic-navy text-white font-black uppercase tracking-widest text-[9px] rounded-xl hover:bg-academic-blue transition-all shadow-lg shadow-academic-navy/10"
             >
                 <FiBookOpen className="w-3.5 h-3.5" />
@@ -293,6 +335,7 @@ export default function ArticlePage() {
                     { type: 'downloads' as const, icon: FiDownload, label: 'Downloads' },
                     { type: 'references' as const, icon: FiList, label: 'References' },
                     { type: 'tables' as const, icon: FiGrid, label: 'Figures' },
+                    { type: 'cite' as const, icon: FiBookOpen, label: 'Cite As' },
                     { type: 'share' as const, icon: FiShare2, label: 'Share' },
                   ].map((item) => (
                     <button 
@@ -382,6 +425,43 @@ export default function ArticlePage() {
                     )}
               </div>
             )}
+
+                {/* Cite As Block - Matches reference site style */}
+                <section className="bg-academic-navy/[0.02] p-3 rounded-2xl border border-gray-100 space-y-1.5 mt-8">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[12px] font-medium uppercase tracking-[0.2em] text-black">Cite As</h3>
+                    
+                    <div className="flex gap-1.5">
+                      {[
+                        { label: 'RIS', url: article.ris_file },
+                        { label: 'BibTeX', url: article.bib_file },
+                        { label: 'EndNote', url: article.endnote_file },
+                      ].filter(f => f.url).map((file) => (
+                        <a
+                          key={file.label}
+                          href={file.url}
+                          download
+                          className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-white border border-gray-100 rounded hover:border-academic-blue hover:text-academic-blue transition-colors flex items-center gap-1"
+                        >
+                          <FiDownload className="w-2.5 h-2.5" />
+                          {file.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-[11px] font-serif leading-relaxed text-gray-700">
+                    {article.cite_as ? (
+                      <div dangerouslySetInnerHTML={{ __html: article.cite_as }} />
+                    ) : (
+                      <>
+                        {article.authors?.[0]?.last_name} et al. {article.title}. 
+                        <span className="italic"> {journal?.title}</span>, {new Date(article.published_date).getFullYear()}; {article.volume_info?.volume_number || '20'}: {article.article_id_code || 'e187421'}.
+                        <br />
+                        <span className="text-academic-blue break-all text-[9px]">http://dx.doi.org/{article.doi}</span>
+                      </>
+                    )}
+                  </div>
+                </section>
               </article>
             </main>
           </div>
@@ -394,9 +474,14 @@ export default function ArticlePage() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110 duration-700" />
               
               <div className="relative z-10 flex flex-col items-center text-center">
-                <div className="w-14 h-14 bg-white rounded-xl p-2.5 mb-3 shadow-lg border border-gray-50">
+                <div className="w-14 h-14 bg-white rounded-xl p-2.5 mb-3 shadow-lg border border-gray-50 relative">
                   {journal?.logo ? (
-                    <img src={journal.logo} alt="" className="w-full h-full object-contain" />
+                    <Image 
+                      src={journal.logo} 
+                      alt={journal.title || "Journal Logo"} 
+                      fill
+                      className="object-contain p-2" 
+                    />
                   ) : (
                     <div className="w-full h-full bg-academic-navy rounded-lg flex items-center justify-center text-white font-serif font-black text-xl">
                       {journal?.title?.[0]}
@@ -451,6 +536,7 @@ export default function ArticlePage() {
                 { label: 'About Article', type: 'about' as const, icon: FiInfo, color: 'hover:border-academic-navy' },
                 { label: 'Figures & Tables', type: 'tables' as const, icon: FiGrid, color: 'hover:border-academic-blue' },
                 { label: 'References', type: 'references' as const, icon: FiList, color: 'hover:border-academic-gold' },
+                { label: 'Cite As', type: 'cite' as const, icon: FiBookOpen, color: 'hover:border-academic-navy' },
               ].map((action) => (
                 <button 
                   key={action.type}

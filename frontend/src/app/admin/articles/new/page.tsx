@@ -30,10 +30,12 @@ export default function NewArticlePage() {
     status: 'draft',
     article_id_code: '',
     license_text: 'CC BY License',
+    cite_as: '',
     received_date: '',
     revised_date: '',
     accepted_date: '',
     published_date: '',
+    cite_as: '',
   });
 
   // File states
@@ -43,6 +45,9 @@ export default function NewArticlePage() {
     epub_file: null,
     prc_file: null,
     mobi_file: null,
+    ris_file: null,
+    bib_file: null,
+    endnote_file: null,
   });
 
   // Fetch subjects
@@ -426,34 +431,61 @@ export default function NewArticlePage() {
                 </div>
             </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    DOI
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.doi}
-                    onChange={(e) => setFormData({ ...formData, doi: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
-                    placeholder="10.1234/example.2024.001"
-                  />
-                </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
-              >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-              </select>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  DOI
+                </label>
+                <input
+                  type="text"
+                  value={formData.doi}
+                  onChange={(e) => setFormData({ ...formData, doi: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+                  placeholder="10.1234/example.2024.001"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archive">Archive</option>
+                </select>
               </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                License / Copyright Text
+              </label>
+              <textarea
+                value={formData.license_text}
+                onChange={(e) => setFormData({ ...formData, license_text: e.target.value })}
+                rows={3}
+                placeholder="Enter license or copyright info. HTML links are supported."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Cite As (Custom Text)
+              </label>
+              <textarea
+                value={formData.cite_as}
+                onChange={(e) => setFormData({ ...formData, cite_as: e.target.value })}
+                rows={3}
+                placeholder="Enter custom citation text. If empty, a default will be generated."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+              />
+            </div>
+          </div>
           </div>
 
           {/* Step 3: Date Information */}
@@ -583,6 +615,45 @@ export default function NewArticlePage() {
                     accept=".mobi"
                     className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     onChange={(e) => handleFileChange(e, 'mobi_file')}
+                  />
+                </label>
+              </div>
+
+              {/* RIS Citation File */}
+              <div className="p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <label className="block cursor-pointer">
+                  <span className="block text-sm font-medium text-gray-700 mb-2">RIS Citation (.ris)</span>
+                  <input
+                    type="file"
+                    accept=".ris"
+                    className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    onChange={(e) => handleFileChange(e, 'ris_file')}
+                  />
+                </label>
+              </div>
+
+              {/* BibTeX Citation File */}
+              <div className="p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <label className="block cursor-pointer">
+                  <span className="block text-sm font-medium text-gray-700 mb-2">BibTeX Citation (.bib)</span>
+                  <input
+                    type="file"
+                    accept=".bib"
+                    className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    onChange={(e) => handleFileChange(e, 'bib_file')}
+                  />
+                </label>
+              </div>
+
+              {/* EndNote Citation File */}
+              <div className="p-4 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <label className="block cursor-pointer">
+                  <span className="block text-sm font-medium text-gray-700 mb-2">EndNote Citation (.enw)</span>
+                  <input
+                    type="file"
+                    accept=".enw"
+                    className="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    onChange={(e) => handleFileChange(e, 'endnote_file')}
                   />
                 </label>
               </div>

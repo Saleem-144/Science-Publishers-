@@ -9,9 +9,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/a
 // Create axios instance
 export const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Don't set default Content-Type to allow axios to automatically
+  // set it for FormData (multipart/form-data) vs JSON objects
 });
 
 // Request interceptor to add auth token
@@ -175,9 +174,7 @@ export const journalsApi = {
   },
 
   createWithImage: async (formData: FormData) => {
-    const response = await api.post('/journals/admin/create/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post('/journals/admin/create/', formData);
     return response.data;
   },
 
@@ -187,9 +184,7 @@ export const journalsApi = {
   },
 
   updateWithImage: async (id: number, formData: FormData) => {
-    const response = await api.patch(`/journals/admin/${id}/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.patch(`/journals/admin/${id}/`, formData);
     return response.data;
   },
   
@@ -220,6 +215,11 @@ export const volumesApi = {
   },
   
   // Admin
+  adminList: async (params?: any) => {
+    const response = await api.get('/volumes/admin/', { params });
+    return response.data;
+  },
+
   create: async (data: any) => {
     const response = await api.post('/volumes/admin/create/', data);
     return response.data;
@@ -262,6 +262,11 @@ export const issuesApi = {
   },
   
   // Admin
+  adminList: async (params?: any) => {
+    const response = await api.get('/issues/admin/', { params });
+    return response.data;
+  },
+
   create: async (data: any) => {
     const response = await api.post('/issues/admin/create/', data);
     return response.data;
@@ -284,12 +289,13 @@ export const issuesApi = {
 
 export const articlesApi = {
   list: async (params?: { 
-    journal?: number; 
+    journal?: number | string; 
     volume?: number;
     issue?: number; 
     search?: string; 
     page?: number; 
-    is_special_issue?: boolean 
+    is_special_issue?: boolean;
+    status?: string;
   }) => {
     const response = await api.get('/articles/', { params });
     return response.data;
@@ -366,9 +372,7 @@ export const articlesApi = {
   },
 
   createWithFiles: async (formData: FormData) => {
-    const response = await api.post('/articles/admin/create/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post('/articles/admin/create/', formData);
     return response.data;
   },
   
@@ -378,9 +382,7 @@ export const articlesApi = {
   },
 
   updateWithFiles: async (id: number, formData: FormData) => {
-    const response = await api.patch(`/articles/admin/${id}/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.patch(`/articles/admin/${id}/`, formData);
     return response.data;
   },
   
@@ -400,9 +402,27 @@ export const articlesApi = {
     formData.append('file_type', fileType);
     formData.append('is_primary', String(isPrimary));
     
-    const response = await api.post(`/articles/admin/${id}/files/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post(`/articles/admin/${id}/files/`, formData);
+    return response.data;
+  },
+
+  listFigures: async (articleId: number) => {
+    const response = await api.get(`/articles/admin/${articleId}/figures/`);
+    return response.data;
+  },
+
+  uploadFigure: async (articleId: number, formData: FormData) => {
+    const response = await api.post(`/articles/admin/${articleId}/figures/`, formData);
+    return response.data;
+  },
+
+  updateFigure: async (articleId: number, figureId: number, formData: FormData) => {
+    const response = await api.patch(`/articles/admin/${articleId}/figures/${figureId}/`, formData);
+    return response.data;
+  },
+
+  deleteFigure: async (articleId: number, figureId: number) => {
+    const response = await api.delete(`/articles/admin/${articleId}/figures/${figureId}/`);
     return response.data;
   },
 };
@@ -485,9 +505,7 @@ export const xmlApi = {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await api.post(`/xml/upload/${articleId}/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post(`/xml/upload/${articleId}/`, formData);
     return response.data;
   },
   
@@ -544,17 +562,13 @@ export const announcementsApi = {
   
   // Admin - create announcement
   create: async (formData: FormData) => {
-    const response = await api.post('/journals/admin/announcements/create/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post('/journals/admin/announcements/create/', formData);
     return response.data;
   },
   
   // Admin - update announcement
   update: async (id: number, formData: FormData) => {
-    const response = await api.patch(`/journals/admin/announcements/${id}/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.patch(`/journals/admin/announcements/${id}/`, formData);
     return response.data;
   },
   
@@ -590,17 +604,13 @@ export const affiliationsApi = {
   
   // Admin - create affiliation with logo
   create: async (formData: FormData) => {
-    const response = await api.post('/journals/admin/affiliations/create/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post('/journals/admin/affiliations/create/', formData);
     return response.data;
   },
   
   // Admin - update affiliation
   update: async (id: number, formData: FormData) => {
-    const response = await api.patch(`/journals/admin/affiliations/${id}/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.patch(`/journals/admin/affiliations/${id}/`, formData);
     return response.data;
   },
   
@@ -623,15 +633,11 @@ export const editorialBoardApi = {
     return response.data;
   },
   create: async (data: FormData) => {
-    const response = await api.post('/journals/admin/editorial-board/create/', data, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await api.post('/journals/admin/editorial-board/create/', data);
     return response.data;
   },
   update: async (id: number, data: FormData) => {
-    const response = await api.patch(`/journals/admin/editorial-board/${id}/`, data, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await api.patch(`/journals/admin/editorial-board/${id}/`, data);
     return response.data;
   },
   delete: async (id: number) => {
@@ -659,17 +665,13 @@ export const ctaCardsApi = {
   
   // Admin - create card
   create: async (formData: FormData) => {
-    const response = await api.post('/journals/admin/cta-cards/create/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post('/journals/admin/cta-cards/create/', formData);
     return response.data;
   },
   
   // Admin - update card
   update: async (id: number, formData: FormData) => {
-    const response = await api.patch(`/journals/admin/cta-cards/${id}/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.patch(`/journals/admin/cta-cards/${id}/`, formData);
     return response.data;
   },
   
@@ -692,15 +694,11 @@ export const indexingApi = {
     return response.data;
   },
   create: async (data: FormData) => {
-    const response = await api.post('/journals/admin/indexing/create/', data, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await api.post('/journals/admin/indexing/create/', data);
     return response.data;
   },
   update: async (id: number, data: FormData) => {
-    const response = await api.patch(`/journals/admin/indexing/${id}/`, data, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const response = await api.patch(`/journals/admin/indexing/${id}/`, data);
     return response.data;
   },
   delete: async (id: number) => {
@@ -726,9 +724,7 @@ export const ctaButtonsApi = {
   },
   
   submitForm: async (formData: FormData) => {
-    const response = await api.post('/journals/cta-buttons/submit/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await api.post('/journals/cta-buttons/submit/', formData);
     return response.data;
   },
   

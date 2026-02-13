@@ -1,9 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Custom font imports */
-@import url('https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,300..700;1,7..72,300..700&display=swap');
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 :root {
   --font-literata: 'Literata', Georgia, serif;
@@ -446,6 +443,16 @@ html {
 .ql-editor a {
   color: #2563eb !important;
   text-decoration: underline !important;
+}
+
+.article-license-links a {
+  color: #2563eb !important;
+  text-decoration: underline !important;
+  transition: color 0.2s;
+}
+
+.article-license-links a:hover {
+  color: #1d4ed8 !important;
 }
 
 /* Quill dropdown styling */

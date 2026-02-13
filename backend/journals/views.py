@@ -1,5 +1,8 @@
 """Views for journals app."""
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_control
 from rest_framework import generics, filters, status
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
@@ -34,6 +37,11 @@ from .serializers import (
 class JournalListView(generics.ListAPIView):
     """List all active journals."""
     
+    @method_decorator(cache_page(60 * 5))  # Cache for 5 minutes
+    @method_decorator(cache_control(max_age=300, public=True))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
     permission_classes = [AllowAny]
     serializer_class = JournalListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -48,7 +56,7 @@ class JournalListView(generics.ListAPIView):
     ordering = ['title']
     
     def get_queryset(self):
-        queryset = Journal.objects.filter(is_active=True)
+        queryset = Journal.objects.filter(is_active=True).prefetch_related('subjects')
         
         # Custom filtering for subject slug if provided in params
         subject_slug = self.request.query_params.get('subjects__slug')
@@ -76,6 +84,11 @@ class JournalListView(generics.ListAPIView):
 class FeaturedJournalsView(generics.ListAPIView):
     """List featured journals for homepage."""
     
+    @method_decorator(cache_page(60 * 15))  # Cache for 15 minutes
+    @method_decorator(cache_control(max_age=900, public=True))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+    
     permission_classes = [AllowAny]
     serializer_class = JournalListSerializer
     
@@ -90,7 +103,7 @@ class JournalSearchView(generics.ListAPIView):
     serializer_class = JournalListSerializer
     
     def get_queryset(self):
-        queryset = Journal.objects.filter(is_active=True)
+        queryset = Journal.objects.filter(is_active=True).prefetch_related('subjects')
         query = self.request.query_params.get('q', '')
         
         if query:

@@ -106,12 +106,14 @@ class Journal(models.Model):
         'ISSN (Print)',
         max_length=20,
         blank=True,
+        db_index=True,
         help_text='Print ISSN (e.g., 1234-5678)'
     )
     issn_online = models.CharField(
         'ISSN (Online)',
         max_length=20,
         blank=True,
+        db_index=True,
         help_text='Online ISSN (e.g., 1234-5678)'
     )
     
@@ -121,6 +123,12 @@ class Journal(models.Model):
         blank=True,
         null=True,
         help_text='Journal cover image for display'
+    )
+    banner_image = models.ImageField(
+        upload_to='journals/banners/',
+        blank=True,
+        null=True,
+        help_text='Wide banner image for the journal homepage hero section'
     )
     logo = models.ImageField(
         upload_to='journals/logos/',
@@ -201,6 +209,11 @@ class Journal(models.Model):
         'Submission URL',
         blank=True,
         help_text='URL for submitting work (e.g. OJS or external form)'
+    )
+    login_url = models.URLField(
+        'Login URL',
+        blank=True,
+        help_text='URL for author login'
     )
     flyer_pdf = models.FileField(
         'Journal Flyer (PDF)',
