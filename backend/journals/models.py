@@ -122,24 +122,28 @@ class Journal(models.Model):
         upload_to='journals/covers/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='Journal cover image for display'
     )
     banner_image = models.ImageField(
         upload_to='journals/banners/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='Wide banner image for the journal homepage hero section'
     )
     logo = models.ImageField(
         upload_to='journals/logos/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='Journal logo'
     )
     favicon = models.ImageField(
         upload_to='journals/favicons/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='Favicon for browser tab'
     )
     primary_color = models.CharField(
@@ -164,6 +168,7 @@ class Journal(models.Model):
         upload_to='journals/editors/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='Photo of the Editor-in-Chief for avatar display'
     )
     publisher = models.CharField(
@@ -220,6 +225,7 @@ class Journal(models.Model):
         upload_to='journals/flyers/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='PDF flyer for the journal'
     )
     
@@ -319,6 +325,7 @@ class CorporateAffiliation(models.Model):
     )
     logo = models.ImageField(
         upload_to='affiliations/logos/',
+        max_length=500,
         help_text='Logo image for the organization'
     )
     url = models.URLField(
@@ -373,6 +380,7 @@ class Announcement(models.Model):
         upload_to='announcements/images/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='Featured image for the announcement'
     )
     
@@ -451,6 +459,7 @@ class EditorialBoardMember(models.Model):
         upload_to='editorial_board/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='Member photo'
     )
     department = models.CharField(max_length=255, blank=True)
@@ -488,6 +497,7 @@ class CTACard(models.Model):
     """
     image = models.ImageField(
         upload_to='cta_cards/',
+        max_length=500,
         help_text='Image to display on the card'
     )
     link_url = models.URLField(
@@ -539,6 +549,7 @@ class JournalIndexing(models.Model):
         upload_to='journals/indexing_logos/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='Logo of the indexing service'
     )
     url = models.URLField(
@@ -610,7 +621,7 @@ class CTAFormSubmission(models.Model):
     expertise = models.CharField("Field of Expertise", max_length=255)
     orcid_id = models.CharField("ORCID ID", max_length=50, blank=True)
     scopus_id = models.CharField("Scopus ID", max_length=50, blank=True)
-    cv_file = models.FileField("Upload CV", upload_to='cta_submissions/cvs/')
+    cv_file = models.FileField("Upload CV", upload_to='cta_submissions/cvs/', max_length=500)
     comments = models.TextField(blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)

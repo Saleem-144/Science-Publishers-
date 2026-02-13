@@ -229,37 +229,43 @@ class Article(models.Model):
         upload_to='articles/xml/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='XML source file for parsing'
     )
     pdf_file = models.FileField(
         'PDF File',
         upload_to='articles/pdf/',
         blank=True,
-        null=True
+        null=True,
+        max_length=500
     )
     epub_file = models.FileField(
         'ePUB File',
         upload_to='articles/epub/',
         blank=True,
-        null=True
+        null=True,
+        max_length=500
     )
     prc_file = models.FileField(
         'PRC File',
         upload_to='articles/prc/',
         blank=True,
-        null=True
+        null=True,
+        max_length=500
     )
     mobi_file = models.FileField(
         'Mobi File',
         upload_to='articles/mobi/',
         blank=True,
-        null=True
+        null=True,
+        max_length=500
     )
     ris_file = models.FileField(
         'RIS Citation',
         upload_to='articles/citations/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='RIS citation file'
     )
     bib_file = models.FileField(
@@ -267,6 +273,7 @@ class Article(models.Model):
         upload_to='articles/citations/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='BibTeX citation file'
     )
     endnote_file = models.FileField(
@@ -274,6 +281,7 @@ class Article(models.Model):
         upload_to='articles/citations/',
         blank=True,
         null=True,
+        max_length=500,
         help_text='EndNote citation file'
     )
     
@@ -540,6 +548,7 @@ class ArticleFile(models.Model):
     )
     file = models.FileField(
         upload_to='articles/files/',
+        max_length=500,
         help_text='The uploaded file'
     )
     original_filename = models.CharField(
@@ -782,6 +791,7 @@ class Figure(models.Model):
     
     image = models.ImageField(
         upload_to='articles/figures/',
+        max_length=500,
         help_text='Figure image file'
     )
     original_filename = models.CharField(

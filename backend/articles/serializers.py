@@ -497,9 +497,6 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
         if hasattr(data, 'dict'):
             # From multipart/form-data (QueryDict)
             processed_data = data.dict()
-            # If multiple values were sent for a field (not common for articles but good for safety)
-            # if 'keywords' in data:
-            #     processed_data['keywords'] = data.getlist('keywords')
         else:
             # From JSON or already a dict
             processed_data = dict(data)

@@ -599,6 +599,13 @@ class ArticleCreateView(generics.CreateAPIView):
     serializer_class = ArticleCreateUpdateSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            logger.warning(f"Validation errors for article creation: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         article = serializer.save()
         if article.xml_file:
