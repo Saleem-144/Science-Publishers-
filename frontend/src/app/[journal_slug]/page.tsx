@@ -9,17 +9,18 @@ import {
   FiCalendar, FiBook, FiFileText, FiUsers, 
   FiExternalLink, FiArrowRight, FiInfo, 
   FiChevronRight, FiDownload, FiEdit3,
-  FiStar, FiArchive
+  FiStar, FiArchive, FiHelpCircle, FiChevronDown
 } from 'react-icons/fi';
 import { journalsApi, articlesApi, volumesApi } from '@/lib/api';
 import { ArticleCard } from '@/components/ArticleCard';
 
-type TabType = 'home' | 'aims' | 'editorial' | 'about' | 'indexing' | 'thematic' | 'special' | 'archive';
+type TabType = 'home' | 'aims' | 'editorial' | 'about' | 'indexing' | 'thematic' | 'special' | 'archive' | 'authors' | 'guest-editor' | 'reviewers' | 'faq';
 
 export default function JournalPage() {
   const params = useParams();
   const journalSlug = params.journal_slug as string;
   const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const { data: journal, isLoading: journalLoading } = useQuery({
     queryKey: ['journal', journalSlug],
@@ -41,13 +42,19 @@ export default function JournalPage() {
 
   const { data: archivedArticles, isLoading: archiveLoading } = useQuery({
     queryKey: ['journal-archived-articles', journalSlug],
-    queryFn: () => articlesApi.list({ journal: journalSlug, status: 'archive' }),
+    queryFn: () => articlesApi.list({ journal: journalSlug, volume__is_archived: true }),
     enabled: !!journalSlug,
   });
 
   const { data: volumesData } = useQuery({
     queryKey: ['journal-volumes', journalSlug],
-    queryFn: () => volumesApi.listByJournal(journalSlug),
+    queryFn: () => volumesApi.listByJournal(journalSlug, { is_archived: false }),
+    enabled: !!journalSlug,
+  });
+
+  const { data: archivedVolumesData } = useQuery({
+    queryKey: ['journal-archived-volumes', journalSlug],
+    queryFn: () => volumesApi.listByJournal(journalSlug, { is_archived: true }),
     enabled: !!journalSlug,
   });
 
@@ -56,10 +63,23 @@ export default function JournalPage() {
   const archivedList = archivedArticles?.results || archivedArticles || [];
   const volumesList = volumesData?.results || volumesData || [];
 
+  // Group special articles by year
+  const groupedSpecialArticles = specialArticlesList.reduce((acc: any, article: any) => {
+    const year = article.year || (article.published_date ? new Date(article.published_date).getFullYear().toString() : 'Other');
+    if (!acc[year]) {
+      acc[year] = [];
+    }
+    acc[year].push(article);
+    return acc;
+  }, {});
+
+  const sortedSpecialYears = Object.keys(groupedSpecialArticles).sort((a, b) => b.localeCompare(a));
+
   // Group articles by volume and then issue, identifying prefaces per volume
   const groupedArticles = articlesList.reduce((acc: any, article: any) => {
-    // Skip articles that belong to other tabs
+    // Skip articles that belong to other tabs or archived volumes
     if (article.is_special_issue) return acc;
+    if (article.volume_info?.is_archived) return acc;
     if (article.status === 'archive') return acc;
 
     // Use strictly boolean check for preface
@@ -98,6 +118,36 @@ export default function JournalPage() {
   // Sort volumes (newest first) and issues (newest first)
   const sortedVolKeys = Object.keys(groupedArticles).sort((a, b) => 
     groupedArticles[b].volNum - groupedArticles[a].volNum
+  );
+
+  // Group archived articles by volume and then issue
+  const groupedArchivedArticles = archivedList.reduce((acc: any, article: any) => {
+    const volNum = article.volume_number || 0;
+    const issueNum = article.issue_number || 'Other';
+    const year = article.year || '';
+    const volKey = volNum > 0 ? `Volume ${volNum} (${year})` : 'Archived Articles';
+    
+    if (!acc[volKey]) {
+      acc[volKey] = {
+        volNum: volNum,
+        prefaces: [],
+        issues: {}
+      };
+    }
+
+    if (article.is_preface) {
+      acc[volKey].prefaces.push(article);
+    } else {
+      if (!acc[volKey].issues[issueNum]) {
+        acc[volKey].issues[issueNum] = [];
+      }
+      acc[volKey].issues[issueNum].push(article);
+    }
+    return acc;
+  }, {});
+
+  const sortedArchivedVolKeys = Object.keys(groupedArchivedArticles).sort((a, b) => 
+    groupedArchivedArticles[b].volNum - groupedArchivedArticles[a].volNum
   );
 
   if (journalLoading) {
@@ -203,15 +253,24 @@ export default function JournalPage() {
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-academic-blue"></div>
               </div>
-            ) : specialArticlesList.length > 0 ? (
-              <div className="space-y-4">
-                {specialArticlesList.map((article: any) => (
-                  <ArticleCard key={article.id} article={article} />
+            ) : sortedSpecialYears.length > 0 ? (
+              <div className="space-y-12">
+                {sortedSpecialYears.map((year) => (
+                  <div key={year} className="space-y-6">
+                    <div className="bg-academic-navy/5 border-l-4 border-academic-navy px-6 py-2 rounded-r-lg">
+                      <h3 className="text-lg font-black text-academic-navy tracking-tight">{year}</h3>
+                    </div>
+                    <div className="space-y-4">
+                      {groupedSpecialArticles[year].map((article: any) => (
+                        <ArticleCard key={article.id} article={article} />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
-                <p className="text-gray-500 italic">No special issue articles available at this time.</p>
+                <p className="text-gray-500">No special issue articles available at this time.</p>
               </div>
             )}
           </div>
@@ -219,7 +278,7 @@ export default function JournalPage() {
       case 'archive':
         return (
           <div className={contentClasses}>
-            <h2 className="text-2xl font-bold text-academic-navy mb-6 border-b pb-2 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-academic-navy mb-10 border-b pb-2 flex items-center gap-2">
               <FiArchive className="text-academic-blue" />
               Archive
             </h2>
@@ -227,15 +286,66 @@ export default function JournalPage() {
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-academic-blue"></div>
               </div>
-            ) : archivedList.length > 0 ? (
-              <div className="space-y-4">
-                {archivedList.map((article: any) => (
-                  <ArticleCard key={article.id} article={article} />
-                ))}
+            ) : sortedArchivedVolKeys.length > 0 ? (
+              <div className="space-y-12">
+                {sortedArchivedVolKeys.map((volKey) => {
+                  const volData = groupedArchivedArticles[volKey];
+                  const sortedIssueNums = Object.keys(volData.issues).sort((a, b) => {
+                    const numA = parseInt(a);
+                    const numB = parseInt(b);
+                    if (isNaN(numA) && isNaN(numB)) return a.localeCompare(b);
+                    if (isNaN(numA)) return 1;
+                    if (isNaN(numB)) return -1;
+                    return numB - numA;
+                  });
+
+                  return (
+                    <div key={volKey} className="space-y-8">
+                      {/* Volume Heading */}
+                      <div className="bg-gray-100 border-l-4 border-gray-400 px-6 py-3 rounded-r-lg">
+                        <h3 className="text-xl font-black text-gray-800 tracking-tight">{volKey}</h3>
+                      </div>
+                      
+                      {/* Volume Preface Section */}
+                      {volData.prefaces.length > 0 && (
+                        <div className="space-y-4 px-2">
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Preface</span>
+                            <div className="h-px flex-1 bg-gray-100"></div>
+                          </div>
+                          <div className="space-y-4">
+                            {volData.prefaces.map((article: any) => (
+                              <ArticleCard key={article.id} article={article} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Issues within Volume */}
+                      <div className="space-y-8">
+                        {sortedIssueNums.map((issueNum) => (
+                          <div key={issueNum} className="space-y-4 px-2">
+                            <div className="flex items-center gap-3">
+                              <h4 className="text-sm font-bold text-gray-700 bg-gray-50 px-3 py-1 rounded-full whitespace-nowrap">
+                                Issue {issueNum}
+                              </h4>
+                              <div className="h-px flex-1 bg-gray-50"></div>
+                            </div>
+                            <div className="space-y-4">
+                              {volData.issues[issueNum].map((article: any) => (
+                                <ArticleCard key={article.id} article={article} />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-100">
-                <p className="text-gray-500 italic">No archived articles available.</p>
+                <p className="text-gray-500">No archived volumes available.</p>
               </div>
             )}
           </div>
@@ -298,7 +408,7 @@ export default function JournalPage() {
                             </div>
                             {member.description && (
                               <div 
-                                className="ql-editor !p-0 mt-0.5 text-gray-700 leading-tight text-[12px] italic border-l-2 border-academic-gold/20 pl-3 editorial-description max-h-20 overflow-y-auto scrollbar-hide"
+                                className="ql-editor !p-0 mt-0.5 text-gray-700 leading-tight text-[12px] border-l-2 border-academic-gold/20 pl-3 editorial-description max-h-20 overflow-y-auto scrollbar-hide"
                                 dangerouslySetInnerHTML={{ __html: member.description }}
                               />
                             )}
@@ -310,7 +420,7 @@ export default function JournalPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500 italic">
+              <div className="text-center py-12 text-gray-500">
                 No editorial board information available.
               </div>
             )}
@@ -405,6 +515,80 @@ export default function JournalPage() {
             <div className="ql-editor !p-0" dangerouslySetInnerHTML={{ __html: journal.open_thematic_issue || 'No information available.' }} />
           </div>
         );
+      case 'authors':
+        return (
+          <div className={contentClasses}>
+            <h2 className="text-2xl font-bold text-academic-navy mb-6 border-b pb-2">For Authors</h2>
+            <div className="ql-editor !p-0">
+              {/* Policy content for authors to be added later */}
+            </div>
+          </div>
+        );
+      case 'guest-editor':
+        return (
+          <div className={contentClasses}>
+            <h2 className="text-2xl font-bold text-academic-navy mb-6 border-b pb-2">Guest Editor</h2>
+            <div className="ql-editor !p-0">
+              {/* Policy content for guest editors to be added later */}
+            </div>
+          </div>
+        );
+      case 'reviewers':
+        return (
+          <div className={contentClasses}>
+            <h2 className="text-2xl font-bold text-academic-navy mb-6 border-b pb-2">For Reviewers</h2>
+            <div className="ql-editor !p-0">
+              {/* Policy content for reviewers to be added later */}
+            </div>
+          </div>
+        );
+      case 'faq':
+        return (
+          <div className={contentClasses}>
+            <h2 className="text-2xl font-bold text-academic-navy mb-8 border-b pb-2 flex items-center gap-2">
+              <FiHelpCircle className="text-academic-blue" /> Frequently Asked Questions
+            </h2>
+            
+            {journal.faqs && journal.faqs.length > 0 ? (
+              <div className="space-y-4">
+                {journal.faqs.map((faq: any, index: number) => (
+                  <div 
+                    key={faq.id} 
+                    className="border border-gray-100 rounded-xl overflow-hidden bg-white hover:border-academic-blue/20 transition-all shadow-sm"
+                  >
+                    <button
+                      onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                      className="w-full flex items-center justify-between p-5 text-left bg-gray-50/50 hover:bg-gray-100/50 transition-colors"
+                    >
+                      <span className="font-bold text-gray-900 pr-8">{faq.question}</span>
+                      <FiChevronDown 
+                        className={`w-5 h-5 text-academic-blue transition-transform duration-300 ${openFaqIndex === index ? 'rotate-180' : ''}`} 
+                      />
+                    </button>
+                    
+                    <div 
+                      className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                        openFaqIndex === index ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+                      }`}
+                    >
+                      <div className="p-5 border-t border-gray-100 bg-white">
+                        <div 
+                          className="ql-editor !p-0 text-gray-700 leading-relaxed" 
+                          dangerouslySetInnerHTML={{ __html: faq.answer }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 bg-gray-50/50 rounded-2xl border-2 border-dashed border-gray-100">
+                <FiHelpCircle className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                <p className="text-gray-500 font-medium italic">No FAQs available for this journal at this time.</p>
+              </div>
+            )}
+          </div>
+        );
       default:
         return null;
     }
@@ -488,7 +672,7 @@ export default function JournalPage() {
 
               {/* Short Description */}
               <div className="max-w-3xl mb-8">
-                <p className="text-lg text-white/80 leading-relaxed italic">
+                <p className="text-lg text-white/80 leading-relaxed">
                   {journal.short_description}
                 </p>
               </div>
@@ -541,6 +725,10 @@ export default function JournalPage() {
                   { id: 'about', label: 'About Journal' },
                   { id: 'indexing', label: 'Indexing' },
                   { id: 'thematic', label: 'Open thematic issue' },
+                  { id: 'authors', label: 'For Authors' },
+                  { id: 'guest-editor', label: 'Guest Editor' },
+                  { id: 'reviewers', label: 'For Reviewers' },
+                  { id: 'faq', label: 'FAQ' },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -599,9 +787,9 @@ export default function JournalPage() {
                 </h3>
           </div>
               <div className="max-h-[400px] overflow-y-auto">
-                {volumesList.length > 0 ? (
+                {volumesList.filter((v: any) => !v.is_archived).length > 0 ? (
                   <div className="divide-y divide-gray-50">
-                    {volumesList.map((vol: any) => (
+                    {volumesList.filter((v: any) => !v.is_archived).map((vol: any) => (
                       <div key={vol.id} className="p-4 hover:bg-gray-50 transition-colors">
                         <Link href={`/${journalSlug}/volumes/${vol.volume_number}`} className="block group">
                           <p className="font-semibold text-gray-900 group-hover:text-academic-blue transition-colors">

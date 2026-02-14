@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { FiPlus, FiEdit2, FiTrash2, FiBook, FiLayers, FiFilter, FiSearch, FiX } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiBook, FiLayers, FiFilter, FiSearch, FiX, FiArchive } from 'react-icons/fi';
 import { journalsApi, volumesApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -12,7 +12,7 @@ export default function AdminVolumesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingVolume, setEditingVolume] = useState<any>(null);
-  const [newVolume, setNewVolume] = useState({ number: '', year: new Date().getFullYear().toString() });
+  const [newVolume, setNewVolume] = useState({ number: '', year: new Date().getFullYear().toString(), is_archived: false });
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
 
@@ -67,9 +67,10 @@ export default function AdminVolumesPage() {
         journal: parseInt(selectedJournal),
         volume_number: parseInt(newVolume.number),
         year: parseInt(newVolume.year),
+        is_archived: newVolume.is_archived,
       });
       toast.success('Volume created successfully!');
-      setNewVolume({ number: '', year: new Date().getFullYear().toString() });
+      setNewVolume({ number: '', year: new Date().getFullYear().toString(), is_archived: false });
       setShowCreateForm(false);
       refetchVolumes();
     } catch (error: any) {
@@ -91,6 +92,7 @@ export default function AdminVolumesPage() {
       await volumesApi.update(editingVolume.id, {
         volume_number: parseInt(editingVolume.volume_number),
         year: parseInt(editingVolume.year),
+        is_archived: editingVolume.is_archived,
       });
       toast.success('Volume updated successfully!');
       setEditingVolume(null);
@@ -234,6 +236,18 @@ export default function AdminVolumesPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
                   />
                 </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="checkbox"
+                    id="new-archived"
+                    checked={newVolume.is_archived}
+                    onChange={(e) => setNewVolume({ ...newVolume, is_archived: e.target.checked })}
+                    className="w-4 h-4 text-academic-blue border-gray-300 rounded focus:ring-academic-blue"
+                  />
+                  <label htmlFor="new-archived" className="text-sm font-medium text-gray-700">
+                    Archived?
+                  </label>
+                </div>
                 <button
                   onClick={handleCreateVolume}
                   disabled={creating}
@@ -260,6 +274,12 @@ export default function AdminVolumesPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
+                  <th className="px-6 py-3 text-left">
+                    <div className="flex items-center gap-2">
+                      <FiArchive className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm font-semibold text-gray-600">Archived</span>
+                    </div>
+                  </th>
                   <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Volume</th>
                   <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Year</th>
                   <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Issues</th>
@@ -269,7 +289,28 @@ export default function AdminVolumesPage() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredVolumes.map((volume: any) => (
-                  <tr key={volume.id} className="hover:bg-gray-50">
+                  <tr key={volume.id} className={`hover:bg-gray-50 ${volume.is_archived ? 'bg-red-50/30' : ''}`}>
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={editingVolume?.id === volume.id ? editingVolume.is_archived : volume.is_archived}
+                        onChange={async (e) => {
+                          const checked = e.target.checked;
+                          if (editingVolume?.id === volume.id) {
+                            setEditingVolume({ ...editingVolume, is_archived: checked });
+                          } else {
+                            try {
+                              await volumesApi.update(volume.id, { is_archived: checked });
+                              toast.success(`Volume ${checked ? 'archived' : 'restored'} successfully`);
+                              refetchVolumes();
+                            } catch (error) {
+                              toast.error('Failed to update volume status');
+                            }
+                          }
+                        }}
+                        className="w-4 h-4 text-academic-blue border-gray-300 rounded focus:ring-academic-blue"
+                      />
+                    </td>
                     <td className="px-6 py-4 font-medium text-gray-900">
                       {editingVolume?.id === volume.id ? (
                         <input
@@ -324,7 +365,8 @@ export default function AdminVolumesPage() {
                               onClick={() => setEditingVolume({ 
                                 id: volume.id, 
                                 volume_number: volume.volume_number.toString(), 
-                                year: volume.year.toString() 
+                                year: volume.year.toString(),
+                                is_archived: volume.is_archived
                               })}
                           className="p-2 text-gray-400 hover:text-academic-blue transition-colors"
                           title="Edit"

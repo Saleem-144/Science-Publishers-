@@ -11,6 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 import RichTextEditor from '@/components/admin/RichTextEditor';
 import EditorialBoardManager from '@/components/admin/EditorialBoardManager';
 import IndexingManager from '@/components/admin/IndexingManager';
+import FAQManager from '@/components/admin/FAQManager';
 
 export default function EditJournalPage() {
   const router = useRouter();
@@ -342,6 +343,10 @@ export default function EditJournalPage() {
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
             <IndexingManager journalId={parseInt(journalId)} />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+            <FAQManager journalId={parseInt(journalId)} />
           </div>
         </div>
 

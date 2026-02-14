@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { 
   FiX, FiUser, FiDownload, FiList, FiGrid, FiShare2, 
   FiCheck, FiCopy, FiFile, FiFileText, FiMail, FiMapPin, FiBookOpen,
-  FiInfo, FiShield, FiExternalLink
+  FiInfo, FiShield, FiExternalLink, FiTag
 } from 'react-icons/fi';
 import * as SiIcons from 'react-icons/si';
 import toast from 'react-hot-toast';
@@ -36,6 +36,7 @@ const SOCIAL_PLATFORMS: Record<string, { label: string; icon: string | null; col
   kakao: { label: 'Kakao', icon: 'SiKakaotalk', color: 'text-[#FFE812]', domain: 'kakao.com' },
   kindle: { label: 'Kindle It', icon: null, color: 'text-[#000000]', domain: 'amazon.com' },
   koo: { label: 'Koo App', icon: null, color: 'text-[#FACD00]', domain: 'kooapp.com' },
+  kudos: { label: 'Kudos', icon: null, color: 'text-[#000000]', domain: 'growkudos.com' },
   line: { label: 'Line', icon: 'SiLine', color: 'text-[#00C300]', domain: 'line.me' },
   linkedin: { label: 'LinkedIn', icon: 'SiLinkedin', color: 'text-[#0A66C2]', domain: 'linkedin.com' },
   livejournal: { label: 'LiveJournal', icon: 'SiLivejournal', color: 'text-[#00B0EA]', domain: 'livejournal.com' },
@@ -99,7 +100,7 @@ const SocialIcon = ({ id, className }: { id: string, className: string }) => {
 interface ArticleDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | 'cite' | null;
+  type: 'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | 'cite' | 'advertising' | 'promotional' | null;
   data: any;
 }
 
@@ -246,7 +247,7 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
                 </a>
               ))}
               {files.length === 0 && (
-                <p className="text-center py-8 text-gray-500 italic">No downloadable files available.</p>
+                <p className="text-center py-8 text-gray-500">No downloadable files available.</p>
               )}
             </div>
           </div>
@@ -268,7 +269,7 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
               />
             ) : (
               <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                <p className="text-gray-400 text-sm font-medium italic">No references found in XML.</p>
+                <p className="text-gray-400 text-sm font-medium">No references found in XML.</p>
               </div>
             )}
           </div>
@@ -325,7 +326,7 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
               </div>
             ) : (
               <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                <p className="text-gray-400 text-sm font-medium italic">No tables or figures found.</p>
+                <p className="text-gray-400 text-sm font-medium">No tables or figures found.</p>
               </div>
             )}
           </div>
@@ -353,7 +354,7 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
                 ) : (
                   <>
                     {data.authors?.[0]?.last_name} et al. {data.title}. 
-                    <span className="italic"> {data.journal_info?.title}</span>, {new Date(data.published_date).getFullYear()}; {data.volume_info?.volume_number || '20'}: {data.article_id_code || 'e187421'}.
+                    <span> {data.journal_info?.title}</span>, {new Date(data.published_date).getFullYear()}; {data.volume_info?.volume_number || '20'}: {data.article_id_code || 'e187421'}.
                     <br />
                     <span className="text-academic-blue break-all text-[11px]">http://dx.doi.org/{data.doi}</span>
                   </>
@@ -469,7 +470,7 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
                       dangerouslySetInnerHTML={{ __html: data.license_text }} 
                     />
                   ) : (
-                    <p className="text-gray-500 italic">Open Access. Distributed under the terms of the Creative Commons Attribution 4.0 International License (CC BY 4.0).</p>
+                    <p className="text-gray-500">Open Access. Distributed under the terms of the Creative Commons Attribution 4.0 International License (CC BY 4.0).</p>
                   )}
                 </div>
               </div>
@@ -510,6 +511,36 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
             </div>
           </div>
         );
+      case 'advertising':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
+              <div className="w-8 h-8 bg-academic-navy/5 rounded-lg flex items-center justify-center text-academic-navy">
+                <FiTag className="w-4 h-4" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Advertising Policy</h3>
+            </div>
+            <div className="bg-gray-50/50 rounded-2xl p-8 border border-dashed border-gray-200 flex flex-col items-center justify-center text-center py-20">
+              <FiShield className="w-12 h-12 text-gray-300 mb-4" />
+              <p className="text-gray-500 font-medium italic">Our advertising policy content will be added here soon.</p>
+            </div>
+          </div>
+        );
+      case 'promotional':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
+              <div className="w-8 h-8 bg-academic-navy/5 rounded-lg flex items-center justify-center text-academic-navy">
+                <FiShare2 className="w-4 h-4" />
+              </div>
+              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">Promotional Services</h3>
+            </div>
+            <div className="bg-gray-50/50 rounded-2xl p-8 border border-dashed border-gray-200 flex flex-col items-center justify-center text-center py-20">
+              <FiExternalLink className="w-12 h-12 text-gray-300 mb-4" />
+              <p className="text-gray-500 font-medium italic">Information about our promotional services for authors will be available soon.</p>
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -528,7 +559,7 @@ export function ArticleDrawer({ isOpen, onClose, type, data }: ArticleDrawerProp
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-20">
           <div className="flex flex-col">
             <span className="font-black uppercase tracking-[0.2em] text-[10px] text-academic-gold mb-0.5">Article Resources</span>
-            <span className="text-[11px] font-bold text-gray-400 truncate max-w-[240px] italic">
+            <span className="text-[11px] font-bold text-gray-400 truncate max-w-[240px]">
               {data.title}
             </span>
           </div>

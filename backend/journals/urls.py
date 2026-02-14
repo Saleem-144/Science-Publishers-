@@ -63,6 +63,20 @@ urlpatterns = [
     path('admin/indexing/create/', views.JournalIndexingCreateView.as_view(), name='admin_indexing_create'),
     path('admin/indexing/<int:pk>/', views.JournalIndexingAdminDetailView.as_view(), name='admin_indexing_detail'),
 
+    # FAQ admin endpoints
+    path('admin/faqs/', views.FAQAdminListView.as_view(), name='admin_faq_list'),
+    path('admin/faqs/create/', views.FAQCreateView.as_view(), name='admin_faq_create'),
+    path('admin/faqs/<int:pk>/', views.FAQAdminDetailView.as_view(), name='admin_faq_detail'),
+
+    # Global Indexing Journal endpoints
+    path('indexing-platforms/', views.IndexingPlatformListView.as_view(), name='indexing_platform_list'),
+    path('admin/indexing-platforms/', views.IndexingPlatformAdminListView.as_view(), name='admin_indexing_platform_list'),
+    path('admin/indexing-platforms/create/', views.IndexingPlatformCreateView.as_view(), name='admin_indexing_platform_create'),
+    path('admin/indexing-platforms/<int:pk>/', views.IndexingPlatformAdminDetailView.as_view(), name='admin_indexing_platform_detail'),
+    path('admin/indexing-links/', views.JournalIndexingLinkAdminListView.as_view(), name='admin_indexing_link_list'),
+    path('admin/indexing-links/create/', views.JournalIndexingLinkCreateView.as_view(), name='admin_indexing_link_create'),
+    path('admin/indexing-links/<int:pk>/', views.JournalIndexingLinkAdminDetailView.as_view(), name='admin_indexing_link_detail'),
+
     # CTA Buttons & Form Submissions
     path('cta-buttons/', views.CTAButtonListView.as_view(), name='cta_button_list'),
     path('cta-buttons/by-slug/<slug:slug>/', views.CTAButtonBySlugView.as_view(), name='cta_button_by_slug'),

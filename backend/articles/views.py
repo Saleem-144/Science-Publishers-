@@ -54,7 +54,7 @@ class ArticleListView(generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = ArticleListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['issue', 'volume', 'status', 'article_type', 'is_open_access', 'is_special_issue']
+    filterset_fields = ['issue', 'volume', 'status', 'article_type', 'is_open_access', 'is_special_issue', 'volume__is_archived']
     search_fields = ['title', 'abstract', 'keywords', 'keywords_display']
     ordering_fields = ['published_date', 'title', 'view_count']
     ordering = ['-published_date']
@@ -79,6 +79,21 @@ class ArticleListView(generics.ListAPIView):
                     Q(issue__volume__journal__slug=journal_param) |
                     Q(volume__journal__slug=journal_param)
                 ).distinct()
+        
+        # Filter by archived volumes if requested
+        archived_param = self.request.query_params.get('volume__is_archived')
+        if archived_param:
+            is_archived = archived_param.lower() == 'true'
+            queryset = queryset.filter(
+                Q(volume__is_archived=is_archived) | 
+                Q(issue__volume__is_archived=is_archived)
+            ).distinct()
+        else:
+            # Default to showing non-archived volumes
+            queryset = queryset.filter(
+                Q(volume__is_archived=False) | Q(volume__isnull=True),
+                Q(issue__volume__is_archived=False) | Q(issue__isnull=True)
+            ).distinct()
         
         return queryset.prefetch_related('article_authors__author')
 
@@ -148,6 +163,9 @@ class FeaturedArticlesView(generics.ListAPIView):
         return Article.objects.filter(
             status__in=['published', 'archive'],
             is_featured=True
+        ).filter(
+            Q(volume__is_archived=False) | Q(volume__isnull=True),
+            Q(issue__volume__is_archived=False) | Q(issue__isnull=True)
         ).select_related(
             'issue__volume__journal'
         ).prefetch_related('article_authors__author')[:10]
@@ -171,7 +189,10 @@ class RecentArticlesView(generics.ListAPIView):
     def get_queryset(self):
         # Optional filter by journal
         journal_slug = self.request.query_params.get('journal')
-        queryset = Article.objects.filter(status__in=['published', 'archive']).select_related(
+        queryset = Article.objects.filter(status__in=['published', 'archive']).filter(
+            Q(volume__is_archived=False) | Q(volume__isnull=True),
+            Q(issue__volume__is_archived=False) | Q(issue__isnull=True)
+        ).select_related(
             'journal', 'issue__volume__journal', 'volume__journal'
         ).prefetch_related('article_authors__author')
         

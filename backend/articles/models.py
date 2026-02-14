@@ -344,6 +344,43 @@ class Article(models.Model):
         help_text='Number of times PDF has been downloaded'
     )
     
+    # Scores
+    cite_score = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='Cite Score value'
+    )
+    cite_score_url = models.URLField(
+        blank=True,
+        help_text='URL for Cite Score'
+    )
+    scopus_score = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='Scopus Score value'
+    )
+    scopus_score_url = models.URLField(
+        blank=True,
+        help_text='URL for Scopus Score'
+    )
+    
+    # Top highlights and Crossmark
+    top_highlighted_line = models.TextField(
+        blank=True,
+        help_text='Red highlighted text shown at the very top of the article'
+    )
+    crossmark_logo = models.ImageField(
+        upload_to='articles/logos/',
+        blank=True,
+        null=True,
+        max_length=500,
+        help_text='Crossmark or other top logo'
+    )
+    crossmark_url = models.URLField(
+        blank=True,
+        help_text='URL for the Crossmark/top logo'
+    )
+    
     # SEO
     meta_title = models.CharField(
         max_length=200,

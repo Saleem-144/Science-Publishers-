@@ -8,13 +8,15 @@ import Image from 'next/image';
 import { 
   FiChevronRight, FiDownload, FiUser, FiCalendar, 
   FiTag, FiBookOpen, FiHash, FiAward, FiArrowLeft, 
-  FiArrowRight, FiList, FiGrid, FiShare2, FiInfo, FiExternalLink, FiBarChart2, FiClock, FiFileText
+  FiArrowRight, FiList, FiGrid, FiShare2, FiInfo, FiExternalLink, FiBarChart2, FiClock, FiFileText,
+  FiEdit3, FiUsers, FiBook, FiChevronDown
 } from 'react-icons/fi';
 import { 
   SiFacebook, SiLinkedin, SiWhatsapp, SiReddit, SiX
 } from 'react-icons/si';
-import { journalsApi, articlesApi, siteApi } from '@/lib/api';
+import { journalsApi, articlesApi, siteApi, volumesApi, ctaButtonsApi } from '@/lib/api';
 import { ArticleDrawer } from '@/components/ArticleDrawer';
+import { FigureTablePreview } from '@/components/FigureTablePreview';
 import Script from 'next/script';
 
 declare global {
@@ -30,7 +32,15 @@ export default function ArticlePage() {
   const articleSlug = params.article_slug as string;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerType, setDrawerType] = useState<'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | 'cite' | null>(null);
+  const [drawerType, setDrawerType] = useState<'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | 'cite' | 'advertising' | 'promotional' | null>(null);
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewData, setPreviewData] = useState<{
+    type: 'figure' | 'table';
+    contentHtml: string;
+    captionHtml: string;
+    label: string;
+  } | null>(null);
 
   const { data: journal } = useQuery({
     queryKey: ['journal', journalSlug],
@@ -49,6 +59,22 @@ export default function ArticlePage() {
     queryFn: siteApi.getSettings,
   });
 
+  const { data: volumesData } = useQuery({
+    queryKey: ['journal-volumes', journalSlug],
+    queryFn: () => volumesApi.listByJournal(journalSlug),
+    enabled: !!journalSlug,
+  });
+
+  const { data: ctaButtons } = useQuery({
+    queryKey: ['cta-buttons'],
+    queryFn: () => ctaButtonsApi.list(),
+  });
+
+  const volumesList = volumesData?.results || volumesData || [];
+  const activeCTAButtons = (ctaButtons?.results || ctaButtons || []).filter((b: any) => 
+    ['editorial-board', 'reviewer', 'call-for-editors'].includes(b.slug)
+  );
+
   const { data: fullText, isLoading: fullTextLoading } = useQuery({
     queryKey: ['article-fulltext', journalSlug, articleSlug],
     queryFn: () => articlesApi.getFullText(journalSlug, articleSlug),
@@ -61,7 +87,63 @@ export default function ArticlePage() {
     }
   }, [fullText]);
 
-  const openDrawer = (type: 'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | 'cite') => {
+  // Handle figure and table clicks for preview
+  useEffect(() => {
+    const handleArticleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Check for figure click
+      const figure = target.closest('.article-figure');
+      if (figure) {
+        const img = figure.querySelector('img');
+        const caption = figure.querySelector('.figure-caption');
+        const label = figure.querySelector('.fig_label')?.textContent || 'Figure';
+        
+        if (img) {
+          setPreviewData({
+            type: 'figure',
+            contentHtml: img.outerHTML,
+            captionHtml: caption ? caption.innerHTML : '',
+            label: label.replace(/\.$/, '') // Remove trailing dot if exists
+          });
+          setPreviewOpen(true);
+          return;
+        }
+      }
+      
+      // Check for table click
+      const tableWrapper = target.closest('.article-table');
+      if (tableWrapper) {
+        const table = tableWrapper.querySelector('table');
+        const caption = tableWrapper.querySelector('.table-caption');
+        const label = tableWrapper.querySelector('.table_wrap_label')?.textContent || 'Table';
+        
+        if (table) {
+          setPreviewData({
+            type: 'table',
+            contentHtml: table.outerHTML,
+            captionHtml: caption ? caption.innerHTML : '',
+            label: label.replace(/\.$/, '')
+          });
+          setPreviewOpen(true);
+          return;
+        }
+      }
+    };
+
+    const container = document.querySelector('.article-body-content');
+    if (container) {
+      container.addEventListener('click', handleArticleClick as any);
+    }
+    
+    return () => {
+      if (container) {
+        container.removeEventListener('click', handleArticleClick as any);
+      }
+    };
+  }, [fullText]);
+
+  const openDrawer = (type: 'authors' | 'downloads' | 'references' | 'tables' | 'share' | 'about' | 'cite' | 'advertising' | 'promotional') => {
     setDrawerType(type);
     setDrawerOpen(true);
   };
@@ -107,7 +189,7 @@ export default function ArticlePage() {
       <Script id="mathjax-config" strategy="beforeInteractive">
         {`
           window.MathJax = {
-            loader: { load: ['input/mml', 'output/svg', 'a11y/assistive-mml'] },
+            loader: { load: ['input/mml', 'input/tex', 'output/chtml', 'a11y/assistive-mml'] },
             tex: { 
               inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
               displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
@@ -117,47 +199,24 @@ export default function ArticlePage() {
             mml: {
               forceReparse: true
             },
-            svg: { 
-              fontCache: 'global',
-              scale: 1,
-              minScale: 0.5,
+            chtml: { 
+              displayAlign: 'center',
+              mtextInheritFont: true,
               matchFontHeight: true,
-              useFontCache: true
+              scale: 1
             },
             options: {
               enableMenu: true,
-              processHtmlClass: 'math-container|tex-math',
-              ignoreHtmlClass: 'tex2jax_ignore',
-              renderActions: {
-                findScript: [10, function (doc) {
-                  for (const node of Array.from(document.querySelectorAll('script[type^="math/mml"]'))) {
-                    const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], true);
-                    const text = document.createTextNode('');
-                    node.parentNode.replaceChild(text, node);
-                    math.start = {node: text, delim: '', n: 0};
-                    math.end = {node: text, delim: '', n: 0};
-                    doc.math.push(math);
-                  }
-                }, '']
-              }
+              processHtmlClass: 'math-container|tex-math|display-formula',
+              ignoreHtmlClass: 'tex2jax_ignore'
             }
           };
         `}
       </Script>
       <Script 
-        src="https://unpkg.com/mathjs@14.2.1/lib/browser/math.js" 
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" 
         strategy="afterInteractive"
         crossOrigin="anonymous"
-      />
-      <Script 
-        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-svg.js" 
-        strategy="afterInteractive"
-        crossOrigin="anonymous"
-        onLoad={() => {
-          if (window.MathJax && window.MathJax.typeset) {
-            window.MathJax.typeset();
-          }
-        }}
       />
       {/* Top Breadcrumb Bar - Clean & Minimal */}
       <div className="bg-gray-50 border-b border-gray-100">
@@ -179,6 +238,37 @@ export default function ArticlePage() {
           
           {/* Main Content Area */}
           <div className="lg:col-span-8 relative">
+            {/* Top Highlighted Line & Branding */}
+            {(article.top_highlighted_line || article.crossmark_logo) && (
+              <div className="mb-6 flex flex-col gap-4">
+                {article.top_highlighted_line && (
+                  <div className="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest text-center border border-red-100/50 shadow-sm">
+                    {article.top_highlighted_line}
+                  </div>
+                )}
+                
+                {article.crossmark_logo && (
+                  <div className="flex justify-start px-1">
+                    {article.crossmark_url ? (
+                      <a href={article.crossmark_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+                        <img 
+                          src={article.crossmark_logo} 
+                          alt="Branding Logo" 
+                          className="h-16 w-auto object-contain"
+                        />
+                      </a>
+                    ) : (
+                      <img 
+                        src={article.crossmark_logo} 
+                        alt="Branding Logo" 
+                        className="h-16 w-auto object-contain"
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <header className="space-y-3">
               <div className="flex items-center gap-3">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-academic-gold bg-academic-gold/5 px-2 py-0.5 rounded">
@@ -361,11 +451,11 @@ export default function ArticlePage() {
                       <h2 className="text-xl font-black text-academic-navy mb-6 uppercase tracking-widest font-sans">Abstract</h2>
                       {htmlContent.abstract_html ? (
                         <div 
-                          className="text-base leading-relaxed italic text-gray-700 ql-editor !p-0 abstract-content-container"
+                          className="text-base leading-relaxed text-gray-700 ql-editor !p-0 abstract-content-container"
                           dangerouslySetInnerHTML={{ __html: htmlContent.abstract_html }} 
                         />
                       ) : (
-                        <div className="text-base leading-relaxed italic text-gray-700">
+                        <div className="text-base leading-relaxed text-gray-700">
                           {article.abstract}
                         </div>
                       )}
@@ -455,7 +545,7 @@ export default function ArticlePage() {
                     ) : (
                       <>
                         {article.authors?.[0]?.last_name} et al. {article.title}. 
-                        <span className="italic"> {journal?.title}</span>, {new Date(article.published_date).getFullYear()}; {article.volume_info?.volume_number || '20'}: {article.article_id_code || 'e187421'}.
+                        <span> {journal?.title}</span>, {new Date(article.published_date).getFullYear()}; {article.volume_info?.volume_number || '20'}: {article.article_id_code || 'e187421'}.
                         <br />
                         <span className="text-academic-blue break-all text-[9px]">http://dx.doi.org/{article.doi}</span>
                       </>
@@ -511,6 +601,129 @@ export default function ArticlePage() {
               </div>
             </div>
 
+            {/* Volume Navigation Dropdown */}
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <FiBook className="text-academic-blue w-3.5 h-3.5" />
+                <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Browse Volumes</h4>
+              </div>
+              
+              <div className="relative">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      router.push(`/${journalSlug}/volumes/${e.target.value}`);
+                    }
+                  }}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[11px] font-bold text-gray-900 focus:ring-2 focus:ring-academic-blue focus:bg-white transition-all appearance-none cursor-pointer"
+                  defaultValue=""
+                >
+                  <option value="" disabled>Select Volume</option>
+                  {volumesList.filter((v: any) => !v.is_archived).map((vol: any) => (
+                    <option key={vol.id} value={vol.volume_number}>
+                      Volume {vol.volume_number} ({vol.year})
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <FiChevronDown className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
+            {/* Article Volume Info */}
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <FiHash className="text-academic-blue w-3.5 h-3.5" />
+                  <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Current Volume</h4>
+                </div>
+                <span className="text-sm font-black text-academic-navy">Volume {article.volume_number || article.volume_info?.volume_number || 'N/A'}</span>
+              </div>
+              
+              <a
+                href={journal?.submission_url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 py-3 bg-academic-gold hover:bg-yellow-500 text-academic-navy font-black uppercase tracking-[0.1em] text-[10px] rounded-xl transition-all shadow-md"
+              >
+                <FiEdit3 className="w-4 h-4" />
+                Submit Paper
+              </a>
+            </div>
+
+            {/* Join Our Team Section */}
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <FiUsers className="text-academic-blue w-3.5 h-3.5" />
+                <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Join Our Team</h4>
+              </div>
+              
+              <div className="space-y-2">
+                {activeCTAButtons.length > 0 ? (
+                  activeCTAButtons.map((btn: any) => (
+                    <Link
+                      key={btn.id}
+                      href={`/apply/${btn.slug}`}
+                      className="flex items-center justify-between group p-3 bg-gray-50 hover:bg-academic-navy hover:text-white rounded-xl transition-all border border-gray-100"
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-tight">{btn.label}</span>
+                      <FiArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Link>
+                  ))
+                ) : (
+                  <p className="text-[10px] text-gray-400 italic text-center py-2">No open positions at the moment.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Marketing & Opportunities Section */}
+            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <FiTag className="text-academic-blue w-3.5 h-3.5" />
+                <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">Marketing & Opportunities</h4>
+              </div>
+              
+              <div className="space-y-2">
+                <button
+                  onClick={() => openDrawer('advertising')}
+                  className="w-full flex items-center justify-between group p-3 bg-gray-50 hover:bg-academic-navy hover:text-white rounded-xl transition-all border border-gray-100"
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-tight">Advertising Policy</span>
+                  <FiArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+
+                {settings?.social_links?.kudos && (
+                  <a
+                    href={settings.social_links.kudos}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-between group p-3 bg-gray-50 hover:bg-academic-navy hover:text-white rounded-xl transition-all border border-gray-100"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 relative bg-white rounded-sm overflow-hidden flex items-center justify-center">
+                        <img 
+                          src="https://www.google.com/s2/favicons?sz=64&domain=growkudos.com" 
+                          alt="Kudos" 
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-tight">Kudos</span>
+                    </div>
+                    <FiExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                )}
+
+                <button
+                  onClick={() => openDrawer('promotional')}
+                  className="w-full flex items-center justify-between group p-3 bg-gray-50 hover:bg-academic-navy hover:text-white rounded-xl transition-all border border-gray-100"
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-tight">Promotional Services</span>
+                  <FiArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              </div>
+            </div>
+
             {/* Metrics Section - Clean & Statistical */}
             <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
@@ -520,37 +733,43 @@ export default function ArticlePage() {
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-medium text-black">Total Views</span>
+                  <span className="text-[12px] font-medium text-black font-sans">Total Views</span>
                   <span className="text-lg font-black text-academic-navy">{(article.view_count || 1240).toLocaleString()}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[12px] font-medium text-black">Downloads</span>
+                <div className="flex items-center justify-between border-b border-gray-50 pb-3">
+                  <span className="text-[12px] font-medium text-black font-sans">Downloads</span>
                   <span className="text-lg font-black text-academic-navy">{(article.download_count || 843).toLocaleString()}</span>
+                </div>
+
+                {/* Score Section */}
+                <div className="pt-1 space-y-3">
+                  {article.cite_score && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[12px] font-bold text-gray-500 uppercase tracking-wider">Cite Score</span>
+                      {article.cite_score_url ? (
+                        <a href={article.cite_score_url} target="_blank" rel="noopener noreferrer" className="text-lg font-black text-academic-blue hover:underline">
+                          {article.cite_score}
+                        </a>
+                      ) : (
+                        <span className="text-lg font-black text-gray-400">{article.cite_score}</span>
+                      )}
+                    </div>
+                  )}
+                  {article.scopus_score && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[12px] font-bold text-gray-500 uppercase tracking-wider">Scopus Score</span>
+                      {article.scopus_score_url ? (
+                        <a href={article.scopus_score_url} target="_blank" rel="noopener noreferrer" className="text-lg font-black text-academic-blue hover:underline">
+                          {article.scopus_score}
+                        </a>
+                      ) : (
+                        <span className="text-lg font-black text-gray-400">{article.scopus_score}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 gap-2">
-              {[
-                { label: 'About Article', type: 'about' as const, icon: FiInfo, color: 'hover:border-academic-navy' },
-                { label: 'Figures & Tables', type: 'tables' as const, icon: FiGrid, color: 'hover:border-academic-blue' },
-                { label: 'References', type: 'references' as const, icon: FiList, color: 'hover:border-academic-gold' },
-                { label: 'Cite As', type: 'cite' as const, icon: FiBookOpen, color: 'hover:border-academic-navy' },
-              ].map((action) => (
-                <button 
-                  key={action.type}
-                  type="button"
-                  onClick={() => openDrawer(action.type)}
-                  className={`flex items-center gap-3 w-full p-3.5 bg-white border border-gray-100 rounded-2xl transition-all group ${action.color} hover:shadow-md`}
-                >
-                  <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center group-hover:bg-white transition-colors">
-                    <action.icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-academic-navy" />
-                  </div>
-                  <span className="font-black text-gray-900 text-[9px] uppercase tracking-widest">{action.label}</span>
-                </button>
-              ))}
-          </div>
 
           </aside>
         </div>
@@ -563,6 +782,18 @@ export default function ArticlePage() {
         type={drawerType}
         data={article}
       />
+
+      {/* Figure/Table Preview Component */}
+      {previewData && (
+        <FigureTablePreview
+          isOpen={previewOpen}
+          onClose={() => setPreviewOpen(false)}
+          type={previewData.type}
+          contentHtml={previewData.contentHtml}
+          captionHtml={previewData.captionHtml}
+          label={previewData.label}
+        />
+      )}
     </div>
   );
 }

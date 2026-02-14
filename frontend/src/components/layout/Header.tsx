@@ -23,6 +23,7 @@ const navLinks: NavLink[] = [
     children: [
       { href: '/about', label: 'About Aethra science publisher' },
       { href: '/about/open-access-policy', label: 'Open access policy' },
+      { href: '/indexing-journals', label: 'Indexing Journal' },
       { href: '/contact', label: 'ContactUs' },
     ],
   },

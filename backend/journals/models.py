@@ -633,3 +633,81 @@ class CTAFormSubmission(models.Model):
         
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.button.label}"
+
+
+class FAQ(models.Model):
+    """
+    Frequently Asked Questions for a specific journal.
+    """
+    journal = models.ForeignKey(
+        Journal,
+        on_delete=models.CASCADE,
+        related_name='faqs',
+        help_text='The journal this FAQ belongs to'
+    )
+    question = models.TextField(help_text='The question text')
+    answer = models.TextField(help_text='The answer text (supports HTML)')
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text='Order of appearance'
+    )
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "FAQ"
+        verbose_name_plural = "FAQs"
+        ordering = ['display_order', 'created_at']
+        
+    def __str__(self):
+        return f"{self.question[:50]}... ({self.journal.title})"
+
+
+class IndexingPlatform(models.Model):
+    """
+    Global indexing platforms (e.g. Scopus, Web of Science).
+    """
+    name = models.CharField(max_length=255, unique=True)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "indexing platform"
+        verbose_name_plural = "indexing platforms"
+        ordering = ['display_order', 'name']
+        
+    def __str__(self):
+        return self.name
+
+
+class JournalIndexingLink(models.Model):
+    """
+    Links a journal to a global indexing platform with a specific URL.
+    """
+    platform = models.ForeignKey(
+        IndexingPlatform,
+        on_delete=models.CASCADE,
+        related_name='journal_links'
+    )
+    journal = models.ForeignKey(
+        Journal,
+        on_delete=models.CASCADE,
+        related_name='global_indexing_links'
+    )
+    url = models.URLField(help_text='URL to the journal on this indexing platform')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "journal indexing link"
+        verbose_name_plural = "journal indexing links"
+        unique_together = ['platform', 'journal']
+        
+    def __str__(self):
+        return f"{self.journal.title} on {self.platform.name}"

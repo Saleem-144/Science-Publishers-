@@ -35,7 +35,6 @@ export default function NewArticlePage() {
     revised_date: '',
     accepted_date: '',
     published_date: '',
-    cite_as: '',
   });
 
   // File states
@@ -455,7 +454,6 @@ export default function NewArticlePage() {
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
-                  <option value="archive">Archive</option>
                 </select>
               </div>
             </div>

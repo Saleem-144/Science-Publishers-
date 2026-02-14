@@ -49,6 +49,12 @@ export default function EditArticlePage() {
     accepted_date: '',
     published_date: '',
     cite_as: '',
+    cite_score: '',
+    cite_score_url: '',
+    scopus_score: '',
+    scopus_score_url: '',
+    top_highlighted_line: '',
+    crossmark_url: '',
   });
 
   // Existing files info
@@ -61,6 +67,7 @@ export default function EditArticlePage() {
     ris_file: null,
     bib_file: null,
     endnote_file: null,
+    crossmark_logo: null,
   });
 
   // New files to upload
@@ -73,6 +80,7 @@ export default function EditArticlePage() {
     ris_file: null,
     bib_file: null,
     endnote_file: null,
+    crossmark_logo: null,
   });
 
   // Fetch subjects
@@ -137,6 +145,12 @@ export default function EditArticlePage() {
           accepted_date: article.accepted_date || '',
           published_date: article.published_date || '',
           cite_as: article.cite_as || '',
+          cite_score: article.cite_score || '',
+          cite_score_url: article.cite_score_url || '',
+          scopus_score: article.scopus_score || '',
+          scopus_score_url: article.scopus_score_url || '',
+          top_highlighted_line: article.top_highlighted_line || '',
+          crossmark_url: article.crossmark_url || '',
         });
 
         setArticleAuthors(article.authors || []);
@@ -179,6 +193,7 @@ export default function EditArticlePage() {
           ris_file: article.ris_file || null,
           bib_file: article.bib_file || null,
           endnote_file: article.endnote_file || null,
+          crossmark_logo: article.crossmark_logo || null,
         });
 
       } catch (error) {
@@ -588,7 +603,6 @@ export default function EditArticlePage() {
                   >
                     <option value="draft">Draft</option>
                     <option value="published">Published</option>
-                    <option value="archive">Archive</option>
                   </select>
                 </div>
               </div>
@@ -658,6 +672,136 @@ export default function EditArticlePage() {
             initialAuthors={articleAuthors}
             onAuthorsUpdate={(updated) => setArticleAuthors(updated)}
           />
+
+          {/* Step 4: Scores & Metrics */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="w-6 h-6 bg-academic-navy text-white text-xs flex items-center justify-center rounded-full">4</span>
+              Scores & Metrics
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cite Score (Value)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.cite_score}
+                    onChange={(e) => setFormData({ ...formData, cite_score: e.target.value })}
+                    placeholder="e.g. 4.5"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cite Score URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.cite_score_url}
+                    onChange={(e) => setFormData({ ...formData, cite_score_url: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Scopus Score (Value)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.scopus_score}
+                    onChange={(e) => setFormData({ ...formData, scopus_score: e.target.value })}
+                    placeholder="e.g. 3.2"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Scopus Score URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.scopus_score_url}
+                    onChange={(e) => setFormData({ ...formData, scopus_score_url: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 5: Top Branding & Highlights */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="w-6 h-6 bg-academic-navy text-white text-xs flex items-center justify-center rounded-full">5</span>
+              Top Branding & Highlights
+            </h2>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Top Highlighted Line (Red text at very top)
+                </label>
+                <textarea
+                  value={formData.top_highlighted_line}
+                  onChange={(e) => setFormData({ ...formData, top_highlighted_line: e.target.value })}
+                  placeholder="e.g. IMPORTANT: This article has been updated with new research data."
+                  rows={2}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Crossmark Logo (or top branding logo)
+                  </label>
+                  <div className="mt-1 flex items-center gap-4">
+                    {(newFiles.crossmark_logo || existingFiles.crossmark_logo) && (
+                      <div className="relative w-16 h-16 bg-gray-50 border rounded-lg overflow-hidden flex items-center justify-center">
+                        <img
+                          src={newFiles.crossmark_logo ? URL.createObjectURL(newFiles.crossmark_logo) : existingFiles.crossmark_logo!}
+                          alt="Logo preview"
+                          className="max-w-full max-h-full object-contain"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) setNewFiles({ ...newFiles, crossmark_logo: file });
+                        }}
+                        className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-academic-navy/5 file:text-academic-navy hover:file:bg-academic-navy/10"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Crossmark URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.crossmark_url}
+                    onChange={(e) => setFormData({ ...formData, crossmark_url: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academic-blue focus:border-academic-blue"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-6">

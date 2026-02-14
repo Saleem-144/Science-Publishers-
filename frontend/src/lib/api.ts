@@ -199,8 +199,8 @@ export const journalsApi = {
 // =============================================================================
 
 export const volumesApi = {
-  listByJournal: async (journalSlug: string) => {
-    const response = await api.get(`/volumes/by-journal/${journalSlug}/`);
+  listByJournal: async (journalSlug: string, params?: { is_archived?: boolean }) => {
+    const response = await api.get(`/volumes/by-journal/${journalSlug}/`, { params });
     return response.data;
   },
   
@@ -296,6 +296,7 @@ export const articlesApi = {
     page?: number; 
     is_special_issue?: boolean;
     status?: string;
+    volume__is_archived?: boolean;
   }) => {
     const response = await api.get('/articles/', { params });
     return response.data;
@@ -703,6 +704,94 @@ export const indexingApi = {
   },
   delete: async (id: number) => {
     const response = await api.delete(`/journals/admin/indexing/${id}/`);
+    return response.data;
+  }
+};
+
+// =============================================================================
+// FAQ API
+// =============================================================================
+
+export const faqsApi = {
+  list: async (journalId: number) => {
+    const response = await api.get('/journals/admin/faqs/', {
+      params: { journal: journalId }
+    });
+    return response.data;
+  },
+  create: async (data: any) => {
+    const response = await api.post('/journals/admin/faqs/create/', data);
+    return response.data;
+  },
+  update: async (id: number, data: any) => {
+    const response = await api.patch(`/journals/admin/faqs/${id}/`, data);
+    return response.data;
+  },
+  delete: async (id: number) => {
+    const response = await api.delete(`/journals/admin/faqs/${id}/`);
+    return response.data;
+  }
+};
+
+// =============================================================================
+// Global Indexing Journal API
+// =============================================================================
+
+export const indexingPlatformsApi = {
+  // Public - get all platforms with links
+  list: async () => {
+    const response = await api.get('/journals/indexing-platforms/');
+    return response.data;
+  },
+  
+  // Admin - get all platforms
+  adminList: async () => {
+    const response = await api.get('/journals/admin/indexing-platforms/');
+    return response.data;
+  },
+  
+  // Admin - get single platform
+  get: async (id: number) => {
+    const response = await api.get(`/journals/admin/indexing-platforms/${id}/`);
+    return response.data;
+  },
+  
+  // Admin - create platform
+  create: async (data: any) => {
+    const response = await api.post('/journals/admin/indexing-platforms/create/', data);
+    return response.data;
+  },
+  
+  // Admin - update platform
+  update: async (id: number, data: any) => {
+    const response = await api.patch(`/journals/admin/indexing-platforms/${id}/`, data);
+    return response.data;
+  },
+  
+  // Admin - delete platform
+  delete: async (id: number) => {
+    const response = await api.delete(`/journals/admin/indexing-platforms/${id}/`);
+    return response.data;
+  },
+  
+  // Admin - Links
+  listLinks: async (params?: { platform?: number; journal?: number }) => {
+    const response = await api.get('/journals/admin/indexing-links/', { params });
+    return response.data;
+  },
+  
+  createLink: async (data: any) => {
+    const response = await api.post('/journals/admin/indexing-links/create/', data);
+    return response.data;
+  },
+  
+  updateLink: async (id: number, data: any) => {
+    const response = await api.patch(`/journals/admin/indexing-links/${id}/`, data);
+    return response.data;
+  },
+  
+  deleteLink: async (id: number) => {
+    const response = await api.delete(`/journals/admin/indexing-links/${id}/`);
     return response.data;
   }
 };

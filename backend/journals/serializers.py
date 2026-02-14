@@ -2,7 +2,59 @@
 
 import logging
 from rest_framework import serializers
-from .models import Subject, Journal, Announcement, CorporateAffiliation, EditorialBoardMember, CTACard, JournalIndexing, CTAButton, CTAFormSubmission
+from .models import (
+    Subject, Journal, Announcement, CorporateAffiliation, 
+    EditorialBoardMember, CTACard, JournalIndexing, 
+    CTAButton, CTAFormSubmission, FAQ,
+    IndexingPlatform, JournalIndexingLink
+)
+
+
+class IndexingPlatformSerializer(serializers.ModelSerializer):
+    """Serializer for global Indexing Platforms."""
+    class Meta:
+        model = IndexingPlatform
+        fields = ['id', 'name', 'is_active', 'display_order', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class JournalIndexingLinkSerializer(serializers.ModelSerializer):
+    """Serializer for linking a journal to an indexing platform."""
+    journal_title = serializers.CharField(source='journal.title', read_only=True)
+    platform_name = serializers.CharField(source='platform.name', read_only=True)
+    
+    class Meta:
+        model = JournalIndexingLink
+        fields = [
+            'id', 'platform', 'platform_name', 
+            'journal', 'journal_title', 'url'
+        ]
+        read_only_fields = ['id']
+
+
+class IndexingPlatformDetailSerializer(serializers.ModelSerializer):
+    """Serializer for Indexing Platform with its linked journals."""
+    journal_links = JournalIndexingLinkSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = IndexingPlatform
+        fields = [
+            'id', 'name', 'is_active', 'display_order', 
+            'journal_links', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class FAQSerializer(serializers.ModelSerializer):
+    """Serializer for Frequently Asked Questions."""
+    class Meta:
+        model = FAQ
+        fields = [
+            'id', 'journal', 'question', 'answer', 
+            'display_order', 'is_active',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
 
 class JournalIndexingSerializer(serializers.ModelSerializer):
@@ -216,6 +268,7 @@ class JournalDetailSerializer(serializers.ModelSerializer):
     logo = serializers.SerializerMethodField()
     favicon = serializers.SerializerMethodField()
     editor_in_chief_image = serializers.SerializerMethodField()
+    faqs = serializers.SerializerMethodField()
     
     class Meta:
         model = Journal
@@ -236,6 +289,7 @@ class JournalDetailSerializer(serializers.ModelSerializer):
             'meta_title', 'meta_description', 'meta_keywords',
             'total_volumes', 'total_articles', 'current_issue',
             'editorial_board_members', 'indexing_entries',
+            'faqs',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'total_volumes', 'total_articles']
@@ -273,6 +327,10 @@ class JournalDetailSerializer(serializers.ModelSerializer):
     def get_indexing_entries(self, obj):
         entries = obj.indexing_entries.all().order_by('display_order', 'title')
         return JournalIndexingSerializer(entries, many=True, context=self.context).data
+    
+    def get_faqs(self, obj):
+        faqs = obj.faqs.filter(is_active=True).order_by('display_order', 'created_at')
+        return FAQSerializer(faqs, many=True, context=self.context).data
     
     def get_current_issue(self, obj):
         try:

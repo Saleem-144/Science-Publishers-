@@ -202,6 +202,20 @@ export default function AdminLayout({
               Socials
             </Link>
 
+            {/* Indexing Journal */}
+            <Link
+              href="/admin/indexing-journals"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                pathname?.startsWith('/admin/indexing-journals')
+                  ? 'bg-academic-gold text-academic-navy font-bold'
+                  : 'text-blue-100 hover:bg-white/10'
+              }`}
+            >
+              <FiLayers className="w-5 h-5" />
+              Indexing Journal
+            </Link>
+
             {/* News */}
             <Link
               href="/admin/announcements"

@@ -200,6 +200,7 @@ class ArticleListSerializer(serializers.ModelSerializer):
             'id': volume.id,
             'volume_number': volume.volume_number,
             'year': volume.year,
+            'is_archived': volume.is_archived,
         }
 
     def get_issue_info(self, obj):
@@ -274,6 +275,8 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
             'xml_file', 'pdf_file', 'epub_file', 'prc_file', 'mobi_file',
             'ris_file', 'bib_file', 'endnote_file',
             'view_count', 'download_count',
+            'cite_score', 'cite_score_url', 'scopus_score', 'scopus_score_url',
+            'top_highlighted_line', 'crossmark_logo', 'crossmark_url',
             'meta_title', 'meta_description',
             'journal', 'journal_info', 'volume', 'volume_info', 'issue', 'issue_info',
             'authors', 'corresponding_author',
@@ -327,6 +330,7 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
             'volume_number': volume.volume_number,
             'year': volume.year,
             'title': volume.title,
+            'is_archived': volume.is_archived,
         }
     
     def get_issue_info(self, obj):
@@ -488,6 +492,8 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
             'page_start', 'page_end', 'article_number',
             'received_date', 'revised_date', 'accepted_date', 'published_date',
             'is_open_access', 'is_featured',
+            'cite_score', 'cite_score_url', 'scopus_score', 'scopus_score_url',
+            'top_highlighted_line', 'crossmark_logo', 'crossmark_url',
             'meta_title', 'meta_description'
         ]
         read_only_fields = ['id']

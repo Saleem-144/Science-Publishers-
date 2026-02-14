@@ -50,6 +50,11 @@ class Volume(models.Model):
         help_text='Is this volume visible to the public?'
     )
     
+    is_archived = models.BooleanField(
+        default=False,
+        help_text='Is this volume archived?'
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -79,6 +84,6 @@ class Volume(models.Model):
         """Count of articles across all issues in this volume."""
         from articles.models import Article
         return Article.objects.filter(
-            issue__volume=self,
+            models.Q(issue__volume=self) | models.Q(volume=self),
             status__in=['published', 'archive']
         ).count()

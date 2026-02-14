@@ -146,7 +146,7 @@ export function ArticleCard({ article, compact = false }: ArticleCardProps) {
       </div>
 
       {!compact && article.abstract && (
-        <p className="mt-3 text-sm text-gray-600 line-clamp-2 italic">
+        <p className="mt-3 text-sm text-gray-600 line-clamp-2">
           {article.abstract}
         </p>
       )}

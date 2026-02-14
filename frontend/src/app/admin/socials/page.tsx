@@ -35,6 +35,7 @@ const SOCIAL_PLATFORMS = [
   { id: 'kakao', label: 'Kakao', icon: 'SiKakaotalk', color: 'hover:text-[#FFE812]', domain: 'kakao.com' },
   { id: 'kindle', label: 'Kindle It', icon: null, color: 'hover:text-[#000000]', domain: 'amazon.com' },
   { id: 'koo', label: 'Koo App', icon: null, color: 'hover:text-[#FACD00]', domain: 'kooapp.com' },
+  { id: 'kudos', label: 'Kudos', icon: null, color: 'hover:text-[#000000]', domain: 'growkudos.com' },
   { id: 'line', label: 'Line', icon: 'SiLine', color: 'hover:text-[#00C300]', domain: 'line.me' },
   { id: 'linkedin', label: 'LinkedIn', icon: 'SiLinkedin', color: 'hover:text-[#0A66C2]', domain: 'linkedin.com' },
   { id: 'livejournal', label: 'LiveJournal', icon: 'SiLivejournal', color: 'hover:text-[#00B0EA]', domain: 'livejournal.com' },

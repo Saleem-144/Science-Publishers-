@@ -18,7 +18,7 @@ class VolumeListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'journal', 'journal_title', 'journal_slug',
             'volume_number', 'title', 'year',
-            'cover_image', 'is_active',
+            'cover_image', 'is_active', 'is_archived',
             'total_issues', 'total_articles',
             'display_name', 'issues'
         ]
@@ -48,7 +48,7 @@ class VolumeDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'journal', 'journal_title', 'journal_slug',
             'volume_number', 'title', 'year', 'description',
-            'cover_image', 'is_active',
+            'cover_image', 'is_active', 'is_archived',
             'total_issues', 'total_articles',
             'display_name', 'issues', 'articles',
             'created_at', 'updated_at'
@@ -82,7 +82,7 @@ class VolumeCreateUpdateSerializer(serializers.ModelSerializer):
         model = Volume
         fields = [
             'id', 'journal', 'volume_number', 'title', 'year',
-            'description', 'cover_image', 'is_active'
+            'description', 'cover_image', 'is_active', 'is_archived'
         ]
         read_only_fields = ['id']
     

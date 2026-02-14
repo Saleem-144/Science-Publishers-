@@ -58,6 +58,8 @@ class VolumesByJournalView(generics.ListAPIView):
     """
     permission_classes = [AllowAny]
     serializer_class = VolumeListSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['is_archived']
     
     def get_queryset(self):
         journal_slug = self.kwargs['journal_slug']

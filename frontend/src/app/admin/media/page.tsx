@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   FiImage, FiUpload, FiCopy, FiTrash2, 
-  FiFilter, FiCheck, FiFileText, FiExternalLink, FiRefreshCw
+  FiFilter, FiCheck, FiFileText, FiExternalLink, FiRefreshCw, FiSearch
 } from 'react-icons/fi';
 import { journalsApi, volumesApi, articlesApi } from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -12,10 +12,9 @@ import Image from 'next/image';
 
 export default function MediaPage() {
   const queryClient = useQueryClient();
-  const [selectedSubject, setSelectedSubject] = useState('');
-  const [selectedJournal, setSelectedJournal] = useState('');
-  const [selectedVolume, setSelectedVolume] = useState('');
   const [selectedArticle, setSelectedArticle] = useState('');
+  const [articleIdSearch, setArticleIdSearch] = useState('');
+  const [searching, setSearching] = useState(false);
   
   const [replacing, setReplacing] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -23,43 +22,20 @@ export default function MediaPage() {
   const [uploadLabel, setUploadLabel] = useState('');
   const [uploadCaption, setUploadCaption] = useState('');
 
-  // 1. Fetch Subjects
-  const { data: subjects } = useQuery({
-    queryKey: ['subjects'],
-    queryFn: journalsApi.subjects,
-  });
-
-  // 2. Fetch Journals
-  const { data: journals } = useQuery({
-    queryKey: ['admin-journals', selectedSubject],
-    queryFn: () => journalsApi.adminList({ subjects__slug: selectedSubject || undefined }),
-  });
-
-  // 3. Fetch Volumes
-  const { data: volumes } = useQuery({
-    queryKey: ['admin-volumes', selectedJournal],
-    queryFn: () => volumesApi.adminList({ journal: selectedJournal }),
-    enabled: !!selectedJournal,
-  });
-
-  // 4. Fetch Articles
-  const { data: articles } = useQuery({
-    queryKey: ['admin-articles', selectedVolume],
-    queryFn: () => articlesApi.adminList({ volume: selectedVolume }),
-    enabled: !!selectedVolume,
-  });
-
-  // 5. Fetch Figures for selected article (Restored for persistence)
+  // 1. Fetch Figures for selected article
   const { data: figures, isLoading: figuresLoading } = useQuery({
     queryKey: ['article-figures', selectedArticle],
     queryFn: () => articlesApi.listFigures(parseInt(selectedArticle)),
     enabled: !!selectedArticle,
   });
 
-  const subjectsList = subjects?.results || subjects || [];
-  const journalsList = journals?.results || journals || [];
-  const volumesList = volumes?.results || volumes || [];
-  const articlesList = articles?.results || articles || [];
+  // Fetch article details if selected
+  const { data: article } = useQuery({
+    queryKey: ['admin-article-detail', selectedArticle],
+    queryFn: () => articlesApi.get(selectedArticle),
+    enabled: !!selectedArticle,
+  });
+
   const figuresList = figures || [];
 
   const handleCopyUrl = (url: string) => {
@@ -67,6 +43,53 @@ export default function MediaPage() {
     const absoluteUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
     navigator.clipboard.writeText(absoluteUrl);
     toast.success('URL copied to clipboard!');
+  };
+
+  const handleIdSearch = async () => {
+    if (!articleIdSearch) {
+      toast.error('Please enter an Article ID');
+      return;
+    }
+
+    setSearching(true);
+    try {
+      // 1. First try searching by the custom Article ID (Code)
+      const results = await articlesApi.adminList({ search: articleIdSearch });
+      const articleList = results.results || results || [];
+      
+      // Look for an exact match on article_id_code
+      const exactMatch = articleList.find((a: any) => 
+        a.article_id_code?.toLowerCase() === articleIdSearch.toLowerCase()
+      );
+
+      if (exactMatch) {
+        setSelectedArticle(exactMatch.id.toString());
+        toast.success(`Found: ${exactMatch.title.substring(0, 40)}...`);
+        setSearching(false);
+        return;
+      }
+
+      // 2. If no exact code match, try as a database ID if it's numeric
+      if (/^\d+$/.test(articleIdSearch)) {
+        try {
+          const articleData = await articlesApi.get(articleIdSearch);
+          if (articleData) {
+            setSelectedArticle(articleData.id.toString());
+            toast.success(`Found: ${articleData.title.substring(0, 40)}...`);
+            setSearching(false);
+            return;
+          }
+        } catch (e) {
+          // Ignore and continue to "not found"
+        }
+      }
+
+      toast.error('Article not found with this ID or Code');
+    } catch (error) {
+      toast.error('Search failed');
+    } finally {
+      setSearching(false);
+    }
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -141,89 +164,60 @@ export default function MediaPage() {
           </div>
         </div>
 
-        {/* Cascading Selectors */}
+        {/* Search Bar */}
         <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 mb-8">
-          <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-50">
-            <FiFilter className="text-academic-blue" />
-            <h2 className="font-bold text-gray-900">Filter by Article</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Subject */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">1. Subject</label>
-              <select
-                value={selectedSubject}
-                onChange={(e) => {
-                  setSelectedSubject(e.target.value);
-                  setSelectedJournal('');
-                  setSelectedVolume('');
-                  setSelectedArticle('');
-                }}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue/20 focus:border-academic-blue transition-all"
+          <div className="max-w-2xl mx-auto">
+            <label className="text-[10px] font-black uppercase tracking-widest text-academic-navy block mb-2 text-center">Search for Article by ID</label>
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Enter Article ID / Code (e.g. e187421)"
+                  value={articleIdSearch}
+                  onChange={(e) => setArticleIdSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleIdSearch()}
+                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-academic-blue/10 focus:border-academic-blue transition-all font-mono text-lg"
+                />
+              </div>
+              <button
+                onClick={handleIdSearch}
+                disabled={searching}
+                className="px-8 bg-academic-navy text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-academic-blue transition-all disabled:opacity-50 flex items-center gap-2 shadow-xl shadow-academic-navy/20 active:scale-95"
               >
-                <option value="">All Subjects</option>
-                {subjectsList.map((s: any) => (
-                  <option key={s.id} value={s.slug}>{s.name}</option>
-                ))}
-              </select>
+                {searching ? <FiRefreshCw className="animate-spin w-4 h-4" /> : <FiSearch className="w-4 h-4" />}
+                Search
+              </button>
             </div>
-
-            {/* Journal */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">2. Journal</label>
-              <select
-                value={selectedJournal}
-                onChange={(e) => {
-                  setSelectedJournal(e.target.value);
-                  setSelectedVolume('');
-                  setSelectedArticle('');
-                }}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue/20 focus:border-academic-blue transition-all disabled:opacity-50"
-              >
-                <option value="">Select Journal</option>
-                {journalsList.map((j: any) => (
-                  <option key={j.id} value={j.id}>{j.title}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Volume */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">3. Volume</label>
-              <select
-                value={selectedVolume}
-                onChange={(e) => {
-                  setSelectedVolume(e.target.value);
-                  setSelectedArticle('');
-                }}
-                disabled={!selectedJournal}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue/20 focus:border-academic-blue transition-all disabled:opacity-50"
-              >
-                <option value="">Select Volume</option>
-                {volumesList.map((v: any) => (
-                  <option key={v.id} value={v.id}>Vol. {v.volume_number} ({v.year})</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Article */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">4. Article</label>
-              <select
-                value={selectedArticle}
-                onChange={(e) => setSelectedArticle(e.target.value)}
-                disabled={!selectedVolume}
-                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-academic-blue/20 focus:border-academic-blue transition-all disabled:opacity-50"
-              >
-                <option value="">Select Article</option>
-                {articlesList.map((a: any) => (
-                  <option key={a.id} value={a.id}>{a.title.length > 60 ? a.title.substring(0, 60) + '...' : a.title}</option>
-                ))}
-              </select>
-            </div>
+            <p className="text-[10px] text-gray-400 mt-3 text-center italic">
+              Tip: You can use the custom Article Code (e.g. e187421) or the database ID.
+            </p>
           </div>
         </div>
+
+        {selectedArticle && article && (
+          <div className="mb-8 bg-academic-navy/5 rounded-2xl p-6 border border-academic-navy/10 flex items-start gap-4">
+            <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-academic-navy flex-shrink-0 border border-academic-navy/10">
+              <FiFileText className="w-6 h-6" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-academic-gold">Currently Managing Media For:</span>
+              <h2 className="text-xl font-serif font-black text-gray-900 leading-tight mt-1">{article.title}</h2>
+              <div className="flex items-center gap-4 mt-2">
+                <span className="text-[11px] font-bold text-gray-500 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                  Code: {article.article_id_code || article.id}
+                </span>
+                <span className="text-[11px] font-bold text-gray-500">
+                  DB ID: {article.id}
+                </span>
+                <span className="text-[11px] font-bold text-gray-500">
+                  Journal: {article.journal_info?.title}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {selectedArticle ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -435,11 +429,11 @@ export default function MediaPage() {
         ) : (
           <div className="bg-white rounded-2xl shadow-sm border border-dashed border-gray-300 p-24 text-center">
             <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FiFileText className="w-12 h-12 text-gray-300" />
+              <FiSearch className="w-12 h-12 text-gray-300" />
             </div>
-            <h3 className="text-xl font-serif font-black text-gray-900 mb-2">Select an Article to Manage Media</h3>
+            <h3 className="text-xl font-serif font-black text-gray-900 mb-2">Search for an Article to Manage Media</h3>
             <p className="text-gray-500 max-w-sm mx-auto">
-              Choose a subject, journal, volume, and article from the filters above to view and upload its figures.
+              Enter an **Article ID** in the search box above to view and upload its figures.
             </p>
           </div>
         )}

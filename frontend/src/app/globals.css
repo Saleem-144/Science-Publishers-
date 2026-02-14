@@ -41,6 +41,82 @@ body {
   font-family: var(--font-literata), Georgia, serif;
 }
 
+/* 
+   Global Italics Override 
+   Forcing all text to be upright (non-italic) as per user request
+   EXCLUDING MathJax containers to preserve TeX layout
+*/
+mjx-container, 
+mjx-container *,
+.mjx-chtml,
+.mjx-chtml * {
+  font-style: normal !important;
+}
+
+*:not(mjx-container):not(mjx-container *):not(.mjx-chtml):not(.mjx-chtml *) {
+  font-style: normal !important;
+}
+
+/* 
+   Explicitly target common italic elements to be extra sure 
+*/
+i, em, .italic, [class*="italic"] {
+  font-style: normal !important;
+}
+
+/* Math Rendering Styles */
+.math-container {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.125rem;
+  max-width: 100%;
+}
+
+.display-formula, 
+.disp-formula,
+.formula-container {
+  display: block !important;
+  text-align: center !important;
+  margin: 3rem 0 !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 1.5rem 0 !important;
+  font-size: 1.2em;
+}
+
+/* Ensure MathJax elements inside display containers are centered */
+.display-formula mjx-container,
+.disp-formula mjx-container,
+.formula-container mjx-container {
+  margin: 0 auto !important;
+}
+
+/* MathJax Specific Overrides */
+mjx-container {
+  font-style: normal !important;
+  line-height: 0;
+}
+
+mjx-container[display="true"] {
+  display: block !important;
+  text-align: center !important;
+  margin: 1.5em 0 !important;
+}
+
+/* Specific MathJax overrides for non-italic identifiers as requested */
+mjx-mi, mjx-mi *, mjx-mtext, mjx-mtext *, mjx-utext, mjx-utext * {
+  font-style: normal !important;
+}
+
+/* Force summation limits to be above/below in display mode */
+mjx-container[display="true"] mjx-over,
+mjx-container[display="true"] mjx-under {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
 /* Article Content Styling */
 .article-content, 
 .article-body-content, 
@@ -77,42 +153,6 @@ body {
   margin-bottom: 0.75rem !important;
   font-weight: 700 !important;
   display: block !important;
-}
-
-/* Math Rendering Styles */
-.math-container {
-  display: inline-block;
-  vertical-align: middle;
-  margin: 0 0.125rem;
-  max-width: 100%;
-}
-
-.display-formula {
-  text-align: center !important;
-  margin: 2.5rem 0 !important;
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 1rem 0;
-}
-
-/* Protect MathJax SVG from global font overrides */
-mjx-container[jax="SVG"] {
-  direction: ltr;
-  font-family: serif !important; /* MathJax handles its own fonts but this helps layout */
-}
-
-mjx-container[jax="SVG"] > svg {
-  margin: 0 !important;
-  vertical-align: middle !important;
-}
-
-/* Ensure MathJax elements are not affected by global font/alignment overrides */
-mjx-container, 
-mjx-container * {
-  font-family: MJXZERO, STIXGeneral, 'Arial Unicode MS', serif !important;
-  text-align: left !important;
-  white-space: nowrap !important;
 }
 
 .article-content p, 
@@ -197,24 +237,42 @@ mjx-container * {
 }
 
 /* Table and figure styling */
+.article-figure, .article-table {
+  cursor: zoom-in;
+  transition: all 0.2s ease;
+}
+
+.article-figure:hover {
+  background-color: rgba(30, 58, 138, 0.02);
+  border-radius: 1rem;
+}
+
 .article-content table, .article-body-content table {
   width: 100% !important;
   border-collapse: collapse !important;
   margin: 3rem 0 !important;
   font-family: var(--font-inter), sans-serif !important;
   font-size: 0.9375rem !important;
+  border-top: 1.5px solid #000 !important;
+  border-bottom: 1.5px solid #000 !important;
 }
 
-.article-content th, .article-content td, .article-body-content th, .article-body-content td {
-  border: 1px solid #f3f4f6 !important;
+.article-content th, .article-body-content th {
+  background-color: #f8fafc !important;
+  font-weight: 800 !important;
+  color: #111827 !important;
+  border-bottom: 1px solid #000 !important;
+  padding: 1rem !important;
+}
+
+.article-content td, .article-body-content td {
+  border-bottom: 1px solid #f3f4f6 !important;
   padding: 1rem !important;
   text-align: left !important;
 }
 
-.article-content th, .article-body-content th {
-  background-color: #f9fafb !important;
-  font-weight: 800 !important;
-  color: #111827 !important;
+.article-content tr:last-child td, .article-body-content tr:last-child td {
+  border-bottom: none !important;
 }
 
 /* Fix chemical formulas vertical alignment */
@@ -247,15 +305,6 @@ mjx-container * {
   margin-top: 1.5rem !important;
   display: block !important;
   opacity: 0.6 !important;
-}
-
-.article-content a, .article-body-content a, .abstract-content-container a {
-  color: #2563eb !important;
-  text-decoration: underline !important;
-}
-
-.article-content a:hover, .article-body-content a:hover, .abstract-content-container a:hover {
-  color: #1d4ed8 !important;
 }
 
 .article-content a, .article-body-content a, .abstract-content-container a {

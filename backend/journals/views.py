@@ -10,7 +10,12 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count, OuterRef, Subquery
 
-from .models import Subject, Journal, Announcement, CorporateAffiliation, CTACard, EditorialBoardMember, JournalIndexing, CTAButton, CTAFormSubmission
+from .models import (
+    Subject, Journal, Announcement, CorporateAffiliation, 
+    CTACard, EditorialBoardMember, JournalIndexing, 
+    CTAButton, CTAFormSubmission, FAQ,
+    IndexingPlatform, JournalIndexingLink
+)
 from .serializers import (
     SubjectSerializer,
     SubjectListSerializer,
@@ -27,8 +32,78 @@ from .serializers import (
     EditorialBoardMemberSerializer,
     JournalIndexingSerializer,
     CTAButtonSerializer,
-    CTAFormSubmissionSerializer
+    CTAFormSubmissionSerializer,
+    FAQSerializer,
+    IndexingPlatformSerializer,
+    JournalIndexingLinkSerializer,
+    IndexingPlatformDetailSerializer
 )
+
+
+# =============================================================================
+# Indexing Journal Views
+# =============================================================================
+
+class IndexingPlatformListView(generics.ListAPIView):
+    """Public: List all active indexing platforms with their linked journals."""
+    permission_classes = [AllowAny]
+    serializer_class = IndexingPlatformDetailSerializer
+    pagination_class = None
+    
+    def get_queryset(self):
+        return IndexingPlatform.objects.filter(is_active=True).prefetch_related(
+            'journal_links', 'journal_links__journal'
+        ).order_by('display_order', 'name')
+
+
+class IndexingPlatformAdminListView(generics.ListAPIView):
+    """Admin: List all indexing platforms."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = IndexingPlatformSerializer
+    queryset = IndexingPlatform.objects.all().order_by('display_order', 'name')
+    pagination_class = None
+
+
+class IndexingPlatformCreateView(generics.CreateAPIView):
+    """Admin: Create an indexing platform."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = IndexingPlatformSerializer
+
+
+class IndexingPlatformAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin: Get, update, or delete an indexing platform."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = IndexingPlatformSerializer
+    queryset = IndexingPlatform.objects.all()
+
+
+class JournalIndexingLinkAdminListView(generics.ListAPIView):
+    """Admin: List all links for a platform or journal."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = JournalIndexingLinkSerializer
+    
+    def get_queryset(self):
+        platform_id = self.request.query_params.get('platform')
+        journal_id = self.request.query_params.get('journal')
+        queryset = JournalIndexingLink.objects.all()
+        if platform_id:
+            queryset = queryset.filter(platform_id=platform_id)
+        if journal_id:
+            queryset = queryset.filter(journal_id=journal_id)
+        return queryset
+
+
+class JournalIndexingLinkCreateView(generics.CreateAPIView):
+    """Admin: Create a journal indexing link."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = JournalIndexingLinkSerializer
+
+
+class JournalIndexingLinkAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin: Get, update, or delete a journal indexing link."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = JournalIndexingLinkSerializer
+    queryset = JournalIndexingLink.objects.all()
 
 # =============================================================================
 # Public Journal Views
@@ -599,3 +674,32 @@ class JournalIndexingAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = JournalIndexingSerializer
     queryset = JournalIndexing.objects.all()
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+
+# =============================================================================
+# FAQ Views
+# =============================================================================
+
+class FAQAdminListView(generics.ListAPIView):
+    """Admin: List FAQs for a specific journal."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = FAQSerializer
+
+    def get_queryset(self):
+        journal_id = self.request.query_params.get('journal')
+        if journal_id:
+            return FAQ.objects.filter(journal_id=journal_id).order_by('display_order', 'created_at')
+        return FAQ.objects.all().order_by('display_order', 'created_at')
+
+
+class FAQCreateView(generics.CreateAPIView):
+    """Admin: Create a new FAQ."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = FAQSerializer
+
+
+class FAQAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin: Get, update, or delete an FAQ."""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = FAQSerializer
+    queryset = FAQ.objects.all()

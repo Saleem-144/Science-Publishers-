@@ -669,7 +669,7 @@ class JATSParser(BaseXMLParser):
                 has_content = True
             elif tag == 'disp-formula':
                 formula_id = child.get('id', '')
-                formula_content = self._convert_inline_elements(child)
+                formula_content = self._convert_inline_elements(child, is_display=True)
                 html_parts.append(f'<div class="display-formula" id="{formula_id}"><br/>{formula_content}</div>')
                 has_content = True
             elif tag == 'disp-quote':
@@ -752,7 +752,7 @@ class JATSParser(BaseXMLParser):
                 html_parts.append(self._parse_list(child))
             elif tag == 'disp-formula':
                 formula_id = child.get('id', '')
-                formula_content = self._convert_inline_elements(child)
+                formula_content = self._convert_inline_elements(child, is_display=True)
                 html_parts.append(f'<div class="display-formula" id="{formula_id}"><br/>{formula_content}</div>')
             elif tag == 'chem-struct-wrapper':
                 chem_id = child.get('id', '')
@@ -783,7 +783,7 @@ class JATSParser(BaseXMLParser):
             return ''
         return f'<p>{inner_html}</p>'
     
-    def _convert_inline_elements(self, elem) -> str:
+    def _convert_inline_elements(self, elem, is_display: bool = False) -> str:
         """Convert JATS inline elements to HTML."""
         if elem is None:
             return ''
@@ -792,8 +792,12 @@ class JATSParser(BaseXMLParser):
         
         # Handle text before children
         if elem.text:
-            # Collapse whitespace in text nodes
-            parts.append(re.sub(r'\s+', ' ', elem.text))
+            text = re.sub(r'\s+', ' ', elem.text)
+            if is_display and text.strip() and not any(tag in text for tag in ['<math', 'mjx-']):
+                # If display context and we have raw text, treat as TeX display math
+                parts.append(f'\\[{text}\\]')
+            else:
+                parts.append(text)
         
         for child in elem:
             # Handle JATS namespaces
@@ -802,13 +806,13 @@ class JATSParser(BaseXMLParser):
                 tag = tag.split('}', 1)[1]
             
             if tag in ['bold', 'b']:
-                parts.append(f'<strong>{self._convert_inline_elements(child)}</strong>')
+                parts.append(f'<strong>{self._convert_inline_elements(child, is_display)}</strong>')
             elif tag in ['italic', 'i']:
-                parts.append(f'<em>{self._convert_inline_elements(child)}</em>')
+                parts.append(f'<em>{self._convert_inline_elements(child, is_display)}</em>')
             elif tag == 'sup':
-                parts.append(f'<sup>{self._convert_inline_elements(child)}</sup>')
+                parts.append(f'<sup>{self._convert_inline_elements(child, is_display)}</sup>')
             elif tag == 'sub':
-                parts.append(f'<sub>{self._convert_inline_elements(child)}</sub>')
+                parts.append(f'<sub>{self._convert_inline_elements(child, is_display)}</sub>')
             elif tag == 'math' or 'math' in tag.lower():
                 # Preserve MathML for MathJax
                 # We use method='xml' to ensure all MathML tags are preserved exactly
@@ -821,23 +825,34 @@ class JATSParser(BaseXMLParser):
                     elif 'xmlns=' not in mathml_content and '<math' in mathml_content:
                         mathml_content = mathml_content.replace('<math', '<math xmlns="http://www.w3.org/1998/Math/MathML"')
                     
+                    # If this is a display formula, force display="block" attribute if missing
+                    if is_display and 'display="block"' not in mathml_content:
+                        if '<mml:math' in mathml_content:
+                            mathml_content = mathml_content.replace('<mml:math', '<mml:math display="block"')
+                        elif '<math' in mathml_content:
+                            mathml_content = mathml_content.replace('<math', '<math display="block"')
+
                     parts.append(f'<span class="math-container">{mathml_content}</span>')
                 except Exception as e:
                     logger.warning(f"Failed to stringify MathML element: {str(e)}")
-                    parts.append(self._convert_inline_elements(child))
+                    parts.append(self._convert_inline_elements(child, is_display))
             elif tag == 'tex-math':
                 # Handle TeX math
-                parts.append(f'<span class="tex-math">\\({child.text or ""}\\)</span>')
+                math_text = child.text or ""
+                if is_display:
+                    parts.append(f'<span class="tex-math">\\[{math_text}\\]</span>')
+                else:
+                    parts.append(f'<span class="tex-math">\\({math_text}\\)</span>')
             elif tag == 'underline':
-                parts.append(f'<u>{self._convert_inline_elements(child)}</u>')
+                parts.append(f'<u>{self._convert_inline_elements(child, is_display)}</u>')
             elif tag == 'sc':
-                parts.append(f'<span style="font-variant: small-caps;">{self._convert_inline_elements(child)}</span>')
+                parts.append(f'<span style="font-variant: small-caps;">{self._convert_inline_elements(child, is_display)}</span>')
             elif tag == 'monospace':
-                parts.append(f'<code>{self._convert_inline_elements(child)}</code>')
+                parts.append(f'<code>{self._convert_inline_elements(child, is_display)}</code>')
             elif tag == 'xref':
                 ref_type = child.get('ref-type', '')
                 rid = child.get('rid', '')
-                text = self._convert_inline_elements(child)
+                text = self._convert_inline_elements(child, is_display)
                 if ref_type == 'bibr':
                     # Ensure consistent ref- prefix for internal linking
                     target_id = rid if rid.startswith('ref-') else f'ref-{rid}'
@@ -850,7 +865,7 @@ class JATSParser(BaseXMLParser):
                     parts.append(text)
             elif tag == 'ext-link':
                 href = child.get('{http://www.w3.org/1999/xlink}href', '#')
-                text = self._convert_inline_elements(child) or href
+                text = self._convert_inline_elements(child, is_display) or href
                 parts.append(f'<a href="{href}" target="_blank" rel="noopener">{text}</a>')
             elif tag == 'inline-graphic' or tag == 'graphic':
                 href = child.get('{http://www.w3.org/1999/xlink}href', '')
@@ -859,38 +874,42 @@ class JATSParser(BaseXMLParser):
                 parts.append(f'<img src="{{{{FIGURE:{href_base}}}}}" class="article-image" alt="graphic">')
             elif tag == 'named-content':
                 content_type = child.get('content-type', '')
-                content = self._convert_inline_elements(child)
+                content = self._convert_inline_elements(child, is_display)
                 if content_type:
                     parts.append(f'<span class="named-content" data-type="{content_type}">[{content_type}: {content}]</span>')
                 else:
                     parts.append(content)
             elif tag == 'abbrev':
-                abbrev_text = self._convert_inline_elements(child)
+                abbrev_text = self._convert_inline_elements(child, is_display)
                 href = child.get('{http://www.w3.org/1999/xlink}href', '')
                 if href:
                     parts.append(f'<abbr title="{href}">{abbrev_text}</abbr>')
                 else:
                     parts.append(f'<abbr>{abbrev_text}</abbr>')
             elif tag == 'disp-quote':
-                quote_content = self._convert_inline_elements(child)
+                quote_content = self._convert_inline_elements(child, is_display)
                 parts.append(f'<blockquote>{quote_content}</blockquote>')
             elif tag == 'preformat':
                 pre_content = etree.tostring(child, method='text', encoding='unicode')
                 parts.append(f'<pre>{pre_content}</pre>')
             elif tag == 'p':
-                parts.append(f'<p>{self._convert_inline_elements(child)}</p>')
+                parts.append(f'<p>{self._convert_inline_elements(child, is_display)}</p>')
             elif tag == 'title':
-                parts.append(f'<h4>{self._convert_inline_elements(child)}</h4>')
+                parts.append(f'<h4>{self._convert_inline_elements(child, is_display)}</h4>')
             else:
                 # Default: handle children recursively
-                content = self._convert_inline_elements(child)
+                content = self._convert_inline_elements(child, is_display)
                 if content:
                     parts.append(content)
             
             # Handle text after children (tail)
             if child.tail:
                 # Collapse whitespace in tail nodes
-                parts.append(re.sub(r'\s+', ' ', child.tail))
+                text = re.sub(r'\s+', ' ', child.tail)
+                if is_display and text.strip() and not any(tag in text for tag in ['<math', 'mjx-']):
+                    parts.append(f'\\[{text}\\]')
+                else:
+                    parts.append(text)
         
         return ''.join(parts)
     
